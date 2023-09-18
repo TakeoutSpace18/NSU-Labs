@@ -9,6 +9,12 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    WordCounter::WriteFileWordFrequencyToCSV(argv[1], argv[2]);
+    try {
+        WordCounter::WriteFileWordFrequencyToCSV(argv[1], argv[2]);
+    }
+    catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }

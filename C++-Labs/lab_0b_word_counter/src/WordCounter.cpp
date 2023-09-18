@@ -20,7 +20,7 @@ std::vector<std::string> WordCounter::splitLineToWords(const std::string &line) 
 
     for (char c : line) {
         if (std::isalnum(c)) {
-            curr_word += c;
+            curr_word += std::tolower(c, std::locale());
         }
         else if (curr_word.length() != 0) {
             words.push_back(curr_word);
@@ -32,6 +32,13 @@ std::vector<std::string> WordCounter::splitLineToWords(const std::string &line) 
 }
 void WordCounter::parseFile(const std::string &filename) {
     std::ifstream input(filename);
+    if (!filename.ends_with(".txt")) {
+        throw InputException("Wrong input file extension: only .txt files are allowed");
+    }
+
+    if (!input.is_open()) {
+        throw InputException("Couldn't open file");
+    }
 
     for (std::string line; std::getline(input, line); ) {
         for (const std::string& word : splitLineToWords(line)) {
@@ -50,6 +57,10 @@ void WordCounter::parseFile(const std::string &filename) {
 }
 
 void WordCounter::writeToCSV(const std::string &filename) {
+    if (!filename.ends_with(".csv")) {
+        throw "Wrong output file extension: only csv is allowed";
+    }
+
     std::ofstream output(filename);
     for (const std::string& word : words_) {
         float word_percentage = static_cast<float>(words_frequency_[word]) * 100 / total_words_count_;
@@ -57,3 +68,8 @@ void WordCounter::writeToCSV(const std::string &filename) {
     }
 }
 
+WordCounter::InputException::InputException(char *message) : message_(message) {}
+
+const char *WordCounter::InputException::what() const noexcept {
+    return message_;
+}
