@@ -2,12 +2,11 @@
 #include <stdint.h>
 
 #include "measurable_code.h"
+#include "common.h"
 
-#define TSC_FREQUENCY 33024
-#define MEASURE_COUNT 10
-#define DIFF(a, b) a > b ? a - b : b - a
+// for correct measuring execute "taskset --cpu-list 0 ./rdtsc_user_space"
 
-uint64_t measure_clock_cycles(void) {
+static uint64_t measure_clock_cycles(void) {
     uint64_t cycles_low_begin, cycles_high_begin, cycles_low_end, cycles_high_end;
     uint64_t start, end;
     uint64_t measured_cycles;
@@ -22,7 +21,7 @@ uint64_t measure_clock_cycles(void) {
 
             : "=r" (cycles_high_begin), "=r" (cycles_low_begin));
 
-    measured_function(NULL, 15000000);
+    measured_function(NULL, MEASURED_FUNC_ITERATIONS);
 
     asm volatile (
             "lfence\n\t"
@@ -60,17 +59,15 @@ int main(void)
                 max_diff = diff;
             }
         }
-        uint64_t seconds = measured_cycles * 10000 / TSC_FREQUENCY / 1000000000;
-        uint64_t nanoseconds = measured_cycles * 10000 / TSC_FREQUENCY % 1000000000;
 
-        printf("(%i) function execution time is %lu clock cycles, %lis %lins\n", i, measured_cycles, seconds, nanoseconds);
+        uint64_t elapsed_ns = CYCLES_TO_NANOSECONDS(measured_cycles);
+        printf("(%i) function execution time is %lu clock cycles, %lis %lins\n", i, measured_cycles, elapsed_ns / 1000000000, elapsed_ns % 1000000000);
     }
 
     average_clock_cycles /= MEASURE_COUNT;
 
-    uint64_t average_nanoseconds = (average_clock_cycles * 10000 / TSC_FREQUENCY) % 1000000000;
-    uint64_t average_seconds = (average_clock_cycles * 10000 / TSC_FREQUENCY) / 1000000000;
-    printf("average clock_cycles - %lu, average time - %lis %lins\n", average_clock_cycles, average_seconds, average_nanoseconds);
+    uint64_t average_ns = CYCLES_TO_NANOSECONDS(average_clock_cycles);
+    printf("average clock_cycles - %lu, average time - %lis %lins\n", average_clock_cycles, average_ns / 1000000000, average_ns % 1000000000);
     printf("max difference - %lu\n", max_diff);
 
     return 0;

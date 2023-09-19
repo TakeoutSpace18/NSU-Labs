@@ -4,26 +4,27 @@
 #include <stdlib.h>
 
 #include "measurable_code.h"
+#include "common.h"
 
-#define MEASURE_COUNT 10
-#define DIFF(a, b) a > b ? a - b : b - a
+static inline uint64_t get_elapsed_nanoseconds(struct timespec* begin, struct timespec* end) {
+    return 1000000000*(end->tv_sec - begin->tv_sec) + end->tv_nsec - begin->tv_nsec;
+}
 
-uint64_t measure_time() {
+static uint64_t measure_time() {
     struct timespec begin_time, end_time;
     if (clock_gettime(CLOCK_MONOTONIC_RAW, &begin_time) == -1) {
         perror("clock_gettime");
         return EXIT_FAILURE;
     }
 
-    measured_function(NULL, 15000000);
+    measured_function(NULL, MEASURED_FUNC_ITERATIONS);
 
     if (clock_gettime(CLOCK_MONOTONIC_RAW, &end_time)) {
         perror("clock_gettime");
         return EXIT_FAILURE;
     }
 
-    long nano_seconds_elapsed = 1000000000*(end_time.tv_sec - begin_time.tv_sec) + end_time.tv_nsec - begin_time.tv_nsec;
-    return nano_seconds_elapsed;
+    return get_elapsed_nanoseconds(&begin_time, &end_time);
 }
 
 int main(void) {
@@ -52,7 +53,6 @@ int main(void) {
 
     printf("average time - %lus %luns\n", average_time / 1000000000, average_time % 1000000000);
     printf("max difference - %lus %luns\n", max_diff / 1000000000, max_diff % 1000000000);
-
 
     return EXIT_SUCCESS;
 }

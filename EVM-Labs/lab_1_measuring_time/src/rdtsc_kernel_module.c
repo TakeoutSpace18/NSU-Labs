@@ -3,9 +3,7 @@
 #include <linux/preempt.h>
 
 #include "measurable_code.h"
-
-#define MEASURE_COUNT 10
-#define DIFF(a, b) a > b ? a - b : b - a
+#include "common.h"
 
 uint64_t measure_clock_cycles(void) {
     unsigned long flags;
@@ -27,7 +25,7 @@ uint64_t measure_clock_cycles(void) {
 
             : "=r" (cycles_high_begin), "=r" (cycles_low_begin));
 
-    measured_function(NULL, 15000000);
+    measured_function(NULL, MEASURED_FUNC_ITERATIONS);
 
     asm volatile (
             "lfence\n\t"
@@ -55,6 +53,7 @@ int init_module(void) {
 
     uint64_t measure_results[MEASURE_COUNT];
     uint64_t average_clock_cycles = 0;
+    uint64_t average_ns;
     uint64_t max_diff = 0;
 
     for (int i = 0; i < MEASURE_COUNT; ++i) {
@@ -69,16 +68,19 @@ int init_module(void) {
             }
         }
 
+        uint64_t elapsed_ns = CYCLES_TO_NANOSECONDS(measured_cycles);
+
         printk(KERN_INFO
-        "cpu_time_measure: (%i) function execution time is %llu clock cycles", i, measured_cycles);
+        "cpu_time_measure: (%i) function execution time is %llu clock cycles, %lis %lins", i, measured_cycles, elapsed_ns / 1000000000, elapsed_ns % 1000000000);
     }
 
     average_clock_cycles /= MEASURE_COUNT;
+    average_ns = CYCLES_TO_NANOSECONDS(average_clock_cycles);
 
     printk(KERN_INFO
-    "cpu_time_measure: average clock_cycles - %lu", average_clock_cycles);
+    "cpu_time_measure: average clock_cycles - %lu, average time - %lis %lins", average_clock_cycles, average_ns / 1000000000, average_ns % 1000000000);
     printk(KERN_INFO
-    "cpu_time_measure: max difference - %lu", max_diff);
+    "cpu_time_measure: max difference - %lu clock cycles", max_diff);
 
 
     return 0;
