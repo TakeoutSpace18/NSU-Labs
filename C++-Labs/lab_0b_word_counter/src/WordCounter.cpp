@@ -1,6 +1,8 @@
 #include <fstream>
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
+#include <codecvt>
 
 #include "WordCounter.h"
 
@@ -14,24 +16,29 @@ void WordCounter::WriteFileWordFrequencyToCSV(const std::string& input_filename,
     counter.writeToCSV(output_filename);
 }
 
-std::vector<std::string> WordCounter::splitLineToWords(const std::string &line) {
-    std::vector<std::string> words;
-    std::string curr_word;
+std::vector<std::wstring> WordCounter::splitLineToWords(const std::wstring &line) {
+    std::vector<std::wstring> words;
+    std::wstring curr_word;
 
-    for (char c : line) {
-        if (std::isalnum(c)) {
+    for (wchar_t c : line) {
+        if (std::isalnum(c, std::locale()) || c == '\'') {
             curr_word += std::tolower(c, std::locale());
         }
-        else if (curr_word.length() != 0) {
+        else if (!curr_word.empty()) {
             words.push_back(curr_word);
-            curr_word = "";
+            curr_word = L"";
         }
+    }
+
+    if (!curr_word.empty()) {
+        words.push_back(curr_word);
     }
 
     return words;
 }
 void WordCounter::parseFile(const std::string &filename) {
-    std::ifstream input(filename);
+    std::wifstream input(filename);
+
     if (!filename.ends_with(".txt")) {
         throw InputException("Wrong input file extension: only .txt files are allowed");
     }
@@ -40,8 +47,8 @@ void WordCounter::parseFile(const std::string &filename) {
         throw InputException("Couldn't open file");
     }
 
-    for (std::string line; std::getline(input, line); ) {
-        for (const std::string& word : splitLineToWords(line)) {
+    for (std::wstring line; std::getline(input, line); ) {
+        for (const std::wstring& word : splitLineToWords(line)) {
             if (!words_frequency_.contains(word)) {
                 words_.push_back(word);
             }
@@ -58,17 +65,18 @@ void WordCounter::parseFile(const std::string &filename) {
 
 void WordCounter::writeToCSV(const std::string &filename) {
     if (!filename.ends_with(".csv")) {
-        throw "Wrong output file extension: only csv is allowed";
+        throw InputException("Wrong output file extension: only csv is allowed");
     }
 
-    std::ofstream output(filename);
-    for (const std::string& word : words_) {
-        float word_percentage = static_cast<float>(words_frequency_[word]) * 100 / total_words_count_;
+    std::wofstream output(filename);
+
+    for (const std::wstring& word : words_) {
+        float word_percentage = static_cast<float>(words_frequency_[word]) * 100 / static_cast<float>(total_words_count_);
         output << word << "," << words_frequency_[word] << "," << std::setprecision(3) << word_percentage << std::endl;
     }
 }
 
-WordCounter::InputException::InputException(char *message) : message_(message) {}
+WordCounter::InputException::InputException(const char *message) : message_(message) {}
 
 const char *WordCounter::InputException::what() const noexcept {
     return message_;

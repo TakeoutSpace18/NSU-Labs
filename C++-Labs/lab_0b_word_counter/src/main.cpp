@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     }
 
     try {
+        std::locale::global(std::locale("ru_RU.utf8").combine<std::numpunct<wchar_t>>(std::locale("C")));
         WordCounter::WriteFileWordFrequencyToCSV(argv[1], argv[2]);
     }
     catch (const std::exception& e) {

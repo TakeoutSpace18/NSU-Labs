@@ -12,6 +12,7 @@ add_executable(lab_0b_word_counter
         src/WordCounter.h
         src/main.cpp)
 
+target_compile_options(lab_0b_word_counter PRIVATE -Wall -Wpedantic)
 
 include(FetchContent)
 FetchContent_Declare(
