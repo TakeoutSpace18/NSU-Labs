@@ -7,6 +7,8 @@
 
 #include "measurable_code.h"
 
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+
 #define MEASURED_FUNC_ITERATIONS 200000
 #define MEASURE_COUNT 10
 
@@ -46,30 +48,28 @@ int main(void) {
     printf("measuring code execution time...\n");
 
     FILE* output = fopen("results.txt", "w");
-    double* output_buffer = malloc(sizeof(double) * MEASURED_FUNC_ITERATIONS);
+    double* output_buffer = (double*)malloc(sizeof(double) * MEASURED_FUNC_ITERATIONS);
 
-    struct elapsed_times average_time = {0, 0};
+    struct elapsed_times min_time = {UINT64_MAX, UINT64_MAX};
 
     for (int i = 0; i < MEASURE_COUNT; ++i) {
         struct elapsed_times measured_time = measure_time(output_buffer);
 
-        average_time.system_time_ns += measured_time.system_time_ns;
-        average_time.user_time_ns += measured_time.user_time_ns;
+        min_time.system_time_ns = MIN(measured_time.system_time_ns, min_time.system_time_ns);
+        min_time.user_time_ns = MIN(measured_time.user_time_ns, min_time.user_time_ns);
 
-        for (size_t i = 0; i < MEASURED_FUNC_ITERATIONS; ++i) {
-            fprintf(output, "%f\n", output_buffer[i]);
+        for (size_t j = 0; j < MEASURED_FUNC_ITERATIONS; ++j) {
+            fprintf(output, "%f\n", output_buffer[j]);
         }
 
-        printf("\n(%i) function execution time is:", i);
-        print_elapsed_times(stdout, &measured_time);
-        fflush(stdout);
+//        printf("\n(%i) function execution time is:", i);
+//        print_elapsed_times(stdout, &measured_time);
+//        fflush(stdout);
     }
 
-    average_time.system_time_ns /= MEASURE_COUNT;
-    average_time.user_time_ns /= MEASURE_COUNT;
-
-    printf("\naverage time:");
-    print_elapsed_times(stdout, &average_time);
+    printf("\nminimum time:");
+    print_elapsed_times(stdout, &min_time);
+    printf("\n");
 
     fclose(output);
     free(output_buffer);
