@@ -7,22 +7,15 @@
 
 class WordCounter {
 public:
-    class InputException : public std::exception {
-    public:
-        explicit InputException(const char *message);
-        [[nodiscard]] const char * what() const noexcept override;
-    private:
-        const char* message_;
-    };
-
     static void WriteFileWordFrequencyToCSV(const std::string& input_filename, const std::string& output_filename);
 
 private:
     WordCounter();
 
     void parseFile(const std::string &filename);
-    void writeToCSV(const std::string &filename);
+    void writeToCSV(const std::string &filename) const;
 
+    static void validateFilenameExtension(const std::string &filename, const std::string &extension);
     static std::vector<std::wstring> splitLineToWords(const std::wstring &line);
 
     size_t total_words_count_;

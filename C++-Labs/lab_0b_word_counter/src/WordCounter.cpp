@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
-#include <codecvt>
 
 #include "WordCounter.h"
 
@@ -37,14 +36,11 @@ std::vector<std::wstring> WordCounter::splitLineToWords(const std::wstring &line
     return words;
 }
 void WordCounter::parseFile(const std::string &filename) {
+    validateFilenameExtension(filename, "txt");
+
     std::wifstream input(filename);
-
-    if (!filename.ends_with(".txt")) {
-        throw InputException("Wrong input file extension: only .txt files are allowed");
-    }
-
     if (!input.is_open()) {
-        throw InputException("Couldn't open file");
+        throw std::runtime_error("Failed to open input file");
     }
 
     for (std::wstring line; std::getline(input, line); ) {
@@ -63,21 +59,23 @@ void WordCounter::parseFile(const std::string &filename) {
               { return freq[w1] > freq[w2]; });
 }
 
-void WordCounter::writeToCSV(const std::string &filename) {
-    if (!filename.ends_with(".csv")) {
-        throw InputException("Wrong output file extension: only csv is allowed");
-    }
+void WordCounter::writeToCSV(const std::string &filename) const {
+    validateFilenameExtension(filename, "csv");
 
     std::wofstream output(filename);
+    if (!output.is_open()) {
+        throw std::runtime_error("Failed to open output file");
+    }
 
     for (const std::wstring& word : words_) {
-        float word_percentage = static_cast<float>(words_frequency_[word]) * 100 / static_cast<float>(total_words_count_);
-        output << word << "," << words_frequency_[word] << "," << std::setprecision(3) << word_percentage << std::endl;
+        size_t freq = words_frequency_.at(word);
+        float word_percentage = static_cast<float>(freq) * 100 / static_cast<float>(total_words_count_);
+        output << word << "," << freq << "," << std::setprecision(3) << word_percentage << std::endl;
     }
 }
 
-WordCounter::InputException::InputException(const char *message) : message_(message) {}
-
-const char *WordCounter::InputException::what() const noexcept {
-    return message_;
+void WordCounter::validateFilenameExtension(const std::string &filename, const std::string &extension) {
+    if (!filename.ends_with("." + extension)) {
+        throw std::invalid_argument("Wrong extension in " + filename + ": ." + extension + " expected.");
+    }
 }
