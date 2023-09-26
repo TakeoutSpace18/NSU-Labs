@@ -28,7 +28,7 @@ static uint64_t measure_time() {
 }
 
 int main(void) {
-    printf("measuring code execution time...\n");
+    printf("measuring code execution time with clock_gettime()...\n");
 
     uint64_t measure_results[MEASURE_COUNT];
     uint64_t average_time = 0;

@@ -46,7 +46,7 @@ int main(void)
 
     uint64_t measure_results[MEASURE_COUNT];
     uint64_t average_clock_cycles = 0;
-    uint64_t max_diff = 0;
+    uint64_t max_diff_clock_cycles = 0;
 
     for (int i = 0; i < MEASURE_COUNT; ++i) {
         uint64_t measured_cycles = measure_clock_cycles();
@@ -55,8 +55,8 @@ int main(void)
 
         for (int j = 0; j < i; ++j) {
             uint64_t diff = DIFF(measure_results[j], measured_cycles);
-            if (diff > max_diff) {
-                max_diff = diff;
+            if (diff > max_diff_clock_cycles) {
+                max_diff_clock_cycles = diff;
             }
         }
 
@@ -67,8 +67,9 @@ int main(void)
     average_clock_cycles /= MEASURE_COUNT;
 
     uint64_t average_ns = CYCLES_TO_NANOSECONDS(average_clock_cycles);
+    uint64_t max_diff_ns = CYCLES_TO_NANOSECONDS(max_diff_clock_cycles);
     printf("average clock_cycles - %lu, average time - %lis %lins\n", average_clock_cycles, average_ns / 1000000000, average_ns % 1000000000);
-    printf("max difference - %lu\n", max_diff);
+    printf("max difference - %lu clock cycles, %lis %lins\n", max_diff_clock_cycles, max_diff_ns / 1000000000, max_diff_ns % 1000000000);
 
     return 0;
 }
