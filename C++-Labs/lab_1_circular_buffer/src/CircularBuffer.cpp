@@ -112,20 +112,15 @@ size_t CircularBuffer::reserve() const {
 }
 
 void CircularBuffer::insert(int pos, const value_type &item) {
-    size_t shift_begin = (buffer_start_ + pos) % capacity();
-    size_t shift_end = (shift_begin + size()) % capacity();
-    size_t shift_count = size() - pos;
-
-    if (shift_begin < shift_end) {
-        std::memmove(buffer_ + shift_begin + 1, buffer_ + shift_begin, shift_count);
+    linearize();
+    if (size() == capacity()) {
+        std::memmove(buffer_ + pos + 1, buffer_ + pos, size() - pos - 1);
     }
     else {
-        std::memmove(buffer_ + 1, buffer_, shift_count - capacity() + shift_begin);
-        buffer_[0] = buffer_[capacity() - 1];
-        std::memmove(buffer_ + shift_begin + 1, buffer_ + shift_begin, capacity() - shift_begin - 1);
+        std::memmove(buffer_ + pos + 1, buffer_ + pos, size() - pos);
+        ++size_;
     }
-
-    buffer_[shift_begin] = item;
+    buffer_[pos] = item;
 }
 
 void CircularBuffer::clear() {
@@ -202,6 +197,18 @@ CircularBuffer &CircularBuffer::operator=(const CircularBuffer &cb) {
 
 void CircularBuffer::swap(CircularBuffer &cb) noexcept {
     std::swap(*this, cb);
+//    std::swap(buffer_, cb.buffer_);
+//    std::swap(buffer_start_, cb.buffer_start_);
+//    std::swap(capacity_, cb.capacity_);
+//    std::swap(size_, cb.size_);
+}
+
+CircularBuffer::CircularBuffer(const CircularBuffer &cb) :
+buffer_start_(cb.buffer_start_),
+capacity_(cb.capacity()),
+size_(cb.size()){
+    buffer_ = new value_type[cb.size()];
+    std::memcpy(buffer_, cb.buffer_, cb.size());
 }
 
 bool operator==(const CircularBuffer &a, const CircularBuffer &b) {

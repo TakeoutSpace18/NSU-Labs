@@ -14,6 +14,16 @@ TEST(CircularBufferTest, CreatesWithSpecifiedCapacity) {
     EXPECT_EQ(buf.capacity(), 5);
 }
 
+TEST(CircularBufferTest, SetCapacityWorks) {
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.set_capacity(2);
+    EXPECT_EQ(buf.capacity(), 2);
+    EXPECT_EQ(buf.size(), 2);
+    buf.set_capacity(5);
+    EXPECT_EQ(buf.capacity(), 5);
+    EXPECT_EQ(buf.size(), 2);
+}
+
 TEST(CircularBufferTest, CreatesWithSpecifiedCapacityAndSpecifiedItems) {
     CircularBuffer buf(5, 'a');
     EXPECT_EQ(buf.capacity(), 5);
@@ -32,6 +42,13 @@ TEST(CircularBufferTest, CanAccessElements_WithoutBoundChecking) {
     }
 }
 
+TEST(CircularBufferTest, CanAccessElements_WithoutBoundChecking_Const) {
+    const CircularBuffer buf(5, '0');
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(buf[i], '0');
+    }
+}
+
 TEST(CircularBufferTest, CanAccessElements_WithBoundChecking) {
     CircularBuffer buf(5, '0');
     buf.push_back('0');
@@ -41,6 +58,16 @@ TEST(CircularBufferTest, CanAccessElements_WithBoundChecking) {
     }
     for (int i = 0; i < 5; ++i) {
         EXPECT_EQ(buf.at(i), i);
+    }
+
+    EXPECT_THROW(buf.at(45), std::out_of_range);
+}
+
+TEST(CircularBufferTest, CanAccessElements_WithBoundChecking_Const) {
+    const CircularBuffer buf(5, '0');
+
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(buf.at(i), '0');
     }
 
     EXPECT_THROW(buf.at(45), std::out_of_range);
@@ -143,5 +170,72 @@ TEST(CircularBufferTest, FullWorks) {
     EXPECT_FALSE(buf.full());
 }
 
+TEST(CircularBufferTest, InsertWorks) {
+    CircularBuffer buf = {'1', '2', '3', '4'};
+    buf.push_front('0');
+    buf.push_front('0');
+    buf.insert(1, '9');
+    EXPECT_EQ(buf[0], '0');
+    EXPECT_EQ(buf[1], '9');
+    EXPECT_EQ(buf[2], '0');
+    EXPECT_EQ(buf[3], '1');
 
+}
 
+TEST(CircularBufferTest, EraseWorks) {
+    CircularBuffer buf = {'1', '2', '3', '4'};
+    buf.push_front('0');
+    buf.push_front('0');
+    buf.erase(1, 3);
+    EXPECT_EQ(buf.size(), 2);
+    EXPECT_EQ(buf[0], '0');
+    EXPECT_EQ(buf[1], '2');
+}
+
+TEST(CircularBufferTest, ClearWorks) {
+    CircularBuffer buf = {'1', '2', '3', '4'};
+    buf.clear();
+    EXPECT_EQ(buf.size(), 0);
+    EXPECT_EQ(buf.capacity(), 4);
+
+    buf.push_front('0');
+    EXPECT_EQ(buf[0], '0');
+}
+
+TEST(CircularBufferTest, ReserveWorks) {
+    CircularBuffer buf(3);
+    EXPECT_EQ(buf.reserve(), 3);
+    buf.push_front('0');
+    EXPECT_EQ(buf.reserve(), 2);
+    buf.push_front('0');
+    EXPECT_EQ(buf.reserve(), 1);
+    buf.push_front('0');
+    EXPECT_EQ(buf.reserve(), 0);
+
+}
+
+TEST(CircularBufferTest, OperatorEqualsWorks) {
+    CircularBuffer buf1 = {'1', '2', '3', '4'};
+    CircularBuffer buf2 = {'1', '2', '9', '4'};
+    CircularBuffer buf3 = {'1', '2', '3', '4'};
+    EXPECT_FALSE(buf1 == buf2);
+    EXPECT_TRUE(buf1 == buf3);
+}
+
+TEST(CircularBufferTest, SwapWorks) {
+    CircularBuffer buf1 = {'1', '2', '3'};
+    CircularBuffer buf2 = {'1', '4', '9'};
+    buf1.swap(buf2);
+    EXPECT_EQ(buf1[0], '1');
+    EXPECT_EQ(buf1[1], '4');
+    EXPECT_EQ(buf1[2], '9');
+    EXPECT_EQ(buf2[0], '1');
+    EXPECT_EQ(buf2[1], '2');
+    EXPECT_EQ(buf2[2], '3');
+}
+TEST(CircularBufferTest, AssignmentOperatorWorks) {
+    CircularBuffer buf1 = {'1', '2', '3', '4'};
+    CircularBuffer buf2 = {'1', '2', '9', '4'};
+    buf1 = buf2;
+    EXPECT_TRUE(buf1 == buf2);
+}

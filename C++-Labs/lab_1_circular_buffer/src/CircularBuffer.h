@@ -18,7 +18,7 @@ public:
     ~CircularBuffer();
 
     /// Copy constructor
-    CircularBuffer(const CircularBuffer &cb) = default;
+    CircularBuffer(const CircularBuffer &cb);
 
     /**
      * Construct empty circular buffer with specified capacity
