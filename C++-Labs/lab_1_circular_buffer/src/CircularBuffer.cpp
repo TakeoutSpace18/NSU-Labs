@@ -30,7 +30,7 @@ CircularBuffer::CircularBuffer(std::initializer_list<value_type> list)
 }
 
 CircularBuffer::~CircularBuffer() {
-    delete buffer_;
+    delete[] buffer_;
 }
 
 void CircularBuffer::resize(size_t new_size, const value_type &item) {
@@ -44,17 +44,19 @@ void CircularBuffer::resize(size_t new_size, const value_type &item) {
 }
 
 void CircularBuffer::set_capacity(size_t new_capacity) {
+    size_t new_size = size_;
     if (new_capacity < size_) {
-        size_ = new_capacity;
+        new_size = new_capacity;
     }
 
     linearize();
     auto* new_buffer = new value_type[new_capacity];
-    std::memcpy(new_buffer, buffer_, size_ * sizeof(value_type));
+    std::copy(buffer_, buffer_ + new_size, new_buffer);
 
-    delete buffer_;
+    delete[] buffer_;
     buffer_ = new_buffer;
     capacity_ = new_capacity;
+    size_ = new_size;
 }
 
 void CircularBuffer::push_back(const value_type &item) {
@@ -189,30 +191,32 @@ const value_type &CircularBuffer::back() const {
     return buffer_[(buffer_start_ + size()) % capacity()];
 }
 
-CircularBuffer &CircularBuffer::operator=(const CircularBuffer &cb) {
-    CircularBuffer tmp(cb);
-    swap(tmp);
+CircularBuffer &CircularBuffer::operator=(CircularBuffer other) {
+    this->swap(other);
     return *this;
 }
 
-void CircularBuffer::swap(CircularBuffer &cb) noexcept {
-    std::swap(*this, cb);
-//    std::swap(buffer_, cb.buffer_);
-//    std::swap(buffer_start_, cb.buffer_start_);
-//    std::swap(capacity_, cb.capacity_);
-//    std::swap(size_, cb.size_);
+void CircularBuffer::swap(CircularBuffer &other) noexcept {
+    std::swap(buffer_, other.buffer_);
+    std::swap(buffer_start_, other.buffer_start_);
+    std::swap(capacity_, other.capacity_);
+    std::swap(size_, other.size_);
 }
 
-CircularBuffer::CircularBuffer(const CircularBuffer &cb) :
-buffer_start_(cb.buffer_start_),
-capacity_(cb.capacity()),
-size_(cb.size()){
-    buffer_ = new value_type[cb.size()];
-    std::memcpy(buffer_, cb.buffer_, cb.size());
+CircularBuffer::CircularBuffer(const CircularBuffer &other) :
+buffer_start_(other.buffer_start_),
+capacity_(other.capacity()),
+size_(other.size()) {
+    buffer_ = new value_type[other.size()];
+    std::copy(other.buffer_, other.buffer_ + other.size(), this->buffer_);
 }
 
 bool operator==(const CircularBuffer &a, const CircularBuffer &b) {
-    for (size_t i = 0; i < std::min(a.size(), b.size()); ++i) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < a.size(); ++i) {
         if (a[i] != b[i]) {
             return false;
         }

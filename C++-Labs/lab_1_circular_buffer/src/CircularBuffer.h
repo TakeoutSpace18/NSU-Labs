@@ -18,7 +18,7 @@ public:
     ~CircularBuffer();
 
     /// Copy constructor
-    CircularBuffer(const CircularBuffer &cb);
+    CircularBuffer(const CircularBuffer &other);
 
     /**
      * Construct empty circular buffer with specified capacity
@@ -166,17 +166,17 @@ public:
     void resize(size_t new_size, const value_type &item = value_type());
 
     /**
-     * Assignment operator
-     * @param cb assign from
+     * Copy assignment operator
+     * @param other assign from
      * @return reference to assigned value
      */
-    CircularBuffer &operator=(const CircularBuffer &cb);
+    CircularBuffer &operator=(CircularBuffer other);
 
     /**
      * Swap circular buffer contents
-     * @param cb buffer to swap with
+     * @param other buffer to swap with
      */
-    void swap(CircularBuffer &cb) noexcept;
+    void swap(CircularBuffer &other) noexcept;
 
     /**
      * Add element at the end of circular buffer.

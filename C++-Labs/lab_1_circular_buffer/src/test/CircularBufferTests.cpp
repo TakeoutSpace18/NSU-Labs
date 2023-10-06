@@ -233,7 +233,7 @@ TEST(CircularBufferTest, SwapWorks) {
     EXPECT_EQ(buf2[1], '2');
     EXPECT_EQ(buf2[2], '3');
 }
-TEST(CircularBufferTest, AssignmentOperatorWorks) {
+TEST(CircularBufferTest, CopyAssignmentOperatorWorks) {
     CircularBuffer buf1 = {'1', '2', '3', '4'};
     CircularBuffer buf2 = {'1', '2', '9', '4'};
     buf1 = buf2;
