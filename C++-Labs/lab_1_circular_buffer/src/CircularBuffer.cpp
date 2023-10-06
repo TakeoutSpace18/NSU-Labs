@@ -34,26 +34,45 @@ CircularBuffer::~CircularBuffer() {
 }
 
 void CircularBuffer::resize(size_t new_size, const value_type &item) {
+    if (new_size <= size_) {
+        size_ = new_size;
+        return;
+    }
+
     if (new_size > capacity()) {
         set_capacity(new_size);
     }
 
-    linearize();
-    std::fill(buffer_ + size_, buffer_ + new_size, item);
+    size_t fill_begin = (buffer_start_ + size_) % capacity_;
+    size_t fill_quantity = new_size - size_;
+
+    size_t first_part_size = std::min(fill_quantity, capacity_ - fill_begin);
+    std::fill_n(buffer_ + fill_begin, first_part_size, item);
+    if (first_part_size < fill_quantity) {
+        size_t second_part_size = fill_quantity - first_part_size;
+        std::fill_n(buffer_, second_part_size, item);
+    }
+
     size_ = new_size;
 }
 
 void CircularBuffer::set_capacity(size_t new_capacity) {
-    size_t new_size = size_;
-    if (new_capacity < size_) {
-        new_size = new_capacity;
+    size_t new_size = std::min(size_, new_capacity);
+
+    auto* new_buffer = new value_type[new_capacity];
+
+    if (buffer_ != nullptr) {
+        size_t first_part_size = std::min(new_size, capacity_ - buffer_start_);
+
+        std::copy_n(buffer_ + buffer_start_, first_part_size, new_buffer);
+        if (first_part_size < new_size) {
+            size_t second_part_size = new_size - first_part_size;
+            std::copy_n(buffer_, second_part_size, new_buffer + first_part_size);
+        }
     }
 
-    linearize();
-    auto* new_buffer = new value_type[new_capacity];
-    std::copy(buffer_, buffer_ + new_size, new_buffer);
-
     delete[] buffer_;
+    buffer_start_ = 0;
     buffer_ = new_buffer;
     capacity_ = new_capacity;
     size_ = new_size;

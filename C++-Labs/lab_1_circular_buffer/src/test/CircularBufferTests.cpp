@@ -16,12 +16,17 @@ TEST(CircularBufferTest, CreatesWithSpecifiedCapacity) {
 
 TEST(CircularBufferTest, SetCapacityWorks) {
     CircularBuffer buf = {1, 2, 3, 4};
+    buf.push_front(0);
     buf.set_capacity(2);
+
     EXPECT_EQ(buf.capacity(), 2);
     EXPECT_EQ(buf.size(), 2);
+    EXPECT_TRUE(buf == (CircularBuffer{0, 1}));
+
     buf.set_capacity(5);
     EXPECT_EQ(buf.capacity(), 5);
     EXPECT_EQ(buf.size(), 2);
+    EXPECT_TRUE(buf == (CircularBuffer{0, 1}));
 }
 
 TEST(CircularBufferTest, CreatesWithSpecifiedCapacityAndSpecifiedItems) {
@@ -86,17 +91,53 @@ TEST(CircularBufferTest, FrontAndBackWorksConst) {
     EXPECT_EQ(buf.back(), '0');
 }
 
-TEST(CircularBufferTest, ResizeWorks) {
-    CircularBuffer buf(5, '0');
-    buf.resize(10, '1');
-    EXPECT_EQ(buf.capacity(), 10);
-    EXPECT_EQ(buf[0], '0');
-    EXPECT_EQ(buf[4], '0');
-    EXPECT_EQ(buf[5], '1');
-    EXPECT_EQ(buf[9], '1');
+TEST(CircularBufferTest, ResizeWorks_withCapacityExpand) {
+    CircularBuffer buf(3, '0');
+    buf.resize(5, '1');
+    EXPECT_EQ(buf.capacity(), 5);
+    EXPECT_EQ(buf.size(), 5);
+    EXPECT_TRUE(buf == (CircularBuffer{'0', '0', '0', '1', '1'}));
+}
+
+TEST(CircularBufferTest, ResizeWorks_withLessSize) {
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.resize(2);
+    EXPECT_EQ(buf.capacity(), 4);
+    EXPECT_EQ(buf.size(), 2);
+    EXPECT_TRUE(buf == (CircularBuffer{1, 2}));
+}
+
+TEST(CircularBufferTest, ResizeWorks_withShiftedBuffer_1) {
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.set_capacity(8);
+    buf.push_front(0);
+    buf.push_front(0);
+    buf.resize(8, 5);
+    EXPECT_EQ(buf.size(), 8);
+    EXPECT_TRUE(buf == (CircularBuffer{0, 0, 1, 2, 3, 4, 5, 5}));
+}
+
+TEST(CircularBufferTest, ResizeWorks_withShiftedBuffer_2) {
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.set_capacity(6);
+    buf.pop_front();
+    buf.pop_front();
+    buf.resize(5, 5);
+    EXPECT_EQ(buf.size(), 5);
+    EXPECT_TRUE(buf == (CircularBuffer{3, 4, 5, 5, 5}));
 }
 
 TEST(CircularBufferTest, PushFrontWorks) {
+    CircularBuffer buf = {'1', '2'};
+    buf.set_capacity(4);
+    buf.push_front('3');
+    EXPECT_EQ(buf[0], '3');
+    EXPECT_EQ(buf[1], '1');
+    EXPECT_EQ(buf[2], '2');
+    EXPECT_EQ(buf.size(), 3);
+}
+
+TEST(CircularBufferTest, PushFrontWorks_withFullBuffer) {
     CircularBuffer buf(3, '0');
     buf.push_front('1');
     buf.push_front('2');
@@ -105,13 +146,39 @@ TEST(CircularBufferTest, PushFrontWorks) {
     EXPECT_EQ(buf[2], '0');
 }
 
-TEST(CircularBufferTest, PushBackWorks) {
+TEST(CircularBufferTest, PushFrontWorks_withZeroCapacity) {
+    CircularBuffer buf;
+    buf.push_front('1');
+    buf.push_front('2');
+    EXPECT_EQ(buf.size(), 0);
+    EXPECT_EQ(buf.capacity(), 0);
+}
+
+TEST(CircularBufferTest, PushBackWorks_withFullBuffer) {
     CircularBuffer buf(3, '0');
     buf.push_back('1');
     buf.push_back('2');
     EXPECT_EQ(buf[0], '0');
     EXPECT_EQ(buf[1], '1');
     EXPECT_EQ(buf[2], '2');
+}
+
+TEST(CircularBufferTest, PushBackWorks_withZeroCapacity) {
+    CircularBuffer buf;
+    buf.push_back('1');
+    buf.push_back('2');
+    EXPECT_EQ(buf.capacity(), 0);
+    EXPECT_EQ(buf.size(), 0);
+}
+
+TEST(CircularBufferTest, PushBackWorks) {
+    CircularBuffer buf = {'1', '2'};
+    buf.set_capacity(3);
+    buf.push_back('3');
+    EXPECT_EQ(buf[0], '1');
+    EXPECT_EQ(buf[1], '2');
+    EXPECT_EQ(buf[2], '3');
+    EXPECT_EQ(buf.size(), 3);
 }
 
 TEST(CircularBufferTest, PopBackWorks) {
@@ -179,7 +246,13 @@ TEST(CircularBufferTest, InsertWorks) {
     EXPECT_EQ(buf[1], '9');
     EXPECT_EQ(buf[2], '0');
     EXPECT_EQ(buf[3], '1');
-
+    buf.pop_back();
+    buf.pop_back();
+    buf.insert(1, '2');
+    EXPECT_EQ(buf.size(), 3);
+    EXPECT_EQ(buf[0], '0');
+    EXPECT_EQ(buf[1], '2');
+    EXPECT_EQ(buf[2], '9');
 }
 
 TEST(CircularBufferTest, EraseWorks) {
@@ -216,7 +289,7 @@ TEST(CircularBufferTest, ReserveWorks) {
 
 TEST(CircularBufferTest, OperatorEqualsWorks) {
     CircularBuffer buf1 = {'1', '2', '3', '4'};
-    CircularBuffer buf2 = {'1', '2', '9', '4'};
+    CircularBuffer buf2 = {'1', '2', '9', '4', '5'};
     CircularBuffer buf3 = {'1', '2', '3', '4'};
     EXPECT_FALSE(buf1 == buf2);
     EXPECT_TRUE(buf1 == buf3);
