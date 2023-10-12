@@ -219,7 +219,7 @@ public:
      * @param first
      * @param last
      */
-    void erase(int first, int last);
+    void erase(size_t first, size_t last);
 
     /**
      * Clear circular buffer

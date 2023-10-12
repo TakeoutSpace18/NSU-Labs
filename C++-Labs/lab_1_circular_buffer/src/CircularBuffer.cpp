@@ -157,10 +157,36 @@ void CircularBuffer::insert(int pos, const value_type &item) {
     buffer_[absolute_pos] = item;
 }
 
-void CircularBuffer::erase(int first, int last) {
-    linearize();
+void CircularBuffer::erase(size_t first, size_t last) {
+    if (first == last) {
+        return;
+    }
+
+    size_t shift_quantity = size() - last;
+    size_t last_absolute = (buffer_start_ + last) % capacity();
+    size_t first_absolute = (buffer_start_ + first) % capacity();
+
+    if (first_absolute <= last_absolute) {
+        size_t first_part_size = std::min(shift_quantity, capacity() - last_absolute);
+        std::copy_n(buffer_ + last_absolute, first_part_size, buffer_ + first_absolute);
+        if (first_part_size < shift_quantity) {
+            size_t second_part_size = std::min(shift_quantity - first_part_size, capacity() - last_absolute);
+            std::copy_n(buffer_, second_part_size, buffer_ + first_absolute + first_part_size);
+            if (first_part_size + second_part_size < shift_quantity) {
+                size_t third_part_size = shift_quantity - first_part_size - second_part_size;
+                std::copy_n(buffer_ + second_part_size, third_part_size, buffer_);
+            }
+        }
+    }
+    else {
+        size_t first_part_size = std::min(shift_quantity, capacity() - first_absolute);
+        std::copy_n(buffer_ + last_absolute, first_part_size, buffer_ + first_absolute);
+        if (first_part_size < shift_quantity) {
+            size_t second_part_size = shift_quantity - first_part_size;
+            std::copy_n(buffer_ + last_absolute + first_part_size, second_part_size, buffer_);
+        }
+    }
     size_ -= (last - first);
-    std::memmove(buffer_ + first, buffer_ + last, capacity() - last);
 }
 
 void CircularBuffer::clear() {

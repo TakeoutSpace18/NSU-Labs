@@ -254,14 +254,37 @@ TEST(CircularBufferTest, InsertWorks) {
     EXPECT_TRUE(buf == (CircularBuffer{9, 2, 0}));
 }
 
-TEST(CircularBufferTest, EraseWorks) {
-    CircularBuffer buf = {'1', '2', '3', '4'};
-    buf.push_front('0');
-    buf.push_front('0');
+TEST(CircularBufferTest, EraseWorks_1) {
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.push_front(0);
+    buf.push_front(0);
     buf.erase(1, 3);
     EXPECT_EQ(buf.size(), 2);
-    EXPECT_EQ(buf[0], '0');
-    EXPECT_EQ(buf[1], '2');
+
+    EXPECT_TRUE(buf == (CircularBuffer{0, 2}));
+}
+
+TEST(CircularBufferTest, EraseWorks_2) {
+    CircularBuffer buf = {1, 2, 3, 4, 5, 6, 7, 8};
+    buf.push_front(0);
+    buf.push_front(0);
+    buf.push_front(0);
+    buf.erase(1, 5);
+    EXPECT_EQ(buf.size(), 4);
+
+    EXPECT_TRUE(buf == (CircularBuffer{0, 3, 4, 5}));
+}
+
+TEST(CircularBufferTest, EraseWorks_3) {
+    CircularBuffer buf = {0, 0, 0, 0, 1, 2, 3, 4};
+    buf.push_back(5);
+    buf.push_back(6);
+    buf.push_back(7);
+    buf.push_back(8);
+    buf.erase(0, 2);
+    EXPECT_EQ(buf.size(), 6);
+
+    EXPECT_TRUE(buf == (CircularBuffer{3, 4, 5, 6, 7, 8}));
 }
 
 TEST(CircularBufferTest, ClearWorks) {
