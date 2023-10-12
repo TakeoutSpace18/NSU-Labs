@@ -238,21 +238,20 @@ TEST(CircularBufferTest, FullWorks) {
 }
 
 TEST(CircularBufferTest, InsertWorks) {
-    CircularBuffer buf = {'1', '2', '3', '4'};
-    buf.push_front('0');
-    buf.push_front('0');
-    buf.insert(1, '9');
-    EXPECT_EQ(buf[0], '0');
-    EXPECT_EQ(buf[1], '9');
-    EXPECT_EQ(buf[2], '0');
-    EXPECT_EQ(buf[3], '1');
+    CircularBuffer buf = {1, 2, 3, 4};
+    buf.push_front(0);
+    buf.push_front(0);
+
+    buf.insert(1, 9);
+    EXPECT_EQ(buf.size(), 4);
+    EXPECT_TRUE(buf == (CircularBuffer{9, 0, 1, 2}));
+
     buf.pop_back();
     buf.pop_back();
-    buf.insert(1, '2');
+
+    buf.insert(1, 2);
     EXPECT_EQ(buf.size(), 3);
-    EXPECT_EQ(buf[0], '0');
-    EXPECT_EQ(buf[1], '2');
-    EXPECT_EQ(buf[2], '9');
+    EXPECT_TRUE(buf == (CircularBuffer{9, 2, 0}));
 }
 
 TEST(CircularBufferTest, EraseWorks) {

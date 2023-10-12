@@ -133,15 +133,34 @@ size_t CircularBuffer::reserve() const {
 }
 
 void CircularBuffer::insert(int pos, const value_type &item) {
-    linearize();
-    if (size() == capacity()) {
-        std::memmove(buffer_ + pos + 1, buffer_ + pos, size() - pos - 1);
+    size_t shift_quantity = size() - pos;
+    size_t absolute_pos = (buffer_start_ + pos) % capacity();
+    size_t first_part_size = std::min(shift_quantity, capacity() - absolute_pos - 1);
+
+    if (first_part_size < shift_quantity) {
+        size_t second_part_size = shift_quantity - first_part_size - 1;
+        std::copy_n(buffer_, second_part_size, buffer_ + 1);
+        buffer_[0] = buffer_[capacity() - 1];
+    }
+
+    std::copy_n(buffer_ + absolute_pos, first_part_size, buffer_ + absolute_pos + 1);
+
+    if (capacity() == size()) {
+        if (pos != 0) {
+            buffer_start_ = (buffer_start_ + 1) % capacity();
+        }
     }
     else {
-        std::memmove(buffer_ + pos + 1, buffer_ + pos, size() - pos);
         ++size_;
     }
-    buffer_[pos] = item;
+
+    buffer_[absolute_pos] = item;
+}
+
+void CircularBuffer::erase(int first, int last) {
+    linearize();
+    size_ -= (last - first);
+    std::memmove(buffer_ + first, buffer_ + last, capacity() - last);
 }
 
 void CircularBuffer::clear() {
@@ -160,12 +179,6 @@ value_type *CircularBuffer::linearize() {
 
 bool CircularBuffer::is_linearized() const {
     return buffer_start_ == 0;
-}
-
-void CircularBuffer::erase(int first, int last) {
-    linearize();
-    size_ -= (last - first);
-    std::memmove(buffer_ + first, buffer_ + last, capacity() - last);
 }
 
 value_type &CircularBuffer::operator[](size_t i) {
