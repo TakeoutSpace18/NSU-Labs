@@ -19,7 +19,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(lab_1_circular_buffer
         src/CircularBuffer.cpp
         src/CircularBuffer.h
-        src/test/CircularBufferTests.cpp)
+        test/CircularBufferTests.cpp)
 
 target_compile_options(lab_1_circular_buffer PRIVATE -Wall -Wpedantic)
 target_link_libraries(lab_1_circular_buffer GTest::gtest_main)
