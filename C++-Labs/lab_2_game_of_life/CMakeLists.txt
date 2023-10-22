@@ -24,14 +24,42 @@ add_executable(lab_2_game_of_life
         src/Application.cpp
         src/Application.h
         src/main.cpp
-        test/EngineTest.cpp
         src/serialize/UniverseSerializerBase.cpp
         src/serialize/UniverseSerializerBase.h
-        src/core/UniverseFactory.cpp
-        src/core/UniverseFactory.h)
+        )
 
-target_compile_options(lab_2_game_of_life PRIVATE -Wall -Wpedantic)
-target_link_libraries(lab_2_game_of_life GTest::gtest_main)
+target_link_libraries(lab_2_game_of_life PRIVATE
+        common
+)
+
 enable_testing()
+add_executable(
+        lab_2_game_of_life_tests
+        src/core/Universe.cpp
+        src/core/Universe.h
+        src/core/Field.cpp
+        src/core/Field.h
+        src/Application.cpp
+        src/Application.h
+        src/serialize/UniverseSerializerBase.cpp
+        src/serialize/UniverseSerializerBase.h
+        test/FieldTests.cpp
+)
+target_link_libraries(
+        lab_2_game_of_life_tests PRIVATE
+        common
+        GTest::gtest_main
+)
+
 include(GoogleTest)
-gtest_discover_tests(lab_2_game_of_life)
+gtest_discover_tests(lab_2_game_of_life_tests)
+
+add_library(common INTERFACE)
+
+target_compile_options(common INTERFACE
+        -Wall -Wextra -Wshadow -Wnon-virtual-dtor
+        -Wold-style-cast
+        -Woverloaded-virtual -Wzero-as-null-pointer-constant
+        -pedantic
+        -D_GLIBCXX_ASSERTIONS
+)
