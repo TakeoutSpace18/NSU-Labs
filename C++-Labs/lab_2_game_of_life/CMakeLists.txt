@@ -44,6 +44,7 @@ add_executable(
         src/serialize/UniverseSerializerBase.cpp
         src/serialize/UniverseSerializerBase.h
         test/FieldTests.cpp
+        test/UniverseTests.cpp
 )
 target_link_libraries(
         lab_2_game_of_life_tests PRIVATE

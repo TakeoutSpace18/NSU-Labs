@@ -14,7 +14,7 @@ public:
     std::vector<bool> &operator[](size_t x);
 
     /// Get cell neighbours count in Moore neighbourhood
-    [[nodiscard]] uint32_t getNeighboursCount(size_t x, size_t y) const;
+    [[nodiscard]] uint8_t getNeighboursCount(size_t x, size_t y) const;
 
     [[nodiscard]] size_t width() const;
     [[nodiscard]] size_t height() const;
