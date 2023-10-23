@@ -16,16 +16,16 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(lab_2_game_of_life
+set(COMMON_SRC
         src/core/Universe.cpp
-        src/core/Universe.h
         src/core/Field.cpp
-        src/core/Field.h
         src/Application.cpp
-        src/Application.h
-        src/main.cpp
         src/serialize/UniverseSerializerBase.cpp
-        src/serialize/UniverseSerializerBase.h
+)
+
+add_executable(lab_2_game_of_life
+        ${COMMON_SRC}
+        src/main.cpp
         )
 
 target_link_libraries(lab_2_game_of_life PRIVATE
@@ -35,14 +35,7 @@ target_link_libraries(lab_2_game_of_life PRIVATE
 enable_testing()
 add_executable(
         lab_2_game_of_life_tests
-        src/core/Universe.cpp
-        src/core/Universe.h
-        src/core/Field.cpp
-        src/core/Field.h
-        src/Application.cpp
-        src/Application.h
-        src/serialize/UniverseSerializerBase.cpp
-        src/serialize/UniverseSerializerBase.h
+        ${COMMON_SRC}
         test/FieldTests.cpp
         test/UniverseTests.cpp
 )
