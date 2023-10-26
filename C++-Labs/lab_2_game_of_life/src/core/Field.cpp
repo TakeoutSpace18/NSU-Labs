@@ -1,6 +1,7 @@
 #include "Field.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 Field::Field(size_t width, size_t height)
  : field_data_(validateSize(width), std::vector<bool>(validateSize(height), false)){
@@ -44,4 +45,12 @@ size_t Field::validateSize(size_t size) {
         throw std::invalid_argument("Field size must be >= 3");
     }
     return size;
+}
+
+Field::Field(std::initializer_list<std::initializer_list<bool>> matrix) {
+    std::copy(matrix.begin(), matrix.end(), std::back_inserter(field_data_));
+}
+
+bool operator==(const Field &lhs, const Field &rhs) {
+    return lhs.field_data_ == rhs.field_data_;
 }

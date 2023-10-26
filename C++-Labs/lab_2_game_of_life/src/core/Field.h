@@ -10,6 +10,7 @@ public:
     Field() = delete;
     /// Create empty field with specified size
     Field(size_t width, size_t height);
+    Field(std::initializer_list<std::initializer_list<bool>> matrix);
 
     std::vector<bool> &operator[](size_t x);
 
@@ -18,6 +19,8 @@ public:
 
     [[nodiscard]] size_t width() const;
     [[nodiscard]] size_t height() const;
+
+    friend bool operator==(const Field& lhs, const Field& rhs);
 
 private:
     std::vector<std::vector<bool>> field_data_;
