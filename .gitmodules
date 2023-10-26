@@ -1,0 +1,3 @@
+[submodule "C++-Labs/lab_2_game_of_life/third-party/imgui"]
+	path = C++-Labs/lab_2_game_of_life/third-party/imgui
+	url = https://github.com/ocornut/imgui.git
