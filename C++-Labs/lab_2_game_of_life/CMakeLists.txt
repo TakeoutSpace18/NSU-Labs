@@ -7,6 +7,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(src)
 
+# Dear ImGui
+set(IMGUI_DIR ./third-party/imgui)
+include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
+
+find_package(glfw3 3.3 REQUIRED)
+find_package(Vulkan REQUIRED)
+
+set(IMGUI_SRC
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp)
+
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -21,15 +37,20 @@ set(COMMON_SRC
         src/core/Field.cpp
         src/Application.cpp
         src/serialize/UniverseSerializerBase.cpp
+        src/frontend/ImguiFrontend.cpp
+        src/frontend/ImguiFrontend.h
 )
 
 add_executable(lab_2_game_of_life
         ${COMMON_SRC}
+        ${IMGUI_SRC}
         src/main.cpp
         )
 
 target_link_libraries(lab_2_game_of_life PRIVATE
         common
+        glfw
+        Vulkan::Vulkan
 )
 
 enable_testing()
@@ -48,7 +69,8 @@ target_link_libraries(
 include(GoogleTest)
 gtest_discover_tests(lab_2_game_of_life_tests)
 
-add_library(common INTERFACE)
+add_library(common INTERFACE
+        src/frontend/vulkan_initialization.cpp)
 
 target_compile_options(common INTERFACE
         -Wall -Wextra -Wshadow -Wnon-virtual-dtor
@@ -57,3 +79,4 @@ target_compile_options(common INTERFACE
         -pedantic
         -D_GLIBCXX_ASSERTIONS
 )
+

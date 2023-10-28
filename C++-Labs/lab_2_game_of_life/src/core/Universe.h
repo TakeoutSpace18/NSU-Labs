@@ -16,6 +16,7 @@ public:
 
     [[nodiscard]] size_t width() const;
     [[nodiscard]] size_t height() const;
+    Field &field();
 
     template<class T>
     void setRules(T&& neighbours_to_born, T&& neighbours_to_survive) {

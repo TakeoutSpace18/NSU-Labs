@@ -46,3 +46,7 @@ Universe::Universe(Field &&field)
 
 }
 
+Field &Universe::field() {
+    return main_field_;
+}
+

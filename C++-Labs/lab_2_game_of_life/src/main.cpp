@@ -1,6 +1,6 @@
-#include <cstdlib>
+#include "Application.h"
 
 int main(int argc, char *argv[]) {
-
-    return EXIT_SUCCESS;
+    Application app;
+    return app.launch(argc, argv);
 }
