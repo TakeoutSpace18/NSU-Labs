@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "frontend/ImguiFrontend.h"
+#include "frontend/UIRenderer.h"
 #include "core/Universe.h"
 
 int Application::launch(int argc, char **argv) {
@@ -18,7 +18,7 @@ int Application::launch(int argc, char **argv) {
     std::set<uint8_t> survive = {2, 3};
     universe->setRules(std::move(born), std::move(survive));
 
-    auto frontend = std::make_unique<ImguiFrontend>();
+    auto frontend = std::make_unique<UIRenderer>();
     frontend->initialize();
     return frontend->mainLoop(universe);
 }

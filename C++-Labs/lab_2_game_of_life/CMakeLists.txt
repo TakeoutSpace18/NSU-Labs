@@ -37,15 +37,17 @@ set(COMMON_SRC
         src/core/Field.cpp
         src/Application.cpp
         src/serialize/UniverseSerializerBase.cpp
-        src/frontend/ImguiFrontend.cpp
-        src/frontend/ImguiFrontend.h
+        src/frontend/UIRenderer.cpp
+        src/frontend/UIRenderer.h
 )
 
 add_executable(lab_2_game_of_life
         ${COMMON_SRC}
         ${IMGUI_SRC}
         src/main.cpp
-        )
+        src/frontend/GameOfLifeUI.cpp
+        src/frontend/GameOfLifeUI.h
+)
 
 target_link_libraries(lab_2_game_of_life PRIVATE
         common

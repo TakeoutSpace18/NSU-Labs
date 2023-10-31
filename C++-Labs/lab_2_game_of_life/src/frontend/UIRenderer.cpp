@@ -1,4 +1,4 @@
-#include "ImguiFrontend.h"
+#include "UIRenderer.h"
 #include "frontend/vulkan_initialization.cpp"
 
 #define GLFW_INCLUDE_NONE
@@ -19,8 +19,7 @@
 #define IMGUI_VULKAN_DEBUG_REPORT
 #endif
 
-
-int ImguiFrontend::initialize() {
+int UIRenderer::initialize() {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
@@ -62,7 +61,7 @@ int ImguiFrontend::initialize() {
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
+//    ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(window_, true);
@@ -116,14 +115,13 @@ int ImguiFrontend::initialize() {
     }
 }
 
-int ImguiFrontend::mainLoop(std::shared_ptr<Universe> currUniverse) {
+int UIRenderer::mainLoop() {
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     ImGuiIO& io = ImGui::GetIO();
     VkResult err;
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 
     ImGui::GetStyle().ScaleAllSizes(2);
     // Main loop
@@ -154,17 +152,8 @@ int ImguiFrontend::mainLoop(std::shared_ptr<Universe> currUniverse) {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-        ImGui::ShowDemoWindow(&show_demo_window);
 
-        {
-            ImGui::Begin("Field");
-            if (ImGui::Button("Tick")) {
-                currUniverse->tick();
-            }
-            drawField(currUniverse->field());
-            ImGui::End();
-        }
+        this->onFrameUpdate();
 
         // Rendering
         ImGui::Render();
@@ -195,20 +184,4 @@ int ImguiFrontend::mainLoop(std::shared_ptr<Universe> currUniverse) {
     glfwTerminate();
 
     return 0;
-}
-
-void ImguiFrontend::drawField(Field &currField) {
-    float cell_size = 50;
-    ImVec2 startPos = ImGui::GetCursorScreenPos();
-    ImVec2 currPos = startPos;
-
-    for (size_t cell_x = 0; cell_x < currField.width(); ++cell_x) {
-        for (size_t cell_y = 0; cell_y < currField.height(); ++cell_y) {
-            ImU32 color = currField[cell_x][cell_y] ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255);
-            ImGui::GetWindowDrawList()->AddRectFilled(currPos, ImVec2(currPos.x + 50, currPos.y + 50), color);
-            currPos.x += cell_size;
-        }
-        currPos.x = startPos.x;
-        currPos.y += cell_size;
     }
-}
