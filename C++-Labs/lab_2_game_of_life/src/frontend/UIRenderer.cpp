@@ -185,3 +185,7 @@ int UIRenderer::mainLoop() {
 
     return 0;
     }
+
+UIRenderer::UIRenderer() {
+    initialize();
+}

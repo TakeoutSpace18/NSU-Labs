@@ -16,6 +16,7 @@ public:
     int mainLoop();
     virtual void onFrameUpdate() = 0;
 
+    virtual ~UIRenderer() = default;
 private:
     GLFWwindow *window_;
 };
