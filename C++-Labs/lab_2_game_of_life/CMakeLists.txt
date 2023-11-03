@@ -39,6 +39,10 @@ set(COMMON_SRC
         src/serialize/UniverseSerializerBase.cpp
         src/frontend/UIRenderer.cpp
         src/frontend/UIRenderer.h
+        src/utils/CommandLineArguments.cpp
+        src/utils/CommandLineArguments.h
+        src/utils/Logger.cpp
+        src/utils/Logger.h
 )
 
 add_executable(lab_2_game_of_life
@@ -59,6 +63,7 @@ add_executable(
         ${COMMON_SRC}
         test/FieldTests.cpp
         test/UniverseTests.cpp
+        test/CommandlineArgumentsTests.cpp
 )
 target_link_libraries(
         lab_2_game_of_life_tests PRIVATE

@@ -5,10 +5,11 @@
 
 #include "core/Universe.h"
 #include "frontend/UIRenderer.h"
+#include "utils/CommandLineArguments.h"
 
 class Application : public UIRenderer {
 public:
-    int launch(int argc, char* argv[]);
+    int launch(const CommandLineArguments &cmdArgs);
 
     void onFrameUpdate() override;
     static void drawField(Field &currField);

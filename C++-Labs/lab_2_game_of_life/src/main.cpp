@@ -2,5 +2,5 @@
 
 int main(int argc, char *argv[]) {
     Application app;
-    return app.launch(argc, argv);
+    return app.launch({argc, argv});
 }

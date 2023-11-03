@@ -6,7 +6,7 @@
 #include "core/Universe.h"
 #include "imgui.h"
 
-int Application::launch(int argc, char **argv) {
+int Application::launch(const CommandLineArguments &cmdArgs) {
     current_universe_ = std::make_unique<Universe>(std::initializer_list<std::initializer_list<bool>>{
         {1, 0, 0, 0, 0},
         {1, 1, 0, 0, 0},
