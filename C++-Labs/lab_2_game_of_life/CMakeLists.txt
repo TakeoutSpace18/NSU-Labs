@@ -35,10 +35,7 @@ FetchContent_MakeAvailable(googletest)
 set(COMMON_SRC
         src/core/Universe.cpp
         src/core/Field.cpp
-        src/Application.cpp
         src/serialize/UniverseSerializerBase.cpp
-        src/frontend/UIRenderer.cpp
-        src/frontend/UIRenderer.h
         src/utils/CommandLineArguments.cpp
         src/utils/CommandLineArguments.h
         src/utils/Logger.cpp
@@ -48,6 +45,9 @@ set(COMMON_SRC
 add_executable(lab_2_game_of_life
         ${COMMON_SRC}
         ${IMGUI_SRC}
+        src/frontend/UIRenderer.cpp
+        src/frontend/UIRenderer.h
+        src/Application.cpp
         src/main.cpp
 )
 
