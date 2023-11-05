@@ -3,7 +3,7 @@
 #include "core/Universe.h"
 
 TEST(UniverseTests, TickWorks) {
-    Universe universe({
+    Universe universe(Field{
         {1, 0, 0, 0, 0},
         {1, 1, 0, 0, 0},
         {1, 0, 0, 0, 0},

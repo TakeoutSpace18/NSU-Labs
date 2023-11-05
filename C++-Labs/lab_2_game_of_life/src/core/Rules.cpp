@@ -3,10 +3,12 @@
 #include "Rules.h"
 
 Rules::Rules(const std::set<uint8_t>& neighbours_to_born, const std::set<uint8_t>& neighbours_to_survive)
- : neighbours_to_born_(neighbours_to_born), neighbours_to_survive_(neighbours_to_survive) {}
+ : neighbours_to_born_(neighbours_to_born),
+   neighbours_to_survive_(neighbours_to_survive) {}
 
 Rules::Rules(std::set<uint8_t>&& neighbours_to_born, std::set<uint8_t>&& neighbours_to_survive)
- : neighbours_to_born_(std::move(neighbours_to_born)), neighbours_to_survive_(std::move(neighbours_to_survive)) {}
+ : neighbours_to_born_(std::move(neighbours_to_born)),
+   neighbours_to_survive_(std::move(neighbours_to_survive)) {}
 
 bool Rules::canBorn(uint8_t neighbours_count) const {
     return neighbours_to_born_.contains(neighbours_count);
