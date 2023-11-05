@@ -12,6 +12,7 @@ public:
     Field(size_t width, size_t height);
     Field(std::initializer_list<std::initializer_list<bool>> matrix);
 
+    const std::vector<bool> &operator[](size_t x) const;
     std::vector<bool> &operator[](size_t x);
 
     /// Get cell neighbours count in Moore neighbourhood

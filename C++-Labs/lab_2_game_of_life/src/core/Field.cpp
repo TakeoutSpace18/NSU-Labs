@@ -7,6 +7,9 @@ Field::Field(size_t width, size_t height)
  : field_data_(validateSize(width), std::vector<bool>(validateSize(height), false)){
 }
 
+const std::vector<bool> &Field::operator[](size_t x) const {
+    return field_data_[x];
+}
 std::vector<bool> &Field::operator[](size_t x) {
     return field_data_[x];
 }

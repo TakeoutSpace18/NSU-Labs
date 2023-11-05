@@ -11,9 +11,7 @@ TEST(UniverseTests, TickWorks) {
         {0, 0, 0, 0, 1}
     });
 
-    std::set<uint8_t> born = {3};
-    std::set<uint8_t> survive = {2, 3};
-    universe.setRules(std::move(born), std::move(survive));
+    universe.setRules(Rules::ConwayGameOfLife());
 
     const Field& result = universe.tick();
 

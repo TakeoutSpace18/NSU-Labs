@@ -6,10 +6,10 @@ const Field& Universe::tick() {
     for (size_t x = 0; x < this->width(); ++x) {
         for (size_t y = 0; y < this->height(); ++y) {
             uint8_t neighbours_count = main_field_.getNeighboursCount(x, y);
-            if (neighbours_to_born_.contains(neighbours_count)) {
+            if (rules_.canBorn(neighbours_count)) {
                 twin_field_[x][y] = true;
             }
-            else if (neighbours_to_survive_.contains(neighbours_count)) {
+            else if (rules_.canSurvive(neighbours_count)) {
                 twin_field_[x][y] = main_field_[x][y];
             }
             else {
@@ -36,17 +36,26 @@ size_t Universe::width() const {
     return main_field_.width();
 }
 
-Universe::Universe(const Field &field)
-: main_field_(field), twin_field_(main_field_.width(), main_field_.height()) {
+Universe::Universe(const Field& field)
+: main_field_(field),
+  twin_field_(main_field_.width(), main_field_.height()),
+  rules_(Rules::ConwayGameOfLife()) {}
 
-}
+Universe::Universe(Field&& field)
+: main_field_(std::move(field)),
+  twin_field_(main_field_.width(), main_field_.height()),
+  rules_(Rules::ConwayGameOfLife()) {}
 
-Universe::Universe(Field &&field)
-: main_field_(std::move(field)), twin_field_(main_field_.width(), main_field_.height()){
-
-}
-
-Field &Universe::field() {
+Field & Universe::field() {
     return main_field_;
+}
+
+
+const std::string &Universe::name() const {
+    return name_;
+}
+
+const Rules &Universe::rules() const {
+    return rules_;
 }
 

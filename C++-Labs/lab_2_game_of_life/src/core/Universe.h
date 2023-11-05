@@ -4,6 +4,7 @@
 #include <set>
 
 #include "Field.h"
+#include "Rules.h"
 
 class Universe {
 public:
@@ -14,22 +15,23 @@ public:
     const Field& tick();
     const Field& tick_n(size_t n);
 
+    [[nodiscard]] const std::string& name() const;
     [[nodiscard]] size_t width() const;
     [[nodiscard]] size_t height() const;
-    Field &field();
+
+    [[nodiscard]] const Rules& rules() const;
+    Field& field();
 
     template<class T>
-    void setRules(T&& neighbours_to_born, T&& neighbours_to_survive) {
-        neighbours_to_born_ = std::forward<T>(neighbours_to_born);
-        neighbours_to_survive_ = std::forward<T>(neighbours_to_survive);
+    void setRules(T&& rules) {
+        rules_ = std::forward<T>(rules);
     }
 
 private:
+    std::string name_;
     Field main_field_;
     Field twin_field_;
-    std::string name_;
-    std::set<uint8_t> neighbours_to_born_;
-    std::set<uint8_t> neighbours_to_survive_;
+    Rules rules_;
 };
 
 #endif //LAB_2_GAME_OF_LIFE_UNIVERSE_H

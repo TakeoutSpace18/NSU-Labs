@@ -12,7 +12,7 @@ public:
     int launch(const CommandLineArguments &cmdArgs);
 
     void onFrameUpdate() override;
-    static void drawField(Field &currField);
+    static void drawField(const Field &currField);
 
     ~Application() override = default;
 

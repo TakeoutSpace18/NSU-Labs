@@ -15,14 +15,12 @@ int Application::launch(const CommandLineArguments &cmdArgs) {
         {0, 0, 0, 0, 1}
     });
 
-    std::set<uint8_t> born = {3};
-    std::set<uint8_t> survive = {2, 3};
-    current_universe_->setRules(std::move(born), std::move(survive));
+    current_universe_->setRules(Rules::ConwayGameOfLife());
 
     return mainLoop();
 }
 
-void Application::drawField(Field &currField) {
+void Application::drawField(const Field &currField) {
     float cell_size = 50;
     ImVec2 startPos = ImGui::GetCursorScreenPos();
     ImVec2 currPos = startPos;

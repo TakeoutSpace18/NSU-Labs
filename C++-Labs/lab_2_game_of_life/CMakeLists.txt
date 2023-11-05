@@ -35,11 +35,14 @@ FetchContent_MakeAvailable(googletest)
 set(COMMON_SRC
         src/core/Universe.cpp
         src/core/Field.cpp
-        src/serialize/UniverseSerializerBase.cpp
         src/utils/CommandLineArguments.cpp
         src/utils/CommandLineArguments.h
         src/utils/Logger.cpp
         src/utils/Logger.h
+        src/serialize/LifeASCIISerializer.cpp
+        src/serialize/LifeASCIISerializer.h
+        src/core/Rules.cpp
+        src/core/Rules.h
 )
 
 add_executable(lab_2_game_of_life
@@ -64,6 +67,7 @@ add_executable(
         test/FieldTests.cpp
         test/UniverseTests.cpp
         test/CommandlineArgumentsTests.cpp
+        test/RulesTests.cpp
 )
 target_link_libraries(
         lab_2_game_of_life_tests PRIVATE
