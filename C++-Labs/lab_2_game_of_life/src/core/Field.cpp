@@ -40,6 +40,9 @@ size_t Field::width() const {
 }
 
 size_t Field::height() const {
+    if (this->width() == 0) {
+        return 0;
+    }
     return this->field_data_[0].size();
 }
 
@@ -56,4 +59,13 @@ Field::Field(std::initializer_list<std::initializer_list<bool>> matrix) {
 
 bool operator==(const Field &lhs, const Field &rhs) {
     return lhs.field_data_ == rhs.field_data_;
+}
+
+Field &Field::resize(size_t width, size_t height) {
+    field_data_.resize(validateSize(width));
+    for (auto &col : field_data_) {
+        col.resize(validateSize(height));
+    }
+
+    return *this;
 }

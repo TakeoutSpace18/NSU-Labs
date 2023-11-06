@@ -21,7 +21,7 @@ bool Rules::canSurvive(uint8_t neighbours_count) const {
 Rules Rules::FromMCellNotation(const std::string &notation) {
     size_t separator_pos = notation.find('/');
     if (separator_pos == std::string::npos) {
-        throw std::runtime_error("Error while parsing MCell notation: separator_pos not found");
+        throw std::runtime_error("Error while parsing MCell notation: separator not found");
     }
 
     auto charToDigit = [](char c) {return c - '0';};

@@ -43,3 +43,14 @@ const Field &Universe::field() const {
 const Rules &Universe::rules() const {
     return rules_;
 }
+
+Universe &Universe::resize(size_t width, size_t height) {
+    main_field_.resize(width, height);
+    twin_field_.resize(width, height);
+    return *this;
+}
+
+Universe::Universe()
+: name_("Unnamed"),
+  rules_(Rules::ConwayGameOfLife())
+  {}

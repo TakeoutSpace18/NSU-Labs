@@ -8,7 +8,9 @@
 
 class Universe {
 public:
-    Universe() = delete;
+
+    /// Create unnamed universe with zero sized field and conway game of life rules.
+    Universe();
 
     template<class T1, class T2, class T3>
     explicit Universe(T1&& field, T2&& rules, T3&& name)
@@ -38,6 +40,8 @@ public:
     [[nodiscard]] const Rules& rules() const;
     [[nodiscard]] const Field& field() const;
     Field& field();
+
+    Universe& resize(size_t width, size_t height);
 
     template<class T>
     void setRules(T&& rules) {

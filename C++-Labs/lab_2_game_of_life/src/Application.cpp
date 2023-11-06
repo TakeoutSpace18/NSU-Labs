@@ -1,22 +1,26 @@
 #include "Application.h"
 
-#include <memory>
+#include <filesystem>
 
-#include "frontend/UIRenderer.h"
-#include "core/Universe.h"
 #include "imgui.h"
 
+#include "serialize/LifeASCIISerializer.h"
+#include "core/Universe.h"
+
 int Application::launch(const CommandLineArguments &cmdArgs) {
-    current_universe_ = std::make_unique<Universe>(std::initializer_list<std::initializer_list<bool>>{
-        {1, 0, 0, 0, 0},
-        {1, 1, 0, 0, 0},
-        {1, 0, 0, 0, 0},
-        {1, 0, 0, 1, 0},
-        {0, 0, 0, 0, 1}
-    });
-
-    current_universe_->setRules(Rules::ConwayGameOfLife());
-
+    auto input_path = cmdArgs.getOption<std::filesystem::path>("input", "i");
+    if (input_path) {
+        current_universe_ = LifeASCIISerializer::ReadFromFile(*input_path);
+    }
+    else {
+        current_universe_ = std::make_unique<Universe>(std::initializer_list<std::initializer_list<bool>>{
+                {1, 0, 0, 0, 0},
+                {1, 1, 0, 0, 0},
+                {1, 0, 0, 0, 0},
+                {1, 0, 0, 1, 0},
+                {0, 0, 0, 0, 1}
+        });
+    }
     return mainLoop();
 }
 
@@ -38,8 +42,6 @@ void Application::drawField(const Field &currField) {
 
 void Application::onFrameUpdate() {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-    ImGui::ShowDemoWindow();
-
     {
         ImGui::Begin("Field");
         if (ImGui::Button("Tick")) {

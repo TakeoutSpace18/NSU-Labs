@@ -12,11 +12,11 @@ class CommandLineArguments {
 public:
     CommandLineArguments(int argc, char *argv[]);
 
-    std::optional<std::string_view> getOption(const std::string &option_name);
-    std::optional<std::string_view> getOption(const std::string &option_name, const std::string &alias);
+    [[nodiscard]] std::optional<std::string_view> getOption(const std::string &option_name) const;
+    [[nodiscard]] std::optional<std::string_view> getOption(const std::string &option_name, const std::string &alias) const;
 
     template<class T>
-    std::optional<T> getOption(const std::string &option_name) {
+    std::optional<T> getOption(const std::string &option_name) const {
         auto option = getOption(option_name);
         if (option) {
             T converted;
@@ -34,7 +34,7 @@ public:
     }
 
     template<class T>
-    std::optional<T> getOption(const std::string &option_name, const std::string &alias) {
+    std::optional<T> getOption(const std::string &option_name, const std::string &alias) const {
         auto full_named = getOption<T>(option_name);
         auto alias_named = getOption<T>(alias);
         if (full_named) {

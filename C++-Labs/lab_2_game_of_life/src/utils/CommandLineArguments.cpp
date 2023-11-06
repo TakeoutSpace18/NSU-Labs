@@ -42,7 +42,7 @@ CommandLineArguments::CommandLineArguments(int argc, char **argv) {
 
 }
 
-std::optional<std::string_view> CommandLineArguments::getOption(const std::string &option_name) {
+std::optional<std::string_view> CommandLineArguments::getOption(const std::string &option_name) const {
     auto found = options_.find(option_name);
     if (found != options_.end()) {
         return found->second;
@@ -51,7 +51,7 @@ std::optional<std::string_view> CommandLineArguments::getOption(const std::strin
 }
 
 std::optional<std::string_view>
-CommandLineArguments::getOption(const std::string &option_name, const std::string &alias) {
+CommandLineArguments::getOption(const std::string &option_name, const std::string &alias) const {
     auto full_named = getOption(option_name);
     auto alias_named = getOption(alias);
     if (full_named) {

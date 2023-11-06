@@ -8,8 +8,14 @@
 
 class LifeASCIISerializer {
 public:
-    static void writeToFile(const std::filesystem::path& path, const Universe& universe);
-    static std::unique_ptr<Universe> readFromFile(const std::filesystem::path& path);
+    static void WriteToFile(const std::filesystem::path& path, const Universe& universe);
+    static std::unique_ptr<Universe> ReadFromFile(const std::filesystem::path& path);
+
+private:
+    class ParseError : public std::runtime_error {
+    public:
+        ParseError(const std::string& line, const std::string& message);
+    };
 };
 
 
