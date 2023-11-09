@@ -3,6 +3,7 @@
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
 
 #include <memory>
@@ -11,13 +12,25 @@
 
 class UIRenderer {
 public:
-    UIRenderer();
-    int initialize();
-    int mainLoop();
+
+    struct Config {
+        int window_width;
+        int window_height;
+        std::string window_title;
+    };
+
+    UIRenderer() = default;
+    int run(Config config);
+
     virtual void onFrameUpdate() = 0;
 
     virtual ~UIRenderer() = default;
+
 private:
+    int initialize();
+    int mainLoop();
+
+    Config config_;
     GLFWwindow *window_;
 };
 

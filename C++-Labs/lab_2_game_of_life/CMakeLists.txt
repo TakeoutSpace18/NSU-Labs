@@ -18,6 +18,7 @@ set(IMGUI_SRC
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
         ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
         ${IMGUI_DIR}/imgui_draw.cpp
         ${IMGUI_DIR}/imgui_demo.cpp
         ${IMGUI_DIR}/imgui_tables.cpp
@@ -43,6 +44,8 @@ set(COMMON_SRC
         src/serialize/LifeASCIISerializer.h
         src/core/Rules.cpp
         src/core/Rules.h
+        src/utils/Vec2.hpp
+        src/frontend/imgui_user_config.h
 )
 
 add_executable(lab_2_game_of_life

@@ -18,6 +18,10 @@ public:
 
 private:
     std::unique_ptr<Universe> current_universe_;
+    bool is_playing_;
+
+    void fieldWindowUpdate() const;
+    void controlWindowUpdate();
 };
 
 #endif //LAB_2_GAME_OF_LIFE_APPLICATION_H

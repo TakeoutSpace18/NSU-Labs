@@ -10,6 +10,7 @@
 
 #include <cstdio>          // printf, fprintf
 #include <cstdlib>         // abort
+#include <utility>
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
@@ -26,7 +27,7 @@ int UIRenderer::initialize() {
 
     // Create window with Vulkan context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window_ = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+Vulkan example", nullptr, nullptr);
+    window_ = glfwCreateWindow(config_.window_width, config_.window_height, config_.window_title.c_str(), nullptr, nullptr);
     if (!glfwVulkanSupported())
     {
         printf("GLFW: Vulkan Not Supported\n");
@@ -186,6 +187,8 @@ int UIRenderer::mainLoop() {
     return 0;
     }
 
-UIRenderer::UIRenderer() {
+int UIRenderer::run(UIRenderer::Config config) {
+    config_ = std::move(config);
     initialize();
+    return mainLoop();
 }
