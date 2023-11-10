@@ -32,18 +32,28 @@ int Application::launch(const CommandLineArguments &cmdArgs) {
     return UIRenderer::run({2000, 1300, "Game of life"});
 }
 
-void Application::drawField(const Field &currField) {
+void Application::updateField(Field &curr_field) const {
     constexpr auto dead_cell_color = IM_COL32(38, 209, 0, 255);
     constexpr auto alive_cell_color = IM_COL32(227, 255, 255, 255);
     constexpr auto border_color = IM_COL32(0, 0, 0, 255);
 
-    float cell_size = 50;
+    float cell_size = (ImGui::GetWindowWidth() - 2 * ImGui::GetStyle().WindowPadding.x) / static_cast<float>(curr_field.width());
     Vec2f startPos = ImGui::GetCursorScreenPos();
     Vec2f currPos = startPos;
 
-    for (size_t cell_x = 0; cell_x < currField.width(); ++cell_x) {
-        for (size_t cell_y = 0; cell_y < currField.height(); ++cell_y) {
-            ImU32 color = currField[cell_x][cell_y] ? dead_cell_color : alive_cell_color;
+    if (ImGui::IsMouseHoveringRect(startPos, startPos + Vec2f{cell_size * curr_field.width(), cell_size * curr_field.height()})) {
+        if (ImGui::IsMouseClicked(0)) {
+            Vec2f mouse_pos = ImGui::GetMousePos();
+            mouse_pos -= startPos;
+            size_t cell_x = mouse_pos.x / cell_size;
+            size_t cell_y = mouse_pos.y / cell_size;
+            curr_field[cell_x][cell_y] = !curr_field[cell_x][cell_y];
+        }
+    }
+
+    for (size_t cell_x = 0; cell_x < curr_field.width(); ++cell_x) {
+        for (size_t cell_y = 0; cell_y < curr_field.height(); ++cell_y) {
+            ImU32 color = curr_field[cell_x][cell_y] ? dead_cell_color : alive_cell_color;
             ImGui::GetWindowDrawList()->AddRectFilled(currPos, currPos + Vec2f(cell_size, cell_size), color);
             ImGui::GetWindowDrawList()->AddRect(currPos, currPos + Vec2f(cell_size, cell_size), border_color);
             currPos.y += cell_size;
@@ -51,6 +61,7 @@ void Application::drawField(const Field &currField) {
         currPos.y = startPos.y;
         currPos.x += cell_size;
     }
+
 }
 
 void Application::onFrameUpdate() {
@@ -67,6 +78,18 @@ void Application::controlWindowUpdate() {
     ImGui::SameLine();
     if (ImGui::Button("Play")) {
         is_playing_ = !is_playing_;
+    }
+
+    static int field_size[2] = {
+            static_cast<int>(current_universe_->field().width()),
+            static_cast<int>(current_universe_->field().height())
+    };
+    if (ImGui::SliderInt2("Field size", field_size, 3, 200)) {
+        current_universe_->resize(field_size[0], field_size[1]);
+    }
+
+    if (ImGui::SliderInt("Speed", reinterpret_cast<int*>(&play_speed), 1, 100)) {
+        delay_between_ticks_ = std::chrono::milliseconds(speedToDelay(play_speed));
     }
 
     static std::string path;
@@ -86,12 +109,12 @@ void Application::fieldWindowUpdate() const {
 
     static auto time_at_last_tick = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
-    if (is_playing_ && (now - time_at_last_tick) > 50ms) {
+    if (is_playing_ && (now - time_at_last_tick) > delay_between_ticks_) {
         time_at_last_tick = now;
         current_universe_->tick();
     }
 
-    drawField(current_universe_->field());
+    updateField(current_universe_->field());
     ImGui::End();
 }
 
@@ -113,4 +136,11 @@ int Application::offlineMode(const CommandLineArguments &cmdArgs) {
         LifeASCIISerializer::WriteToFile("./output.life", *current_universe_);
     }
     return EXIT_SUCCESS;
+}
+
+Application::Application()
+: play_speed(1), delay_between_ticks_(speedToDelay(play_speed)), is_playing_(false) { }
+
+std::chrono::milliseconds Application::speedToDelay(uint32_t speed) {
+    return std::chrono::milliseconds(1000 / speed);
 }
