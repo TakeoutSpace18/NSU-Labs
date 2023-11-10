@@ -82,7 +82,7 @@ int UIRenderer::initialize() {
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 
-    ImFont* font = io.Fonts->AddFontFromFileTTF("resources/Kanit-Regular.ttf", 32.0f);
+    ImFont* font = io.Fonts->AddFontFromFileTTF("resources/fonts/Kanit-Regular.ttf", 32.0f);
     IM_ASSERT(font != nullptr);
 
     // Upload Fonts
