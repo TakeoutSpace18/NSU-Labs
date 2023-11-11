@@ -208,22 +208,26 @@ void Application::openUniverse(const std::filesystem::path &path) {
 
 void Application::rulesSelector() {
     auto selectorCellSize = Vec2f(40, 40);
+    auto born_flags = current_universe_->rules().bornFlags();
+    auto survive_flags = current_universe_->rules().surviveFlags();
 
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
     ImGui::Text("Born:");
     ImGui::SameLine(120);
     for (int i = 0; i < 8; i++) {
         if (i > 0) ImGui::SameLine();
-        if (ImGui::Selectable((std::to_string(i) + "##born").c_str(), neighbours_to_born_flags_[i], 0, selectorCellSize)) {
-                neighbours_to_born_flags_[i].flip();
+        if (ImGui::Selectable((std::to_string(i) + "##born").c_str(), born_flags[i], 0, selectorCellSize)) {
+                born_flags[i].flip();
+                current_universe_->setRules(Rules{born_flags, survive_flags});
         }
     }
     ImGui::Text("Survive:");
     ImGui::SameLine(120);
     for (int i = 0; i < 8; i++) {
         if (i > 0) ImGui::SameLine();
-        if (ImGui::Selectable((std::to_string(i) + "##survive").c_str(), neighbours_to_survive_flags_[i], 0, selectorCellSize)) {
-            neighbours_to_survive_flags_[i].flip();
+        if (ImGui::Selectable((std::to_string(i) + "##survive").c_str(), survive_flags[i], 0, selectorCellSize)) {
+            survive_flags[i].flip();
+            current_universe_->setRules(Rules{born_flags, survive_flags});
         }
     }
     ImGui::PopStyleVar();

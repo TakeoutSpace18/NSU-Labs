@@ -2,20 +2,22 @@
 #include <algorithm>
 #include "Rules.h"
 
-Rules::Rules(const std::set<uint8_t>& neighbours_to_born, const std::set<uint8_t>& neighbours_to_survive)
- : neighbours_to_born_(neighbours_to_born),
-   neighbours_to_survive_(neighbours_to_survive) {}
-
-Rules::Rules(std::set<uint8_t>&& neighbours_to_born, std::set<uint8_t>&& neighbours_to_survive)
- : neighbours_to_born_(std::move(neighbours_to_born)),
-   neighbours_to_survive_(std::move(neighbours_to_survive)) {}
+Rules::Rules(const std::initializer_list<uint8_t>& neighbours_to_born,
+             const std::initializer_list<uint8_t>& neighbours_to_survive) {
+    for (const auto& i : neighbours_to_born) {
+        neighbours_to_born_[i] = true;
+    }
+    for (const auto& i : neighbours_to_survive) {
+        neighbours_to_survive_[i] = true;
+    }
+}
 
 bool Rules::canBorn(uint8_t neighbours_count) const {
-    return neighbours_to_born_.contains(neighbours_count);
+    return neighbours_to_born_[neighbours_count];
 }
 
 bool Rules::canSurvive(uint8_t neighbours_count) const {
-    return neighbours_to_survive_.contains(neighbours_count);
+    return neighbours_to_survive_[neighbours_count];
 }
 
 Rules Rules::FromMCellNotation(const std::string &notation) {
@@ -26,22 +28,22 @@ Rules Rules::FromMCellNotation(const std::string &notation) {
 
     auto charToDigit = [](char c) {return c - '0';};
 
-    std::set<uint8_t> neighbours_to_born;
-    std::set<uint8_t> neighbours_to_survive;
+    std::bitset<9> neighbours_to_born;
+    std::bitset<9> neighbours_to_survive;
 
     std::for_each_n(notation.cbegin(),separator_pos, [&](char c) {
-        if (std::isdigit(c)) {
-            neighbours_to_born.insert(charToDigit(c));
+        if (std::isdigit(c) && c <= '8') {
+            neighbours_to_born[charToDigit(c)] = true;
         }
     });
 
     std::for_each(notation.cbegin() + separator_pos, notation.cend(), [&](char c) {
-        if (std::isdigit(c)) {
-            neighbours_to_survive.insert(charToDigit(c));
+        if (std::isdigit(c) && c <= '8') {
+            neighbours_to_survive[charToDigit(c)] = true;
         }
     });
 
-    return {std::move(neighbours_to_born), std::move(neighbours_to_survive)};
+    return {neighbours_to_born, neighbours_to_survive};
 }
 
 bool operator==(const Rules& lhs, const Rules& rhs) {
@@ -55,12 +57,29 @@ Rules Rules::ConwayGameOfLife() {
 
 std::string Rules::toMCellNotation() const {
     std::string notation = "B";
-    for (uint8_t i : neighbours_to_born_) {
-        notation.append(std::to_string(i));
+    for (int i = 0; i <= 8; ++i) {
+        if (neighbours_to_born_[i]) {
+            notation.append(std::to_string(i));
+        }
     }
     notation.append("/S");
-    for (uint8_t i : neighbours_to_survive_) {
-        notation.append(std::to_string(i));
+    for (int i = 0; i <= 8; ++i) {
+        if (neighbours_to_survive_[i]) {
+            notation.append(std::to_string(i));
+        }
     }
     return notation;
+}
+
+Rules::Rules(const std::bitset<9> &neighbours_to_born,
+             const std::bitset<9> &neighbours_to_survive)
+: neighbours_to_born_(neighbours_to_born),
+  neighbours_to_survive_(neighbours_to_survive) {}
+
+const std::bitset<9> &Rules::bornFlags() const {
+    return neighbours_to_born_;
+}
+
+const std::bitset<9> &Rules::surviveFlags() const {
+    return neighbours_to_survive_;
 }

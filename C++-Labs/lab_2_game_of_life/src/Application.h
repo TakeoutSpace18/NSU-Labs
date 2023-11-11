@@ -42,8 +42,6 @@ private:
     bool is_playing_;
     std::string dump_path_;
     uint32_t field_size_[2];
-    std::bitset<8> neighbours_to_born_flags_;
-    std::bitset<8> neighbours_to_survive_flags_;
 
 };
 

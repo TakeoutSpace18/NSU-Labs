@@ -5,13 +5,26 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <bitset>
 
 class Rules {
 public:
     Rules() = delete;
 
-    Rules(std::set<uint8_t>&& neighbours_to_born, std::set<uint8_t>&& neighbours_to_survive);
-    Rules(const std::set<uint8_t>& neighbours_to_born, const std::set<uint8_t>& neighbours_to_survive);
+    Rules(const std::bitset<9>& neighbours_to_born,
+          const std::bitset<9>& neighbours_to_survive);
+
+    Rules(const std::initializer_list<uint8_t>& neighbours_to_born,
+          const std::initializer_list<uint8_t>& neighbours_to_survive);
+
+    [[nodiscard]] const std::bitset<9>& bornFlags() const;
+
+    [[nodiscard]] const std::bitset<9>& surviveFlags() const;
+
+    [[nodiscard]] bool canBorn(uint8_t neighbours_count) const;
+    [[nodiscard]] bool canSurvive(uint8_t neighbours_count) const;
+
+    [[nodiscard]] std::string toMCellNotation() const;
 
     /**
      * Create Rules object by parsing MCell notation.
@@ -22,16 +35,11 @@ public:
     static Rules FromMCellNotation(const std::string& notation);
     static Rules ConwayGameOfLife();
 
-    [[nodiscard]] std::string toMCellNotation() const;
-
-    [[nodiscard]] bool canBorn(uint8_t neighbours_count) const;
-    [[nodiscard]] bool canSurvive(uint8_t neighbours_count) const;
-
     friend bool operator==(const Rules& lhs, const Rules& rhs);
 
 private:
-    std::set<uint8_t> neighbours_to_born_;
-    std::set<uint8_t> neighbours_to_survive_;
+    std::bitset<9> neighbours_to_born_;
+    std::bitset<9> neighbours_to_survive_;
 };
 
 
