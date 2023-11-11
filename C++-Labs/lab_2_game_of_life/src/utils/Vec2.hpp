@@ -14,8 +14,8 @@ struct Vec2 {
     : x(static_cast<T>(vector.x)),
       y(static_cast<T>(vector.y)) {}
 
-    constexpr Vec2<T> operator-(const Vec2<T> &right) {
-        return Vec2<T>(-right.x, -right.y);
+    constexpr Vec2<T> operator-() {
+        return Vec2<T>(-this->x, -this->y);
     }
 };
 

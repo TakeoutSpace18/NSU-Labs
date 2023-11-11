@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <chrono>
+#include <nfd.h>
 
 #define IMGUI_USER_CONFIG "frontend/imgui_user_config.h"
 #include "imgui.h"
@@ -13,7 +14,7 @@
 int Application::launch(const CommandLineArguments &cmdArgs) {
     auto input_path = cmdArgs.getOption<std::filesystem::path>("input", "i");
     if (input_path) {
-        current_universe_ = LifeASCIISerializer::ReadFromFile(*input_path);
+        openUniverse(*input_path);
     } else {
         logger << Logger::Warning << "No .life input file specified. Loading default universe...\n";
         current_universe_ = std::make_unique<Universe>(std::initializer_list<std::initializer_list<bool>>{
@@ -32,7 +33,7 @@ int Application::launch(const CommandLineArguments &cmdArgs) {
     return UIRenderer::run({2000, 1300, "Game of life"});
 }
 
-void Application::updateField(Field &curr_field) const {
+void Application::updateField(Field &curr_field) {
     constexpr auto dead_cell_color = IM_COL32(38, 209, 0, 255);
     constexpr auto alive_cell_color = IM_COL32(227, 255, 255, 255);
     constexpr auto border_color = IM_COL32(0, 0, 0, 255);
@@ -43,10 +44,9 @@ void Application::updateField(Field &curr_field) const {
 
     if (ImGui::IsMouseHoveringRect(startPos, startPos + Vec2f{cell_size * curr_field.width(), cell_size * curr_field.height()})) {
         if (ImGui::IsMouseClicked(0)) {
-            Vec2f mouse_pos = ImGui::GetMousePos();
-            mouse_pos -= startPos;
-            size_t cell_x = mouse_pos.x / cell_size;
-            size_t cell_y = mouse_pos.y / cell_size;
+            auto mouse_pos = static_cast<Vec2f>(ImGui::GetMousePos()) - startPos;
+            auto cell_x = static_cast<size_t>(mouse_pos.x / cell_size);
+            auto cell_y = static_cast<size_t>(mouse_pos.y / cell_size);
             curr_field[cell_x][cell_y] = !curr_field[cell_x][cell_y];
         }
     }
@@ -72,6 +72,9 @@ void Application::onFrameUpdate() {
 
 void Application::controlWindowUpdate() {
     ImGui::Begin("Control");
+
+    openUniverseButton();
+
     if (ImGui::Button("Tick")) {
         current_universe_->tick();
     }
@@ -80,30 +83,63 @@ void Application::controlWindowUpdate() {
         is_playing_ = !is_playing_;
     }
 
-    static int field_size[2] = {
-            static_cast<int>(current_universe_->field().width()),
-            static_cast<int>(current_universe_->field().height())
-    };
-    if (ImGui::SliderInt2("Field size", field_size, 3, 200)) {
-        current_universe_->resize(field_size[0], field_size[1]);
+    if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 200)) {
+        current_universe_->resize(field_size_[0], field_size_[1]);
     }
 
     if (ImGui::SliderInt("Speed", reinterpret_cast<int*>(&play_speed), 1, 100)) {
         delay_between_ticks_ = std::chrono::milliseconds(speedToDelay(play_speed));
     }
 
-    static std::string path;
-    ImGui::InputTextWithHint("##", "dump path", &path);
+    dumpAsButton();
+
+    ImGui::InputTextWithHint("##", "dump path", &dump_path_);
     ImGui::SameLine();
     if (ImGui::Button("Dump")) {
-        LifeASCIISerializer::WriteToFile(path, *current_universe_);
+        LifeASCIISerializer::WriteToFile(dump_path_, *current_universe_);
     }
     ImGui::End();
 }
 
+void Application::dumpAsButton() {
+    if (ImGui::Button("Dump as")) {
+        nfdchar_t* outPath = nullptr;
+        nfdresult_t result = NFD_SaveDialog(nullptr, nullptr, &outPath);
+        if (result == NFD_OKAY) {
+            dump_path_ = std::string(outPath);
+            LifeASCIISerializer::WriteToFile(dump_path_, *current_universe_);
+            free(outPath);
+        }
+        else if (result == NFD_ERROR) {
+            logger << Logger::Error << NFD_GetError() << "\n";
+        }
+    }
+}
+
+void Application::openUniverseButton() {
+    if (ImGui::Button("Open")) {
+        nfdchar_t* path = nullptr;
+        nfdresult_t result = NFD_OpenDialog(nullptr, nullptr, &path);
+        if (result == NFD_OKAY) {
+            openUniverse(path);
+            free(path);
+        }
+        else if (result == NFD_ERROR) {
+            logger << Logger::Error << NFD_GetError() << "\n";
+        }
+    }
+}
+
 void Application::fieldWindowUpdate() const {
     ImGui::Begin("Field");
-    ImGui::Text("%s", current_universe_->name().c_str());
+
+    static std::string name = current_universe_->name();
+    if (ImGui::InputTextWithHint("##", "Universe name", &name)) {
+        if (name.empty()) {
+            name = "Unnamed";
+        }
+        current_universe_->setName(name);
+    };
 
     using namespace std::chrono_literals;
 
@@ -141,6 +177,12 @@ int Application::offlineMode(const CommandLineArguments &cmdArgs) {
 Application::Application()
 : play_speed(1), delay_between_ticks_(speedToDelay(play_speed)), is_playing_(false) { }
 
-std::chrono::milliseconds Application::speedToDelay(uint32_t speed) {
+constexpr std::chrono::milliseconds Application::speedToDelay(uint32_t speed) {
     return std::chrono::milliseconds(1000 / speed);
+}
+
+void Application::openUniverse(const std::filesystem::path &path) {
+    current_universe_ = LifeASCIISerializer::ReadFromFile(path);
+    field_size_[0] = current_universe_->field().width();
+    field_size_[1] = current_universe_->field().height();
 }

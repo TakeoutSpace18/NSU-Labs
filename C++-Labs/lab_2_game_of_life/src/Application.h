@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <chrono>
+#include <filesystem>
 
 #include "core/Universe.h"
 #include "frontend/UIRenderer.h"
@@ -21,16 +22,23 @@ private:
     void fieldWindowUpdate() const;
     void controlWindowUpdate();
 
-    void updateField(Field &curr_field) const;
+    static void updateField(Field &curr_field) ;
 
     int offlineMode(const CommandLineArguments& cmdArgs);
 
-    static std::chrono::milliseconds speedToDelay(uint32_t speed);
+    void openUniverse(const std::filesystem::path& path);
+
+    static constexpr std::chrono::milliseconds speedToDelay(uint32_t speed);
+
+    void openUniverseButton();
+    void dumpAsButton();
 
     std::unique_ptr<Universe> current_universe_;
     uint32_t play_speed;
     std::chrono::milliseconds delay_between_ticks_;
     bool is_playing_;
+    std::string dump_path_;
+    uint32_t field_size_[2];
 };
 
 #endif //LAB_2_GAME_OF_LIFE_APPLICATION_H
