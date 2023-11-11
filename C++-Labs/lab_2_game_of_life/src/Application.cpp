@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include <filesystem>
+#include <bitset>
 #include <chrono>
 #include <nfd.h>
 
@@ -66,8 +67,20 @@ void Application::updateField(Field &curr_field) {
 
 void Application::onFrameUpdate() {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    ImGui::ShowDemoWindow();
     controlWindowUpdate();
+    debugInfoWindowUpdate();
     fieldWindowUpdate();
+}
+
+void Application::debugInfoWindowUpdate() const {
+    ImGui::Begin("Debug info");
+    auto io = ImGui::GetIO();
+    ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
+    ImGui::Text("Application average ms/frame: %6.3f", 1000.0f / io.Framerate);
+    ImGui::Text("FPS: %.1f ", io.Framerate);
+    ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
+    ImGui::End();
 }
 
 void Application::controlWindowUpdate() {
@@ -83,6 +96,7 @@ void Application::controlWindowUpdate() {
         is_playing_ = !is_playing_;
     }
 
+    ImGui::Separator();
     if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 200)) {
         current_universe_->resize(field_size_[0], field_size_[1]);
     }
@@ -91,6 +105,7 @@ void Application::controlWindowUpdate() {
         delay_between_ticks_ = std::chrono::milliseconds(speedToDelay(play_speed));
     }
 
+    ImGui::Separator();
     dumpAsButton();
 
     ImGui::InputTextWithHint("##", "dump path", &dump_path_);
@@ -98,6 +113,10 @@ void Application::controlWindowUpdate() {
     if (ImGui::Button("Dump")) {
         LifeASCIISerializer::WriteToFile(dump_path_, *current_universe_);
     }
+
+    ImGui::Separator();
+    rulesSelector();
+
     ImGui::End();
 }
 
@@ -186,3 +205,27 @@ void Application::openUniverse(const std::filesystem::path &path) {
     field_size_[0] = current_universe_->field().width();
     field_size_[1] = current_universe_->field().height();
 }
+
+void Application::rulesSelector() {
+    auto selectorCellSize = Vec2f(40, 40);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+    ImGui::Text("Born:");
+    ImGui::SameLine(120);
+    for (int i = 0; i < 8; i++) {
+        if (i > 0) ImGui::SameLine();
+        if (ImGui::Selectable((std::to_string(i) + "##born").c_str(), neighbours_to_born_flags_[i], 0, selectorCellSize)) {
+                neighbours_to_born_flags_[i].flip();
+        }
+    }
+    ImGui::Text("Survive:");
+    ImGui::SameLine(120);
+    for (int i = 0; i < 8; i++) {
+        if (i > 0) ImGui::SameLine();
+        if (ImGui::Selectable((std::to_string(i) + "##survive").c_str(), neighbours_to_survive_flags_[i], 0, selectorCellSize)) {
+            neighbours_to_survive_flags_[i].flip();
+        }
+    }
+    ImGui::PopStyleVar();
+}
+

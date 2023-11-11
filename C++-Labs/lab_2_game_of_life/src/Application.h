@@ -4,6 +4,7 @@
 #include <memory>
 #include <chrono>
 #include <filesystem>
+#include <bitset>
 
 #include "core/Universe.h"
 #include "frontend/UIRenderer.h"
@@ -21,6 +22,7 @@ public:
 private:
     void fieldWindowUpdate() const;
     void controlWindowUpdate();
+    void debugInfoWindowUpdate() const;
 
     static void updateField(Field &curr_field) ;
 
@@ -32,6 +34,7 @@ private:
 
     void openUniverseButton();
     void dumpAsButton();
+    void rulesSelector();
 
     std::unique_ptr<Universe> current_universe_;
     uint32_t play_speed;
@@ -39,6 +42,9 @@ private:
     bool is_playing_;
     std::string dump_path_;
     uint32_t field_size_[2];
+    std::bitset<8> neighbours_to_born_flags_;
+    std::bitset<8> neighbours_to_survive_flags_;
+
 };
 
 #endif //LAB_2_GAME_OF_LIFE_APPLICATION_H
