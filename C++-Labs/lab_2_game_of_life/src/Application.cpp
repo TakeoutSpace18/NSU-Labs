@@ -76,7 +76,7 @@ void Application::controlWindowUpdate() {
         current_universe_->tick();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Play")) {
+    if (ImGui::Button(is_playing_ ?  "Pause" : "Play")) {
         is_playing_ = !is_playing_;
     }
 
