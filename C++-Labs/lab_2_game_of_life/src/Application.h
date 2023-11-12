@@ -20,11 +20,11 @@ public:
     ~Application() override = default;
 
 private:
-    void fieldWindowUpdate() const;
+    void fieldWindowUpdate();
     void controlWindowUpdate();
     void debugInfoWindowUpdate() const;
 
-    static void updateField(Field &curr_field) ;
+    void updateField(Field &curr_field);
 
     int offlineMode(const CommandLineArguments& cmdArgs);
 
@@ -40,6 +40,7 @@ private:
     uint32_t play_speed;
     std::chrono::milliseconds delay_between_ticks_;
     bool is_playing_;
+    bool show_borders_;
     std::string dump_path_;
     uint32_t field_size_[2];
 

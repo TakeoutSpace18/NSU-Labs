@@ -35,8 +35,8 @@ int Application::launch(const CommandLineArguments &cmdArgs) {
 }
 
 void Application::updateField(Field &curr_field) {
-    constexpr auto dead_cell_color = IM_COL32(38, 209, 0, 255);
-    constexpr auto alive_cell_color = IM_COL32(227, 255, 255, 255);
+    constexpr auto alive_cell_color = IM_COL32(32, 168, 2, 255);
+    constexpr auto dead_cell_color = IM_COL32(227, 255, 255, 255);
     constexpr auto border_color = IM_COL32(0, 0, 0, 255);
 
     float cell_size = (ImGui::GetWindowWidth() - 2 * ImGui::GetStyle().WindowPadding.x) / static_cast<float>(curr_field.width());
@@ -54,9 +54,11 @@ void Application::updateField(Field &curr_field) {
 
     for (size_t cell_x = 0; cell_x < curr_field.width(); ++cell_x) {
         for (size_t cell_y = 0; cell_y < curr_field.height(); ++cell_y) {
-            ImU32 color = curr_field[cell_x][cell_y] ? dead_cell_color : alive_cell_color;
+            ImU32 color = curr_field[cell_x][cell_y] ? alive_cell_color : dead_cell_color;
             ImGui::GetWindowDrawList()->AddRectFilled(currPos, currPos + Vec2f(cell_size, cell_size), color);
-            ImGui::GetWindowDrawList()->AddRect(currPos, currPos + Vec2f(cell_size, cell_size), border_color);
+            if (show_borders_) {
+                ImGui::GetWindowDrawList()->AddRect(currPos, currPos + Vec2f(cell_size, cell_size), border_color);
+            }
             currPos.y += cell_size;
         }
         currPos.y = startPos.y;
@@ -97,7 +99,7 @@ void Application::controlWindowUpdate() {
     }
 
     ImGui::Separator();
-    if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 200)) {
+    if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 400)) {
         current_universe_->resize(field_size_[0], field_size_[1]);
     }
 
@@ -116,7 +118,8 @@ void Application::controlWindowUpdate() {
 
     ImGui::Separator();
     rulesSelector();
-
+    ImGui::Separator();
+    ImGui::Checkbox("Show borders", &show_borders_);
     ImGui::End();
 }
 
@@ -149,10 +152,10 @@ void Application::openUniverseButton() {
     }
 }
 
-void Application::fieldWindowUpdate() const {
+void Application::fieldWindowUpdate() {
     ImGui::Begin("Field");
 
-    static std::string name = current_universe_->name();
+    std::string name = current_universe_->name();
     if (ImGui::InputTextWithHint("##", "Universe name", &name)) {
         if (name.empty()) {
             name = "Unnamed";
