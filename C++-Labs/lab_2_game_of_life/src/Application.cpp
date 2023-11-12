@@ -217,7 +217,7 @@ void Application::rulesSelector() {
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
     ImGui::Text("Born:");
     ImGui::SameLine(120);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i <= 8; i++) {
         if (i > 0) ImGui::SameLine();
         if (ImGui::Selectable((std::to_string(i) + "##born").c_str(), born_flags[i], 0, selectorCellSize)) {
                 born_flags[i].flip();
@@ -226,7 +226,7 @@ void Application::rulesSelector() {
     }
     ImGui::Text("Survive:");
     ImGui::SameLine(120);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i <= 8; i++) {
         if (i > 0) ImGui::SameLine();
         if (ImGui::Selectable((std::to_string(i) + "##survive").c_str(), survive_flags[i], 0, selectorCellSize)) {
             survive_flags[i].flip();

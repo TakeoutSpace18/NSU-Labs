@@ -3,6 +3,7 @@
 #include <ranges>
 
 const Field& Universe::tick() {
+    #pragma omp parallel for
     for (size_t x = 0; x < main_field_.width(); ++x) {
         for (size_t y = 0; y < main_field_.height(); ++y) {
             uint8_t neighbours_count = main_field_.getNeighboursCount(x, y);

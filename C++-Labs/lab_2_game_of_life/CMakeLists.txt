@@ -14,6 +14,7 @@ include_directories(${IMGUI_DIR} ${IMGUI_DIR}/backends ..)
 find_package(glfw3 3.3 REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(unofficial-nativefiledialog REQUIRED)
+find_package(OpenMP REQUIRED)
 
 set(IMGUI_SRC
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
@@ -63,6 +64,7 @@ target_link_libraries(lab_2_game_of_life PRIVATE
         glfw
         Vulkan::Vulkan
         unofficial::nativefiledialog::nfd
+        OpenMP::OpenMP_CXX
 )
 
 enable_testing()
@@ -92,4 +94,5 @@ target_compile_options(common INTERFACE
         -Woverloaded-virtual -Wzero-as-null-pointer-constant
         -pedantic
         -D_GLIBCXX_ASSERTIONS
+        -fopenmp
 )
