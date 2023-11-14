@@ -4,7 +4,8 @@
 #include <algorithm>
 
 Field::Field(size_t width, size_t height)
- : field_data_(validateSize(width), std::vector<bool>(validateSize(height), false)){
+ : field_data_(validateSize(width), std::vector<bool>(validateSize(height), false)),
+ width_(width), height_(height){
 }
 
 const std::vector<bool> &Field::operator[](size_t x) const {
@@ -36,14 +37,11 @@ uint8_t Field::getNeighboursCount(size_t x, size_t y) const {
 }
 
 size_t Field::width() const {
-    return this->field_data_.size();
+    return width_;
 }
 
 size_t Field::height() const {
-    if (this->width() == 0) {
-        return 0;
-    }
-    return this->field_data_[0].size();
+    return height_;
 }
 
 size_t Field::validateSize(size_t size) {
@@ -66,6 +64,8 @@ Field &Field::resize(size_t width, size_t height) {
     for (auto &col : field_data_) {
         col.resize(validateSize(height));
     }
+    width_ = width;
+    height_ = height;
 
     return *this;
 }

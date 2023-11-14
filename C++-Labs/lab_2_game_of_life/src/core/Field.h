@@ -31,6 +31,8 @@ private:
     static size_t validateSize(size_t size);
 
     std::vector<std::vector<bool>> field_data_;
+    size_t width_ = 0;
+    size_t height_ = 0;
 };
 
 #endif //LAB_2_GAME_OF_LIFE_FIELD_H
