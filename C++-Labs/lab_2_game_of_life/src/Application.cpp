@@ -56,7 +56,7 @@ void Application::updateField(Field &curr_field) {
         for (size_t cell_y = 0; cell_y < curr_field.height(); ++cell_y) {
             ImU32 color = curr_field[cell_x][cell_y] ? alive_cell_color : dead_cell_color;
             ImGui::GetWindowDrawList()->AddRectFilled(currPos, currPos + Vec2f(cell_size, cell_size), color);
-            if (show_borders_) {
+            if (show_grid_) {
                 ImGui::GetWindowDrawList()->AddRect(currPos, currPos + Vec2f(cell_size, cell_size), border_color);
             }
             currPos.y += cell_size;
@@ -75,7 +75,7 @@ void Application::onFrameUpdate() {
     fieldWindowUpdate();
 }
 
-void Application::debugInfoWindowUpdate() const {
+void Application::debugInfoWindowUpdate() {
     ImGui::Begin("Debug info");
     auto io = ImGui::GetIO();
     ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
@@ -100,6 +100,12 @@ void Application::controlWindowUpdate() {
 
     ImGui::Separator();
     if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 400)) {
+        if (field_size_[0] < 3) {
+            field_size_[0] = 3;
+        }
+        if (field_size_[1] < 3) {
+            field_size_[1] = 3;
+        }
         current_universe_->resize(field_size_[0], field_size_[1]);
     }
 
@@ -119,7 +125,7 @@ void Application::controlWindowUpdate() {
     ImGui::Separator();
     rulesSelector();
     ImGui::Separator();
-    ImGui::Checkbox("Show borders", &show_borders_);
+    ImGui::Checkbox("Show grid", &show_grid_);
     ImGui::End();
 }
 

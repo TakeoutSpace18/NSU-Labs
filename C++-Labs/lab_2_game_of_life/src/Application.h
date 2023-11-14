@@ -22,7 +22,7 @@ public:
 private:
     void fieldWindowUpdate();
     void controlWindowUpdate();
-    void debugInfoWindowUpdate() const;
+    static void debugInfoWindowUpdate() ;
 
     void updateField(Field &curr_field);
 
@@ -40,7 +40,7 @@ private:
     uint32_t play_speed;
     std::chrono::milliseconds delay_between_ticks_;
     bool is_playing_;
-    bool show_borders_;
+    bool show_grid_ = true;
     std::string dump_path_;
     uint32_t field_size_[2];
 
