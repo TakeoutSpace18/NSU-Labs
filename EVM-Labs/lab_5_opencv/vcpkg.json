@@ -1,0 +1,9 @@
+{
+  "name" : "lab-5-opencv",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "61f610845fb206298a69f708104a51d651872877",
+  "dependencies" : [ {
+    "name" : "opencv",
+    "version>=" : "4.8.0"
+  } ]
+}
