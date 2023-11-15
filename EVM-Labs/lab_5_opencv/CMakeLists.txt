@@ -5,5 +5,14 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenCV CONFIG REQUIRED)
 
-add_executable(lab_5_opencv src/main.cpp)
-target_link_libraries(lab_5_opencv PRIVATE opencv_core opencv_highgui)
+add_executable(lab_5_opencv src/main.cpp
+        src/OpenCVDemo.cpp
+        src/OpenCVDemo.h)
+target_link_libraries(lab_5_opencv PRIVATE
+        opencv_core
+        opencv_highgui
+        opencv_ml
+        opencv_dnn
+        opencv_core
+        opencv_flann
+        opencv_video)
