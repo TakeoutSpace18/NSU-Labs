@@ -51,7 +51,8 @@ size_t Field::validateSize(size_t size) {
     return size;
 }
 
-Field::Field(std::initializer_list<std::initializer_list<bool>> matrix) {
+Field::Field(std::initializer_list<std::initializer_list<bool>> matrix)
+: width_(validateSize(matrix.size())), height_(validateSize(matrix.begin()->size())){
     std::copy(matrix.begin(), matrix.end(), std::back_inserter(field_data_));
 }
 
