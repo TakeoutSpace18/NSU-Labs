@@ -12,7 +12,6 @@
 
 class Application : public UIRenderer {
 public:
-    Application();
     int launch(const CommandLineArguments& cmdArgs);
 
     void onFrameUpdate() override;
@@ -24,7 +23,7 @@ private:
     void controlWindowUpdate();
     static void debugInfoWindowUpdate() ;
 
-    void updateField(Field &curr_field);
+    void updateField(Field &curr_field) const;
 
     int offlineMode(const CommandLineArguments& cmdArgs);
 
@@ -37,13 +36,16 @@ private:
     void rulesSelector();
 
     std::unique_ptr<Universe> current_universe_;
-    uint32_t play_speed;
-    std::chrono::milliseconds delay_between_ticks_;
-    bool is_playing_;
+    uint32_t play_speed = 1;
+    std::chrono::milliseconds delay_between_ticks_ = speedToDelay(play_speed);
+    bool is_playing_ = false;
     bool show_grid_ = true;
     std::string dump_path_;
     uint32_t field_size_[2];
 
+    void interestingRulesCombo();
+
+    void checkKeybindings();
 };
 
 #endif //LAB_2_GAME_OF_LIFE_APPLICATION_H

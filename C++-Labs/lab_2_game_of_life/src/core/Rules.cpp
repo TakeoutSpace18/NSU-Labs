@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
 #include "Rules.h"
 
 Rules::Rules(const std::initializer_list<uint8_t>& neighbours_to_born,
@@ -83,3 +84,15 @@ const std::bitset<9> &Rules::bornFlags() const {
 const std::bitset<9> &Rules::surviveFlags() const {
     return neighbours_to_survive_;
 }
+const std::vector<std::pair<const char*, const Rules>> Rules::InterestingRules = {
+        std::make_pair("Life", Rules{{3}, {2, 3}}),
+        std::make_pair("HighLife", Rules{{3, 6}, {2, 3}}),
+        std::make_pair("Day & Night", Rules{{3, 6, 7, 8}, {3, 4, 6, 7, 8}}),
+        std::make_pair("Seeds", Rules{{2}, {}}),
+        std::make_pair("Diamoeba", Rules{{3, 5, 6, 7, 8}, {5, 6, 7, 8}}),
+        std::make_pair("Anneal", Rules{{4, 6, 7, 8}, {3, 5, 6, 7, 8}}),
+        std::make_pair("Morley", Rules{{3, 6, 8}, {2, 4, 5}}),
+        std::make_pair("Life without death", Rules{{3}, {0, 1, 2, 3, 4, 5, 6, 7, 8}}),
+        std::make_pair("2x2", Rules{{3, 6}, {1, 2, 5}}),
+        std::make_pair("Replicator", Rules{{1, 3, 5, 7}, {1, 3, 5, 7}}),
+};

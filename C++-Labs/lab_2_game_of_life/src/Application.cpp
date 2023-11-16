@@ -34,7 +34,7 @@ int Application::launch(const CommandLineArguments &cmdArgs) {
     return UIRenderer::run({2000, 1300, "Game of life"});
 }
 
-void Application::updateField(Field &curr_field) {
+void Application::updateField(Field &curr_field) const {
     constexpr auto alive_cell_color = IM_COL32(32, 168, 2, 255);
     constexpr auto dead_cell_color = IM_COL32(227, 255, 255, 255);
     constexpr auto border_color = IM_COL32(0, 0, 0, 255);
@@ -69,10 +69,16 @@ void Application::updateField(Field &curr_field) {
 
 void Application::onFrameUpdate() {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-    ImGui::ShowDemoWindow();
+    checkKeybindings();
     controlWindowUpdate();
     debugInfoWindowUpdate();
     fieldWindowUpdate();
+}
+
+void Application::checkKeybindings() {
+    if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
+        is_playing_ = !is_playing_;
+    }
 }
 
 void Application::debugInfoWindowUpdate() {
@@ -124,9 +130,25 @@ void Application::controlWindowUpdate() {
 
     ImGui::Separator();
     rulesSelector();
+    interestingRulesCombo();
+
     ImGui::Separator();
     ImGui::Checkbox("Show grid", &show_grid_);
     ImGui::End();
+}
+
+void Application::interestingRulesCombo() {
+    static const char* combo_preview_value = "Choose rule";
+    if (ImGui::BeginCombo("Interesting rules", combo_preview_value)) {
+        for (auto& [name, rule] : Rules::InterestingRules) {
+            if (ImGui::Selectable(name, false)) {
+                current_universe_->setRules(rule);
+                combo_preview_value = name;
+            }
+
+        }
+        ImGui::EndCombo();
+    }
 }
 
 void Application::dumpAsButton() {
@@ -201,9 +223,6 @@ int Application::offlineMode(const CommandLineArguments &cmdArgs) {
     }
     return EXIT_SUCCESS;
 }
-
-Application::Application()
-: play_speed(1), delay_between_ticks_(speedToDelay(play_speed)), is_playing_(false) { }
 
 constexpr std::chrono::milliseconds Application::speedToDelay(uint32_t speed) {
     return std::chrono::milliseconds(1000 / speed);

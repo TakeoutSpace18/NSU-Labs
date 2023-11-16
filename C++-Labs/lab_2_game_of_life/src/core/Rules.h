@@ -34,6 +34,7 @@ public:
      */
     static Rules FromMCellNotation(const std::string& notation);
     static Rules ConwayGameOfLife();
+    static const std::vector<std::pair<const char*, const Rules>> InterestingRules;
 
     friend bool operator==(const Rules& lhs, const Rules& rhs);
 
