@@ -94,5 +94,5 @@ target_compile_options(common INTERFACE
         -Woverloaded-virtual -Wzero-as-null-pointer-constant
         -pedantic
         -D_GLIBCXX_ASSERTIONS
-        -fopenmp
+        -DIMGUI_USER_CONFIG="frontend/imgui_user_config.h"
 )

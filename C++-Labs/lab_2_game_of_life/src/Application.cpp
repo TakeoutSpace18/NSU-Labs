@@ -5,12 +5,12 @@
 #include <chrono>
 #include <nfd.h>
 
-#define IMGUI_USER_CONFIG "frontend/imgui_user_config.h"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 
 #include "serialize/LifeASCIISerializer.h"
 #include "core/Universe.h"
+#include "utils/Vec2.hpp"
 
 int Application::launch(const CommandLineArguments &cmdArgs) {
     auto input_path = cmdArgs.getOption<std::filesystem::path>("input", "i");
@@ -108,7 +108,7 @@ void Application::controlWindowUpdate() {
     }
 
     ImGui::Separator();
-    if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 400)) {
+    if (ImGui::SliderInt2("Field size", reinterpret_cast<int *>(field_size_), 3, 700)) {
         if (field_size_[0] < 3) {
             field_size_[0] = 3;
         }
@@ -264,3 +264,4 @@ void Application::rulesSelector() {
     ImGui::PopStyleVar();
 }
 
+Application::Application() : delay_between_ticks_(speedToDelay(play_speed)) {}
