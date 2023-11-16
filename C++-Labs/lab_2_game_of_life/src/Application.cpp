@@ -79,6 +79,9 @@ void Application::checkKeybindings() {
     if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
         is_playing_ = !is_playing_;
     }
+    if (ImGui::IsKeyPressed(ImGuiKey_T) || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+        current_universe_->tick();
+    }
 }
 
 void Application::debugInfoWindowUpdate() {
