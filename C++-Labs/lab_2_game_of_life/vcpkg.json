@@ -1,0 +1,27 @@
+{
+  "name" : "lab-2-game-of-life",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "213c01f8719e0f8bd48ec6285074a22a7fe5e5a3",
+  "dependencies" : [ {
+    "name" : "imgui",
+    "version>=" : "1.89.9"
+  }, {
+    "name" : "vcpkg-cmake-config",
+    "version>=" : "2022-02-06#1"
+  }, {
+    "name" : "vcpkg-cmake",
+    "version>=" : "2023-05-04"
+  }, {
+    "name" : "glfw3",
+    "version>=" : "3.3.8#2"
+  }, {
+    "name" : "vulkan",
+    "version>=" : "1.1.82.1#6"
+  }, {
+    "name" : "gtest",
+    "version>=" : "1.14.0"
+  }, {
+    "name" : "nativefiledialog",
+    "version>=" : "2022-01-20"
+  } ]
+}
