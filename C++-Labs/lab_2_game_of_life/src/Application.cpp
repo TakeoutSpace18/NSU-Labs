@@ -40,6 +40,7 @@ void Application::updateField(Field &curr_field) const {
     constexpr auto border_color = IM_COL32(0, 0, 0, 255);
 
     float cell_size = (ImGui::GetWindowWidth() - 2 * ImGui::GetStyle().WindowPadding.x) / static_cast<float>(curr_field.width());
+    float border_size = 1;
     Vec2f startPos = ImGui::GetCursorScreenPos();
     Vec2f currPos = startPos;
 
@@ -52,12 +53,19 @@ void Application::updateField(Field &curr_field) const {
         }
     }
 
+    if (show_grid_) {
+        auto field_size_in_pixels = Vec2f(cell_size * curr_field.width(), cell_size * curr_field.height());
+        ImGui::GetWindowDrawList()->AddRect(currPos, currPos + field_size_in_pixels, border_color);
+    }
     for (size_t cell_x = 0; cell_x < curr_field.width(); ++cell_x) {
         for (size_t cell_y = 0; cell_y < curr_field.height(); ++cell_y) {
-            ImU32 color = curr_field[cell_x][cell_y] ? alive_cell_color : dead_cell_color;
-            ImGui::GetWindowDrawList()->AddRectFilled(currPos, currPos + Vec2f(cell_size, cell_size), color);
+            ImU32 cell_color = curr_field[cell_x][cell_y] ? alive_cell_color : dead_cell_color;
             if (show_grid_) {
-                ImGui::GetWindowDrawList()->AddRect(currPos, currPos + Vec2f(cell_size, cell_size), border_color);
+                auto border_offset = Vec2f(border_size, border_size);
+                ImGui::GetWindowDrawList()->AddRectFilled(currPos + border_offset, currPos + Vec2f(cell_size, cell_size) - border_offset, cell_color);
+            }
+            else {
+                ImGui::GetWindowDrawList()->AddRectFilled(currPos, currPos + Vec2f(cell_size, cell_size), cell_color);
             }
             currPos.y += cell_size;
         }

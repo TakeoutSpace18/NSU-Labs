@@ -85,8 +85,7 @@ target_link_libraries(
 include(GoogleTest)
 gtest_discover_tests(lab_2_game_of_life_tests)
 
-add_library(common INTERFACE
-        src/frontend/vulkan_initialization.cpp)
+add_library(common INTERFACE)
 
 target_compile_options(common INTERFACE
         -Wall -Wextra -Wshadow -Wnon-virtual-dtor
