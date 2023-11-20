@@ -4,5 +4,5 @@
 
 int main() {
     CacheSizeMeasure cache_size_measure;
-    return cache_size_measure.run();
+    return cache_size_measure.launch();
 }
