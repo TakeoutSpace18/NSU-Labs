@@ -18,38 +18,20 @@ CacheSizeMeasure::~CacheSizeMeasure() {
     delete[] array_;
 }
 
-void CacheSizeMeasure::openGNUPlot() {
-    FILE* gnuplot_ = popen("gnuplot -","w");
-    fprintf(gnuplot_, "set xlabel \"array size\" \n");
-    fprintf(gnuplot_, "set ylabel \"time\" \n");
-    fprintf(gnuplot_, "plot '%s' with lines \n", output_filename_);
-    fflush(gnuplot_);
-}
-
-void CacheSizeMeasure::doMeasurings() {
-    output_filename_ = "measured_points.dat";
-    std::ofstream data_output(output_filename_);
+void CacheSizeMeasure::doMeasurings(const char* output_filename, TraverseType type) {
+    std::ofstream data_output(output_filename);
 
     for (size_t i = 1; i <= measuring_count; ++i) {
         size_t N = array_increase_step * i;
-        prepareForTraverse(i * array_increase_step, traverse_type_);
-        auto time = measureFunctionRuntime(std::mem_fn(&CacheSizeMeasure::traverseArray), this,  N, 5);
+        prepareForTraverse(i * array_increase_step, type);
+        auto time = measureFunctionRuntime(std::mem_fn(&CacheSizeMeasure::traverseArray), this,  N, traverse_repeat_count_);
 
-        if (i % 100 == 0) {
+        if (i % 10 == 0) {
             std::cout << i << "/" << measuring_count << std::endl;
         }
-        data_output << N << " " << time.count() << std::endl;
+        data_output << N * sizeof(array_) << " " << time.count() << std::endl;
     }
     data_output.close();
-}
-
-int CacheSizeMeasure::launch() {
-    doMeasurings();
-    openGNUPlot();
-
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(180s);
-    return EXIT_SUCCESS;
 }
 
 void CacheSizeMeasure::prepareForTraverse(size_t N, TraverseType type) {

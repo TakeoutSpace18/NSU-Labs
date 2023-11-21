@@ -11,4 +11,4 @@ add_executable(lab_8_cache_size
 
 target_include_directories(lab_8_cache_size PRIVATE src)
 
-target_compile_options(lab_8_cache_size PRIVATE -O0 -Wall -Wpedantic)
+target_compile_options(lab_8_cache_size PRIVATE -Wall -Wpedantic)

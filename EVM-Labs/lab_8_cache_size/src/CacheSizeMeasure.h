@@ -9,17 +9,15 @@ public:
     CacheSizeMeasure();
     ~CacheSizeMeasure();
 
-    int launch();
-
-    void openGNUPlot();
-    void doMeasurings();
-
-private:
     enum class TraverseType {
         Direct,
         Reverse,
         Random
     };
+
+    void doMeasurings(const char* output_filename, TraverseType type);
+
+private:
 
     template <class F, class... Args>
     auto measureFunctionRuntime(F func, Args&&... args) {
@@ -31,12 +29,11 @@ private:
         return stop - start;
     }
 
-    static constexpr size_t array_increase_step = 5000;
-    static constexpr size_t measuring_count = 1000;
+    static constexpr size_t array_increase_step = 4000;
+    static constexpr size_t measuring_count = 530;
+    static constexpr int traverse_repeat_count_ = 4;
 
     size_t *array_;
-    const char* output_filename_ = "measured_points.dat";
-    TraverseType traverse_type_ = TraverseType::Random;
 
     void prepareForTraverse(size_t N, TraverseType type);
     void traverseArray(size_t N, uint32_t repeat_count) const;
