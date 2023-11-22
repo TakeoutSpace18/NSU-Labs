@@ -11,23 +11,26 @@
 #include <thread>
 #include <bits/random.h>
 
-CacheSizeMeasure::CacheSizeMeasure()
-: array_(new size_t[array_increase_step * measuring_count]) {}
+CacheSizeMeasure::CacheSizeMeasure(const Config& config)
+: array_increase_step_(config.array_increase_step),
+measuring_count_(config.measuring_count),
+traverse_repeat_count_(config.traverse_repeat_count),
+array_(new size_t[array_increase_step_ * measuring_count_]) {}
 
 CacheSizeMeasure::~CacheSizeMeasure() {
     delete[] array_;
 }
 
-void CacheSizeMeasure::doMeasurings(const char* output_filename, TraverseType type) {
+void CacheSizeMeasure::doMeasurings(const std::string& output_filename, TraverseType type) {
     std::ofstream data_output(output_filename);
 
-    for (size_t i = 1; i <= measuring_count; ++i) {
-        size_t N = array_increase_step * i;
-        prepareForTraverse(i * array_increase_step, type);
+    for (size_t i = 1; i <= measuring_count_; ++i) {
+        size_t N = array_increase_step_ * i;
+        prepareForTraverse(i * array_increase_step_, type);
         auto time = measureFunctionRuntime(std::mem_fn(&CacheSizeMeasure::traverseArray), this,  N, traverse_repeat_count_);
 
         if (i % 10 == 0) {
-            std::cout << i << "/" << measuring_count << std::endl;
+            std::cout << i << "/" << measuring_count_ << std::endl;
         }
         data_output << N * sizeof(array_) << " " << time.count() << std::endl;
     }
@@ -35,7 +38,7 @@ void CacheSizeMeasure::doMeasurings(const char* output_filename, TraverseType ty
 }
 
 void CacheSizeMeasure::prepareForTraverse(size_t N, TraverseType type) {
-    assert(N <= measuring_count * array_increase_step);
+    assert(N <= measuring_count_ * array_increase_step_);
     switch (type) {
         case TraverseType::Direct:
             std::iota(array_, array_ + N, 1);

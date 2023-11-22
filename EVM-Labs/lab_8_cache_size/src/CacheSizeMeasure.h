@@ -6,7 +6,14 @@
 
 class CacheSizeMeasure {
 public:
-    CacheSizeMeasure();
+    struct Config {
+        size_t array_increase_step;
+        size_t measuring_count;
+        int traverse_repeat_count;
+    };
+
+    CacheSizeMeasure() = delete;
+    CacheSizeMeasure(const Config& config);
     ~CacheSizeMeasure();
 
     enum class TraverseType {
@@ -15,7 +22,7 @@ public:
         Random
     };
 
-    void doMeasurings(const char* output_filename, TraverseType type);
+    void doMeasurings(const std::string&output_filename, TraverseType type);
 
 private:
 
@@ -29,9 +36,9 @@ private:
         return stop - start;
     }
 
-    static constexpr size_t array_increase_step = 4000;
-    static constexpr size_t measuring_count = 530;
-    static constexpr int traverse_repeat_count_ = 4;
+    size_t array_increase_step_ = 40;
+    size_t measuring_count_ = 530;
+    int traverse_repeat_count_ = 50;
 
     size_t *array_;
 
