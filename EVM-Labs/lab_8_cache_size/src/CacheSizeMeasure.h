@@ -7,8 +7,9 @@
 class CacheSizeMeasure {
 public:
     struct Config {
-        size_t array_increase_step;
-        size_t measuring_count;
+        size_t array_increase_step_start;
+        double array_increase_step_multiplier;
+        size_t array_max_size;
         int traverse_repeat_count;
     };
 
@@ -36,9 +37,10 @@ private:
         return stop - start;
     }
 
-    size_t array_increase_step_ = 40;
-    size_t measuring_count_ = 530;
-    int traverse_repeat_count_ = 50;
+    size_t array_increase_step_start_;
+    double array_increase_step_multiplier_;
+    size_t array_max_size_bytes_;
+    int traverse_repeat_count_;
 
     size_t *array_;
 
