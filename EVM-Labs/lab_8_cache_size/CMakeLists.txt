@@ -10,5 +10,4 @@ add_executable(lab_8_cache_size
         src/CacheSizeMeasure.cpp)
 
 target_include_directories(lab_8_cache_size PRIVATE src)
-
-target_compile_options(lab_8_cache_size PRIVATE -Wall -Wpedantic)
+target_compile_options(lab_8_cache_size PRIVATE -O1 -Wall -Wpedantic)

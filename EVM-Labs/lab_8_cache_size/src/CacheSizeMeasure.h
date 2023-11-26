@@ -9,12 +9,14 @@ public:
     struct Config {
         size_t array_increase_step_start;
         double array_increase_step_multiplier;
-        size_t array_max_size;
-        int traverse_repeat_count;
+        size_t array_max_size_bytes;
+        uint32_t traverse_repeat_count;
+        uint32_t measure_repeats;
+
     };
 
     CacheSizeMeasure() = delete;
-    CacheSizeMeasure(const Config& config);
+    explicit CacheSizeMeasure(const Config& config);
     ~CacheSizeMeasure();
 
     enum class TraverseType {
@@ -31,20 +33,16 @@ private:
     auto measureFunctionRuntime(F func, Args&&... args) {
         using clock = std::chrono::high_resolution_clock;
 
-        auto start = clock::now();
+        const auto start = clock::now();
         func(std::forward<Args>(args)...);
-        auto stop = clock::now();
+        const auto stop = clock::now();
         return stop - start;
     }
 
-    size_t array_increase_step_start_;
-    double array_increase_step_multiplier_;
-    size_t array_max_size_bytes_;
-    int traverse_repeat_count_;
-
+    Config config_;
     size_t *array_;
 
-    void prepareForTraverse(size_t N, TraverseType type);
+    void prepareForTraverse(size_t N, TraverseType type) const;
     void traverseArray(size_t N, uint32_t repeat_count) const;
 };
 
