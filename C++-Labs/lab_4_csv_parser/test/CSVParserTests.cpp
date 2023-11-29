@@ -4,16 +4,20 @@
 #include <tuple>
 #include <string>
 
-const static std::string sample_csv = "1,abc\n"
-                                "2,def\n"
-                                "3,ghi";
 
 TEST(CSVParserTests, CanParseData) {
-    std::stringstream ss(sample_csv);
-    CSVParser<int, std::string> parser(ss);
+    std::stringstream sample_csv(
+        "1,abc\n"
+              "2,def\n");
+    CSVParser<int, std::string> parser(sample_csv);
 
-    for (auto& tup : parser) {
-        std::cout << tup << "\n";
-    }
+    std::tuple<int, std::string> line;
+    parser >> line;
+    EXPECT_EQ(std::get<0>(line), 1);
+    EXPECT_EQ(std::get<1>(line), "abc");
+
+    parser >> line;
+    EXPECT_EQ(std::get<0>(line), 2);
+    EXPECT_EQ(std::get<1>(line), "def");
 
 }

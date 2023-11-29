@@ -30,3 +30,6 @@ target_compile_options(lab_4_csv_parser PRIVATE -Wall -Wpedantic)
 set_target_properties(lab_4_csv_parser PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(lab_4_csv_parser GTest::gtest_main)
 gtest_discover_tests(lab_4_csv_parser)
+
+find_package(fmt)
+target_link_libraries(lab_4_csv_parser fmt)
