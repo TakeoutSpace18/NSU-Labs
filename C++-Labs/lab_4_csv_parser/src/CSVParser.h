@@ -8,6 +8,7 @@
 #include <fmt/format.h>
 
 #include "CSVParserErrors.h"
+#include "StringConversion.h"
 
 
 template<class CharT, class Traits, class... Types>
@@ -90,17 +91,9 @@ public:
         std::basic_stringstream<CharT, Traits> ss(field);
         ss >> value;
         if (ss.bad() || !ss.eof()) {
-            std::string field_in_chars;
-            if constexpr(std::is_same<CharT, wchar_t>()) {
-                using convert_type = std::codecvt_utf8<wchar_t>;
-                std::wstring_convert<convert_type, CharT> converter;
-                field_in_chars = converter.to_bytes(field);
-            }
-            else {
-                field_in_chars = field;
-            }
-
-            throw CSVParserErrors::TypeMismatch(parser_.current_row_number_, current_column_number_, field_in_chars,
+            throw CSVParserErrors::TypeMismatch(parser_.current_row_number_,
+                                                current_column_number_,
+                                                convert_basic_string_to_char_string(field),
                                                 typeid(T).name());
         }
         return value;

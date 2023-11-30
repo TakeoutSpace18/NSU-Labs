@@ -26,6 +26,7 @@ add_executable(lab_4_csv_parser
         test/CSVParserTests.cpp
         src/CSVParserErrors.h
         src/CSVParserErrors.cpp
+        src/StringConversion.h
 )
 
 target_compile_options(lab_4_csv_parser PRIVATE -Wall -Wpedantic)
