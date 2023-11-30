@@ -1,17 +1,19 @@
 #ifndef CSVPARSER_H
 #define CSVPARSER_H
-#include <limits>
 
+#include <codecvt>
+#include <limits>
 #include <ranges>
 #include <utility>
 #include <fmt/format.h>
+
+#include "CSVParserErrors.h"
 
 
 template<class CharT, class Traits, class... Types>
 class basic_CSVParser {
 public:
     struct InputIterator;
-    class FieldExtractor;
 
     struct Config {
         CharT column_delimiter = ',';
@@ -20,7 +22,7 @@ public:
     };
 
     explicit basic_CSVParser(
-        std::basic_istream<CharT, Traits>&istream,
+        std::basic_istream<CharT, Traits> &istream,
         const std::size_t skip_first_lines_count = 0,
         Config config = Config())
         : istream_(istream),
@@ -34,7 +36,7 @@ public:
         }
     }
 
-    basic_CSVParser& operator>>(std::tuple<Types...>&tuple) {
+    basic_CSVParser& operator>>(std::tuple<Types...> &tuple) {
         if (eofReached()) {
             return *this;
         }
@@ -43,42 +45,63 @@ public:
         std::getline(istream_, line, config_.line_delimiter);
 
         FieldExtractor fields{line, *this};
-        std::apply([&](auto&... elems) {
+        std::apply([&](auto &... elems) {
             ((elems = fields.template extractNext<Types>()), ...);
         }, tuple);
 
         ++current_row_number_;
+
+        if (!fields.finished()) {
+            throw CSVParserErrors::WrongColumnCount(current_row_number_, sizeof...(Types));
+        }
         return *this;
     }
 
-    bool eofReached() { return istream_.eof(); }
-    auto begin()      { return InputIterator(this); }
-    auto end() const  { return InputIterator(); }
+    bool eofReached() { return istream_.rdbuf()->in_avail() == 0; }
+    auto begin() { return InputIterator(this); }
+    auto end() const { return InputIterator(); }
 
 private:
-    class ColumnNumberError;
-    class TypeMismatchError;
+    class FieldExtractor;
 
-    std::basic_istream<CharT, Traits>&istream_;
+    std::basic_istream<CharT, Traits> &istream_;
     const Config config_;
-    size_t current_row_number_ = 0;
+    size_t current_row_number_ = 1;
 };
 
 
 template<class CharT, class Traits, class... Types>
 class basic_CSVParser<CharT, Traits, Types...>::FieldExtractor {
 public:
-    FieldExtractor(std::basic_string_view<CharT, Traits> row, basic_CSVParser&parser)
+    FieldExtractor(std::basic_string_view<CharT, Traits> row, basic_CSVParser &parser)
         : remained_row_(row), parser_(parser) {
     }
 
     template<class T>
     T convertFieldString(std::basic_string<CharT, Traits> field) {
+        if constexpr (std::is_arithmetic<T>()) {
+            if (field.empty()) {
+                throw CSVParserErrors::EmptyField(parser_.current_row_number_, current_column_number_,
+                                                  typeid(T).name());
+            }
+        }
+
         T value;
         std::basic_stringstream<CharT, Traits> ss(field);
         ss >> value;
-        if (ss.bad()) {
-            throw TypeMismatchError(parser_.current_row_number_, current_column_number_, field, typeid(T).name());
+        if (ss.bad() || !ss.eof()) {
+            std::string field_in_chars;
+            if constexpr(std::is_same<CharT, wchar_t>()) {
+                using convert_type = std::codecvt_utf8<wchar_t>;
+                std::wstring_convert<convert_type, CharT> converter;
+                field_in_chars = converter.to_bytes(field);
+            }
+            else {
+                field_in_chars = field;
+            }
+
+            throw CSVParserErrors::TypeMismatch(parser_.current_row_number_, current_column_number_, field_in_chars,
+                                                typeid(T).name());
         }
         return value;
     }
@@ -91,7 +114,7 @@ public:
              delim_idx = remained_row_.find(parser_.config_.column_delimiter)) {
             if (remained_row_[delim_idx - 1] == parser_.config_.escape_character) {
                 // delimiter with escape symbol found
-                auto line_part = std::string(remained_row_.substr(0, delim_idx - 1)) + parser_.config_.column_delimiter;
+                auto line_part = std::basic_string<CharT, Traits>(remained_row_.substr(0, delim_idx - 1)) + parser_.config_.column_delimiter;
                 remained_row_ = remained_row_.substr(delim_idx + 1);
                 extracted_field += line_part;
             }
@@ -108,14 +131,14 @@ public:
         return extracted_field;
     }
 
-    bool finished() {
+    bool finished() const {
         return finished_;
     }
 
     template<class T>
     T extractNext() {
         if (finished()) {
-            throw ColumnNumberError(parser_.current_row_number_, sizeof...(Types));
+            throw CSVParserErrors::WrongColumnCount(parser_.current_row_number_, sizeof...(Types));
         }
         T ret = convertFieldString<T>(extractNextFieldInternal());
         ++current_column_number_;
@@ -126,7 +149,7 @@ private:
     std::basic_string_view<CharT, Traits> remained_row_;
     size_t current_column_number_ = 0;
     bool finished_ = false;
-    basic_CSVParser&parser_;
+    basic_CSVParser &parser_;
 };
 
 
@@ -166,7 +189,7 @@ struct basic_CSVParser<CharT, Traits, Types...>::InputIterator {
         return tmp;
     }
 
-    friend bool operator==(const InputIterator&a, const InputIterator&b) {
+    friend bool operator==(const InputIterator &a, const InputIterator &b) {
         return (a.parser_ == b.parser_);
     };
 
@@ -174,27 +197,6 @@ private:
     basic_CSVParser* parser_ = nullptr;
     std::tuple<Types...> cur_data_;
 };
-
-
-template<class CharT, class Traits, class... Types>
-class basic_CSVParser<CharT, Traits, Types...>::ColumnNumberError : public std::runtime_error {
-public:
-    ColumnNumberError(const size_t row, const size_t expected_number) : runtime_error(
-        fmt::format("Wrong column number at row {}. Expected {}", row, expected_number)) {
-    }
-};
-
-
-template<class CharT, class Traits, class... Types>
-class basic_CSVParser<CharT, Traits, Types...>::TypeMismatchError : public std::runtime_error {
-public:
-    TypeMismatchError(const size_t row, const size_t col, const std::string&field,
-                      const std::string&desired_type) : runtime_error(fmt::format(
-        "Type mismatch at row {} column {}. Failed to convert \"{}\" to type {}",
-        row, col, field, desired_type)) {
-    }
-};
-
 
 template<class... Ts>
 using CSVParser = basic_CSVParser<char, std::char_traits<char>, Ts...>;

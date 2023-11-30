@@ -24,6 +24,8 @@ add_executable(lab_4_csv_parser
         src/PrintTuple.h
         test/PrintTupleTests.cpp
         test/CSVParserTests.cpp
+        src/CSVParserErrors.h
+        src/CSVParserErrors.cpp
 )
 
 target_compile_options(lab_4_csv_parser PRIVATE -Wall -Wpedantic)
