@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
-#include "PrintTuple.h"
 #include <tuple>
+
+#include "PrintTuple.h"
 
 TEST(PrintTupleTests, TuplePrints) {
     testing::internal::CaptureStdout();
