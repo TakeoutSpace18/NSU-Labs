@@ -8,5 +8,5 @@
 
 int main(int argc, const char** argv) {
     CameraDemo demo;
-    return demo.launch();
+    return demo.Launch();
 }

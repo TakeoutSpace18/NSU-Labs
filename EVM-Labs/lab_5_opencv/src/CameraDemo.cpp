@@ -4,7 +4,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-int CameraDemo::launch() {
+int CameraDemo::Launch() {
     video_capture_.open(0);
     if (!video_capture_.isOpened()) {
         std::cout << "***Could not initialize capturing...***\n";
@@ -13,10 +13,30 @@ int CameraDemo::launch() {
     cv::namedWindow(window_name_, 0);
     is_running_ = true;
 
-    return main_loop();
+    return MainLoop();
 }
 
-int CameraDemo::main_loop() {
+void CameraDemo::CaptureFrame() {
+    video_capture_ >> frame_;
+}
+
+void CameraDemo::ShowFrame() {
+    cv::imshow(window_name_, frame_);
+}
+
+void CameraDemo::ProcessFrame() {
+    cv::putText(frame_, "FPS: " + std::to_string(fps_), {5, 25}, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0,255,0));
+}
+
+void CameraDemo::HandleEvents() {
+    switch (cv::waitKey(1)) {
+        case 'q':
+            is_running_ = false;
+            break;
+    }
+}
+
+int CameraDemo::MainLoop() {
     static constexpr uint32_t n_frames_update_fps = 60;
 
     uint32_t frames_since_last_time_measure = 0;
@@ -25,18 +45,12 @@ int CameraDemo::main_loop() {
     while (is_running_) {
         ++frames_since_last_time_measure;
 
-        cv::Mat frame;
-        video_capture_ >> frame;
-        cv::putText(frame, "FPS: " + std::to_string(fps_), {5, 25}, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0,255,0));
 
-        cv::imshow(window_name_, frame);
+        CaptureFrame();
+        ProcessFrame();
+        ShowFrame();
 
-
-        switch (cv::waitKey(10)) {
-            case 'q':
-                is_running_ = false;
-            break;
-        }
+        // HandleEvents();
 
         if (frames_since_last_time_measure >= n_frames_update_fps) {
             auto time_now = std::chrono::high_resolution_clock::now();
