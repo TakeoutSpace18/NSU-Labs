@@ -1,7 +1,6 @@
 #ifndef CSVPARSER_H
 #define CSVPARSER_H
 
-#include <codecvt>
 #include <limits>
 #include <ranges>
 #include <utility>
@@ -58,9 +57,17 @@ public:
         return *this;
     }
 
-    bool eofReached() { return istream_.rdbuf()->in_avail() == 0; }
-    auto begin() { return InputIterator(this); }
-    auto end() const { return InputIterator(); }
+    bool eofReached() {
+        return istream_.rdbuf()->in_avail() == 0;
+    }
+
+    auto begin() {
+        return InputIterator(this);
+    }
+
+    auto end() const {
+        return InputIterator();
+    }
 
 private:
     class FieldExtractor;
@@ -154,10 +161,16 @@ struct basic_CSVParser<CharT, Traits, Types...>::InputIterator {
     using pointer = value_type *;
     using reference = value_type &;
 
+    // iterator pointing to end is created by default
     InputIterator() = default;
 
     explicit InputIterator(basic_CSVParser* parser) : parser_(parser) {
-        (*parser_) >> cur_data_;
+        if (parser_->eofReached()) {
+            parser_ = nullptr;
+        }
+        else {
+            (*parser_) >> cur_data_;
+        }
     }
 
     reference operator*() {
@@ -169,10 +182,11 @@ struct basic_CSVParser<CharT, Traits, Types...>::InputIterator {
     }
 
     InputIterator& operator++() {
-        (*parser_) >> cur_data_;
         if (parser_->eofReached()) {
             parser_ = nullptr;
+            return *this;
         }
+        (*parser_) >> cur_data_;
         return *this;
     }
 
