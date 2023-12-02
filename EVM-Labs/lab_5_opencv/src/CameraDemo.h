@@ -1,5 +1,6 @@
 #ifndef CAMERADEMO_H
 #define CAMERADEMO_H
+#include <opencv2/dnn_superres.hpp>
 #include <opencv2/videoio.hpp>
 
 
@@ -9,21 +10,21 @@ public:
 
 
 private:
-    void CaptureFrame();
+    cv::Mat CaptureFrame();
 
-    void ShowFrame();
+    void ShowFrame(const cv::Mat& frame);
 
-    void ProcessFrame();
+    cv::Mat ProcessFrame(cv::Mat frame);
 
     void HandleEvents();
 
     int MainLoop();
 
     bool is_running_ = true;
-    uint32_t fps_ = 0;
+    double fps_ = 0;
     std::string window_name_ = "WebCam Demo";
     cv::VideoCapture video_capture_;
-    cv::Mat frame_;
+    cv::dnn_superres::DnnSuperResImpl sr_;
 };
 
 
