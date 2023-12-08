@@ -8,7 +8,6 @@ class CameraDemo {
 public:
     int Launch();
 
-
 private:
     cv::Mat CaptureFrame();
 
