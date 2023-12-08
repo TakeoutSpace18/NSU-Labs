@@ -9,7 +9,6 @@
 #include <iostream>
 #include <numeric>
 #include <thread>
-#include <bits/random.h>
 
 CacheSizeMeasure::CacheSizeMeasure(const Config& config)
 : config_(config),
@@ -34,7 +33,9 @@ void CacheSizeMeasure::doMeasurings(const std::string& output_filename, const Tr
         traverseArray(N, 1); // cache warm-up
 
         double avg_time = 0;
-        for (int j = 0; j < config_.measure_repeats; ++j) {
+        for (uint32_t j = 0; j < config_.measure_repeats; ++j) {
+
+            prepareForTraverse(N, type);
             auto time = measureFunctionRuntime(std::mem_fn(&CacheSizeMeasure::traverseArray), this, N,
                                                config_.traverse_repeat_count);
             avg_time += static_cast<double>(time.count());
@@ -62,12 +63,18 @@ void CacheSizeMeasure::prepareForTraverse(const size_t N, const TraverseType typ
             array_[0] = N-1;
             break;
         case TraverseType::Random:
-            std::iota(array_, array_ + N, 1);
-            array_[N-1] = 0;
+            std::vector<std::size_t> traverse_order(N);
+            std::iota(traverse_order.begin(), traverse_order.end(), 0);
 
             std::random_device rd;
             std::mt19937_64 g(rd());
-            std::shuffle(array_, array_ + N, g);
+            std::ranges::shuffle(traverse_order, g);
+
+            for (std::size_t i = 0; i < N-1; ++i) {
+                array_[traverse_order[i]] = traverse_order[i+1];
+            }
+            array_[traverse_order[N-1]] = traverse_order[0];
+
             break;
     }
 }
