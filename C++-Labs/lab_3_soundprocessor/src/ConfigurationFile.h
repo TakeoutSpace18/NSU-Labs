@@ -51,10 +51,10 @@ public:
     InputIterator& operator++();
     InputIterator operator++(int);
 
-    friend bool operator==(const InputIterator &a, const InputIterator &b);;
+    friend bool operator==(const InputIterator &a, const InputIterator &b);
 
 private:
-    ConfigurationFile* m_configuration_file;
+    ConfigurationFile* m_configuration_file = nullptr;
     std::tuple<ConverterName, ConverterArgs> m_current_command;
 };
 
