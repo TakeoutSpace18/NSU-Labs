@@ -81,7 +81,7 @@ namespace  {
     }
 }
 
-void calc_inv_matrix_naive::operator()(float* in, float* out, std::size_t N) {
+void calc_inv_matrix_simd::operator()(float* in, float* out, std::size_t N) {
     std::vector<float> b(N*N, 0);
     std::vector<float> r(N*N, 0);
     std::vector<float> cur_r(N*N, 0);
@@ -99,9 +99,10 @@ void calc_inv_matrix_naive::operator()(float* in, float* out, std::size_t N) {
     }
 
     mat_mul(sum.data(), b.data(), out, N);
+ }
+
+std::string calc_inv_matrix_simd::getDescription() const
+{
+    return "SIMD_implementation";
 }
 
-std::string calc_inv_matrix_naive::getDescription() const
-{
-    return "Naive_implementation";
-}

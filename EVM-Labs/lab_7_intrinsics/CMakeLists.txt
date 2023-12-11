@@ -12,7 +12,7 @@ add_executable(lab_7_intrinsics)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTest REQUIRED)
 
-target_sources(lab_7_intrinsics PRIVATE test/inversion_test.cpp src/naive_impl.cpp)
+target_sources(lab_7_intrinsics PRIVATE test/inversion_test.cpp src/naive_impl.cpp src/simd_impl.cpp)
 target_include_directories(lab_7_intrinsics PRIVATE src)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCEO_DIR}" FILES ${sources})
