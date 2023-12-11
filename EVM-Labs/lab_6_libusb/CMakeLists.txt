@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(lab_6_libusb
-        src/main.cpp
+        src/print_usb_devices.cpp
 )
 
 target_include_directories(lab_6_libusb PRIVATE src)
