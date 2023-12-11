@@ -15,7 +15,15 @@ add_library(soundprocessor_common
         src/ConfigurationFile.cpp
         src/ConfigurationFile.h
         src/utils/CommandLineOptions.cpp
-        src/utils/CommandLineOptions.h)
+        src/utils/CommandLineOptions.h
+        src/audio/AudioStream.h
+        src/convert/Converter.h
+        src/audio/AudioFile.h
+        src/audio/WavPCMAudioFile.cpp
+        src/audio/WavPCMAudioFile.h
+        src/audio/AudioFile.cpp
+        src/audio/AudioStream.cpp
+)
 
 target_include_directories(soundprocessor_common PUBLIC src ${Boost_INCLUDE_DIR})
 target_compile_options(soundprocessor_common PUBLIC -Wall -Wpedantic)

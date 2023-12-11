@@ -39,6 +39,11 @@ fs::path CommandLineOptions::getOutputFileName() const
     return m_variables_map["output"].as<fs::path>();
 }
 
+fs::path CommandLineOptions::getConfigurationFileName() const
+{
+    return m_variables_map["config"].as<fs::path>();
+}
+
 std::vector<fs::path> CommandLineOptions::getInputFileNames() const
 {
     return m_variables_map["input"].as<std::vector<fs::path>>();

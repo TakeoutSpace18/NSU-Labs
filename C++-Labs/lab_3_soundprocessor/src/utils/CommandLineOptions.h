@@ -14,6 +14,7 @@ public:
 
 	[[nodiscard]] bool printHelpIfRequired(std::ostream& out) const;
 	[[nodiscard]] fs::path getOutputFileName() const;
+	[[nodiscard]] fs::path getConfigurationFileName() const;
 	[[nodiscard]] std::vector<fs::path> getInputFileNames() const;
 
 private:
