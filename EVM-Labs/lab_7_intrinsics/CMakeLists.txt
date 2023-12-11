@@ -7,18 +7,17 @@ project(lab_7_intrinsics
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-Wall -O3")
 
-add_executable(InversionTest)
+add_executable(lab_7_intrinsics)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GTest REQUIRED)
 
-target_sources(InversionTest PRIVATE test/inversion_test.cpp src/naive_impl.cpp)
-target_include_directories(InversionTest PRIVATE src)
+target_sources(lab_7_intrinsics PRIVATE test/inversion_test.cpp src/naive_impl.cpp)
+target_include_directories(lab_7_intrinsics PRIVATE src)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCEO_DIR}" FILES ${sources})
 
-target_link_libraries(InversionTest Eigen3::Eigen gtest gtest_main)
+target_link_libraries(lab_7_intrinsics Eigen3::Eigen gtest gtest_main)
 
-add_test(NAME InversionTest
-	 COMMAND InversionTest)
+gtest_discover_tests(lab_7_intrinsics)
 enable_testing()

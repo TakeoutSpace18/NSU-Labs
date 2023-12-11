@@ -12,6 +12,16 @@ using namespace naive_impl;
 // 	std::copy(mat_inv.data(), mat_inv.data() + N * N, out);
 // }
 
+template <class F, class... Args>
+auto measure_function_runtime(F func, Args&&... args) {
+	using clock = std::chrono::high_resolution_clock;
+
+	const auto start = clock::now();
+	func(std::forward<Args>(args)...);
+	const auto stop = clock::now();
+	return stop - start;
+}
+
 void create_random_diagonally_dominant_matrix(float *a, std::size_t N) {
 	std::random_device rd;
         std::mt19937 gen(rd());
@@ -41,7 +51,10 @@ TEST_P(MatrixInversionParametrizedTest, test1) {
 	float *a_inv = new float[N * N];
 	
 	create_random_diagonally_dominant_matrix(a, N);
-	calc_inv_matrix(a, a_inv, N);
+
+	namespace chr = std::chrono;
+	const auto time = measure_function_runtime(calc_inv_matrix, a, a_inv, N);
+	std::cout << "Time elapsed: " << chr::duration_cast<chr::milliseconds>(time).count() << " ms\n";
 
 	Eigen::MatrixXf mat_a = Eigen::Map<const Eigen::MatrixXf>(a, N, N);
 	Eigen::MatrixXf mat_inv = Eigen::Map<const Eigen::MatrixXf>(a_inv, N, N);
@@ -57,11 +70,3 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(
                 4, 200, 256
         ));
-
-
- TEST(MatrixInversionTests, SimpleMatrix) {
- 	std::vector<float> mat = {1, 2, 3, 4};
- 	std::vector<float> out(4, 0);
- 	calc_inv_matrix(&mat[0], &out[0], 2);
-
- }
