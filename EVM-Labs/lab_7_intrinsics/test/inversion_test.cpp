@@ -64,7 +64,11 @@ INSTANTIATE_TEST_SUITE_P(
         MatrixInversionTests,
         MatrixInversionParametrizedTest,
         ::testing::Combine(
-			::testing::Values(std::make_shared<calc_inv_matrix_naive>(), std::make_shared<calc_inv_matrix_simd>()),
+			::testing::Values(
+				std::make_shared<calc_inv_matrix_naive>(),
+				std::make_shared<calc_inv_matrix_blas>(),
+				std::make_shared<calc_inv_matrix_simd>()
+				),
 			::testing::Values(4, 200, 256, 512)
 			), [](const testing::TestParamInfo<MatrixInversionParametrizedTest::ParamType>& info) {
 				auto desc = std::get<0>(info.param)->getDescription();

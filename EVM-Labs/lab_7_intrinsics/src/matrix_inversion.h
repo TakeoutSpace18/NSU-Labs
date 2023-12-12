@@ -12,13 +12,19 @@ protected:
     static const std::size_t sum_iter_count = 130;
 };
 
-struct calc_inv_matrix_naive : public calc_inv_matrix
+struct calc_inv_matrix_naive : calc_inv_matrix
 {
     void operator()(float* in, float* out, std::size_t N) override;
     [[nodiscard]] std::string getDescription() const override;
 };
 
-struct calc_inv_matrix_simd : public calc_inv_matrix
+struct calc_inv_matrix_simd : calc_inv_matrix
+{
+    void operator()(float* in, float* out, std::size_t N) override;
+    [[nodiscard]] std::string getDescription() const override;
+};
+
+struct calc_inv_matrix_blas : calc_inv_matrix
 {
     void operator()(float* in, float* out, std::size_t N) override;
     [[nodiscard]] std::string getDescription() const override;
