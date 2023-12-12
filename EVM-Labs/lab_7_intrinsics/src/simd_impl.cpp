@@ -2,11 +2,20 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <immintrin.h>
 
 #include "matrix_inversion.h"
 
 
 namespace  {
+    __mmask16 sizeToMask[] = {
+        0x0000, 0x0001, 0x0003, 0x0007,
+        0x000F, 0x001F, 0x003F, 0x007F,
+        0x00FF, 0x01FF, 0x03FF, 0x07FF,
+        0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF,
+        0xFFFF
+    };
+
     float calc_a_one_mul_a_inf(const float* mat_a, std::size_t N) {
         float a_inf_max = std::numeric_limits<float>::min();
         std::vector<float> a_one_sums(N, 0);
@@ -43,11 +52,27 @@ namespace  {
 
     void mat_mul(const float* a, const float* b, float* out, std::size_t N) {
         std::fill_n(out, N*N, 0);
-        for (std::size_t i = 0; i < N; ++i) {
-            for (std::size_t j = 0; j < N; ++j) {
-                for (std::size_t k = 0; k < N; ++k) {
-                    out[i*N + k] += a[i*N + j] * b[j * N + k];
+        for (std::size_t i = 0; i < N; ++i)
+        {
+            for (std::size_t j = 0; j < N; ++j)
+            {
+                __m128 scalar = _mm_maskz_loadu_ps(sizeToMask[1], a + i*N + j);
+                __m512 scalar_line = _mm512_broadcastss_ps(scalar);
+                std::size_t k;
+                for (k = 0; k < (N & ~15); k += 16)
+                {
+                    __m512 line = _mm512_loadu_ps(b + j*N + k);
+                    line = _mm512_mul_ps(line, scalar_line);
+                    __m512 out_line = _mm512_loadu_ps(out + i*N + k);
+                    out_line = _mm512_add_ps(out_line, line);
+                    _mm512_storeu_ps(out + i*N + k, out_line);
                 }
+                __mmask16 mask = sizeToMask[N - k];
+                __m512 line = _mm512_maskz_loadu_ps(mask, b + N*j + k);
+                line = _mm512_mul_ps(line, scalar_line);
+                __m512 out_line = _mm512_maskz_loadu_ps(mask, out + i*N + k);
+                out_line = _mm512_add_ps(out_line, line);
+                _mm512_mask_storeu_ps(out + i*N + k, mask, out_line);
             }
         }
     }
@@ -72,13 +97,24 @@ namespace  {
         }
     }
 
+
     void mat_add(float* dest, const float* src, std::size_t N) {
-        for (std::size_t i = 0; i < N; ++i) {
-            for (std::size_t j = 0; j < N; ++j) {
-                dest[i*N + j] += src[i*N + j];
-            }
+        std::size_t i;
+        for (i = 0; i < (N*N & ~15); i += 16) {
+            __m512 a = _mm512_loadu_ps(src + i);
+            __m512 b = _mm512_loadu_ps(dest + i);
+            __m512 sum = _mm512_add_ps(a, b);
+            _mm512_storeu_ps(dest + i, sum);
         }
+
+        __mmask16 mask = sizeToMask[N*N - i];
+
+        __m512 a = _mm512_maskz_loadu_ps(mask, src + i);
+        __m512 b = _mm512_maskz_loadu_ps(mask, dest + i);
+        __m512 sum = _mm512_maskz_add_ps(mask, a, b);
+        _mm512_mask_storeu_ps(dest + i, mask, sum);
     }
+
 }
 
 void calc_inv_matrix_simd::operator()(float* in, float* out, std::size_t N) {

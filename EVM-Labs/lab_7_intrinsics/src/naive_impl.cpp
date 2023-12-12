@@ -73,10 +73,8 @@ namespace  {
     }
 
     void mat_add(float* dest, const float* src, std::size_t N) {
-        for (std::size_t i = 0; i < N; ++i) {
-            for (std::size_t j = 0; j < N; ++j) {
-                dest[i*N + j] += src[i*N + j];
-            }
+        for (std::size_t i = 0; i < N*N; ++i) {
+            dest[i] += src[i];
         }
     }
 }

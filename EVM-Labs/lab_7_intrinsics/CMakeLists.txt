@@ -14,6 +14,7 @@ find_package(GTest REQUIRED)
 
 target_sources(lab_7_intrinsics PRIVATE test/inversion_test.cpp src/naive_impl.cpp src/simd_impl.cpp)
 target_include_directories(lab_7_intrinsics PRIVATE src)
+target_compile_options(lab_7_intrinsics PRIVATE -O2 -mavx512f -mavx512vl -mfma)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCEO_DIR}" FILES ${sources})
 
