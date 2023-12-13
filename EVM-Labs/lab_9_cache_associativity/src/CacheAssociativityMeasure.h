@@ -12,6 +12,7 @@ public:
         std::size_t step_offset_bytes;
         std::size_t max_banks;
         std::size_t num_sets;
+        std::size_t traverse_repeats;
     };
 
     CacheAssociativityMeasure() = delete;

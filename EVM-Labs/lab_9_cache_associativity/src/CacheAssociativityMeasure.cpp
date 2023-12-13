@@ -24,7 +24,7 @@ void CacheAssociativityMeasure::doMeasurings(const std::string &output_filename)
     for (std::size_t banks = 1; banks < m_config.max_banks; ++banks)
     {
         fillArray(m_config.num_sets, banks);
-        auto time = measureTraverseTime(m_config.num_sets, banks, 5000);
+        auto time = measureTraverseTime(m_config.num_sets, banks, m_config.traverse_repeats);
         data_output << banks << "," << time << '\n';
     }
 
