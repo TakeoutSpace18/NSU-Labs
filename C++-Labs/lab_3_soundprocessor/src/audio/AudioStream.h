@@ -4,7 +4,10 @@
 
 
 class AudioStream {
+public:
 
+private:
+    std::istream m_stream;
 };
 
 

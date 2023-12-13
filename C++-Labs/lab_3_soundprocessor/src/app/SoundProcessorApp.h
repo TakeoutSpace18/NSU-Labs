@@ -1,6 +1,8 @@
 #ifndef SOUNDPROCESSORAPP_H
 #define SOUNDPROCESSORAPP_H
-#include <utils/CommandLineOptions.h>
+#include <app/CommandLineOptions.h>
+
+#include "audio/AudioFile.h"
 
 
 class SoundProcessorApp {

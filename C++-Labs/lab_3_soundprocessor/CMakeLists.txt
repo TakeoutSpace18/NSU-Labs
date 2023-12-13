@@ -9,20 +9,22 @@ find_package(fmt REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 add_library(soundprocessor_common
-        src/SoundProcessorApp.cpp
-        src/SoundProcessorApp.h
+        src/app/SoundProcessorApp.cpp
+        src/app/SoundProcessorApp.h
         src/utils/Logger.cpp
-        src/ConfigurationFile.cpp
-        src/ConfigurationFile.h
-        src/utils/CommandLineOptions.cpp
-        src/utils/CommandLineOptions.h
+        src/app/ConfigurationFile.cpp
+        src/app/ConfigurationFile.h
+        src/app/CommandLineOptions.cpp
+        src/app/CommandLineOptions.h
         src/audio/AudioStream.h
         src/convert/Converter.h
         src/audio/AudioFile.h
-        src/audio/WavPCMAudioFile.cpp
-        src/audio/WavPCMAudioFile.h
+        src/audio/Pcm_s16le_AudioFile.cpp
+        src/audio/Pcm_s16le_AudioFile.h
         src/audio/AudioFile.cpp
         src/audio/AudioStream.cpp
+        src/app/InputFilesLoader.cpp
+        src/app/InputFilesLoader.h
 )
 
 target_include_directories(soundprocessor_common PUBLIC src ${Boost_INCLUDE_DIR})

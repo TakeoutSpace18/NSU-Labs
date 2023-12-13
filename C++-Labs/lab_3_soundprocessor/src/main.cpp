@@ -1,6 +1,7 @@
 #include <utils/Logger.h>
 
-#include "SoundProcessorApp.h"
+#include "app/SoundProcessorApp.h"
+#include "app/CommandLineOptions.h"
 
 int main(int argc, char** argv) {
     try {

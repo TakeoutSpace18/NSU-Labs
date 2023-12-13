@@ -12,16 +12,18 @@ public:
     AudioFile() = default;
     virtual ~AudioFile() = default;
 
-    virtual void write(const fs::path& file) = 0;
+    virtual void open(const fs::path& file_path);
+    virtual void save(const fs::path& file) = 0;
 
-    struct AudioFileError : public std::runtime_error
+    struct AudioFileError : std::runtime_error
     {
         explicit AudioFileError(const std::string& msg);
     };
 
 
 protected:
-    std::unique_ptr<AudioStream> m_audio_stream;
+    fs::path m_path;
+    std::shared_ptr<std::istream> m_input_stream;
 };
 
 
