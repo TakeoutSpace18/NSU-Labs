@@ -87,6 +87,10 @@ public:
 
     template<class T>
     T convertFieldString(std::basic_string<CharT, Traits> field) {
+        if constexpr (std::is_same<T, std::basic_string<CharT, Traits>>()) {
+            return field;
+        }
+
         if constexpr (std::is_arithmetic<T>()) {
             if (field.empty()) {
                 throw CSVParserErrors::EmptyField(parser_.current_row_number_, current_column_number_,

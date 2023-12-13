@@ -7,14 +7,14 @@
 
 TEST(CSVParserTests, ParsesBasicData) {
     std::stringstream sample_csv(
-        "1,abc\n"
+        "1,a bc\n"
         "2,def\n");
     CSVParser<int, std::string> parser(sample_csv);
 
     std::tuple<int, std::string> line;
     parser >> line;
     EXPECT_EQ(std::get<0>(line), 1);
-    EXPECT_EQ(std::get<1>(line), "abc");
+    EXPECT_EQ(std::get<1>(line), "a bc");
 
     parser >> line;
     EXPECT_EQ(std::get<0>(line), 2);
