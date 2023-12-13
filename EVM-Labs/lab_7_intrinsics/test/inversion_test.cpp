@@ -2,6 +2,7 @@
 #include <random>
 #include <gtest/gtest.h>
 #include <Eigen/Dense>
+#include "matrix_utils.h"
 
 #include "matrix_inversion.h"
 
@@ -69,7 +70,7 @@ INSTANTIATE_TEST_SUITE_P(
 				std::make_shared<calc_inv_matrix_blas>(),
 				std::make_shared<calc_inv_matrix_simd>()
 				),
-			::testing::Values(4, 200, 256, 512)
+			::testing::Values(2, 4, 8, 200, 256, 512, 1024, 2048)
 			), [](const testing::TestParamInfo<MatrixInversionParametrizedTest::ParamType>& info) {
 				auto desc = std::get<0>(info.param)->getDescription();
 				auto mat_size = std::to_string(std::get<1>(info.param));

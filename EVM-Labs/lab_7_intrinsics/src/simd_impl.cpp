@@ -128,6 +128,7 @@ void calc_inv_matrix_simd::operator()(float* in, float* out, std::size_t N) {
     calc_mat_b(in, b.data(), N);
     calc_mat_r(in, b.data(), r.data(), N);
 
+    const auto sum_iter_count = calc_inv_matrix::matSizeToIterCount(N);
     for (std::size_t iter = 0; iter < sum_iter_count; ++iter) {
         mat_add(sum.data(), cur_r.data(), N);
         std::swap(cur_r, cur_r_copy);

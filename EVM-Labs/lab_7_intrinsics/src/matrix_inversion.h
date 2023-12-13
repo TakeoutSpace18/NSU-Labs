@@ -2,6 +2,7 @@
 #define MATRIX_INVERSION_H
 
 #include <cstddef>
+#include <string>
 
 struct calc_inv_matrix
 {
@@ -9,7 +10,7 @@ struct calc_inv_matrix
     [[nodiscard]] virtual std::string getDescription() const = 0;
 
 protected:
-    static const std::size_t sum_iter_count = 130;
+    static std::size_t matSizeToIterCount(std::size_t N);
 };
 
 struct calc_inv_matrix_naive : calc_inv_matrix
