@@ -1,17 +1,32 @@
 #ifndef WAVPCMAUDIOFILE_H
 #define WAVPCMAUDIOFILE_H
-#include "AudioFile.h"
 
+#include "audio/AudioFile.h"
+#include "audio/AudioInput.h"
+#include "audio/AudioOutput.h"
+
+
+class Pcm_s16le_AudioOutput;
+class Pcm_s16le_AudioInput;
 
 class Pcm_s16le_AudioFile : public AudioFile
 {
 public:
+    /// create empty file (useless until open is called)
+    Pcm_s16le_AudioFile() = default;
+
+    /// open file
     explicit Pcm_s16le_AudioFile(const fs::path &file_path);
 
     void open(const fs::path &file_path) override;
-    void save(const fs::path &file) override;
+
+    std::unique_ptr<AudioFile> copyWithoutDataTo(const fs::path& file_path) override;
+
+    std::unique_ptr<AudioOutput> beginWriting() override;
+    std::unique_ptr<AudioInput> beginReading() override;
 
 private:
+
     void parseHeader();
 
     struct WavHeader
@@ -39,8 +54,26 @@ private:
         uint32_t subchunk2Size;
     };
 
+    friend Pcm_s16le_AudioInput;
+    friend Pcm_s16le_AudioOutput;
 
     WavHeader m_header;
+};
+
+class Pcm_s16le_AudioInput final : public AudioInput
+{
+public:
+    explicit Pcm_s16le_AudioInput(Pcm_s16le_AudioFile* audio_file);
+
+    [[nodiscard]] std::vector<AudioFile::SampleBuffer> readNextChannels() override;
+};
+
+class Pcm_s16le_AudioOutput final : public AudioOutput
+{
+public:
+    explicit Pcm_s16le_AudioOutput(Pcm_s16le_AudioFile* audio_file);
+
+    void writeNextChannels(const std::vector<AudioFile::SampleBuffer>& channels) override;
 };
 
 

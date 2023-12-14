@@ -1,6 +1,6 @@
 #include "InputFilesLoader.h"
 
-#include "audio/Pcm_s16le_AudioFile.h"
+#include "audio/pcm_s16le/Pcm_s16le_impl.h"
 
 InputFilesLoader::InputFilesLoader(const std::vector<fs::path>& file_paths) : m_file_paths(file_paths),
     m_holder(m_file_paths.size(), nullptr)
