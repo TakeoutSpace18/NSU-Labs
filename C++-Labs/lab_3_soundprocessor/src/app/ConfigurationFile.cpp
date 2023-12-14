@@ -25,7 +25,7 @@ ConfigurationFile::getNextCommand() const
         std::getline(*m_stream, line);
     } while (m_stream->good() && (line.starts_with('#') || line.empty())); // skip comments
 
-    if (!m_stream->good()) {
+    if (!m_stream->good() && (line.starts_with('#') || line.empty())) {
         return std::nullopt;
     }
 

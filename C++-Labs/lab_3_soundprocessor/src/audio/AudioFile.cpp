@@ -3,16 +3,36 @@
 #include <fstream>
 #include <fmt/format.h>
 
-void AudioFile::open(const fs::path& file_path)
+const AudioFile::Properties& AudioFile::getProperties() const
 {
-    auto file_stream = std::make_shared<std::ifstream>(file_path, std::ios::binary);
-    if (!file_stream->is_open())
+    return m_properties;
+}
+
+void AudioFile::openInputHandle()
+{
+    m_output_handle.reset(nullptr);
+
+    auto file_input = std::make_unique<std::ifstream>(m_path, std::ios::binary);
+    if (!file_input->is_open())
     {
-        throw AudioFileError(fmt::format("Failed to open audio file {}", file_path.string()));
+        throw AudioFileError(fmt::format("Failed to open audio file {} for reading", m_path.string()));
     }
-    m_input_stream = std::move(file_stream);
-    m_path = file_path;
+
+    m_input_handle = std::move(file_input);
+}
+
+void AudioFile::openOutputHandle()
+{
+    m_input_handle.reset(nullptr);
+
+    auto file_output = std::make_unique<std::ofstream>(m_path, std::ios::binary);
+    if (!file_output->is_open())
+    {
+        throw AudioFileError(fmt::format("Failed to open audio file {} for writing", m_path.string()));
+    }
+
+    m_output_handle = std::move(file_output);
 }
 
 AudioFile::AudioFileError::AudioFileError(const std::string& msg) :
-std::runtime_error(msg){}
+    std::runtime_error(msg){}

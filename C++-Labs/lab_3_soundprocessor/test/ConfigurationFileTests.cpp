@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/ConfigurationFile.h"
+#include "app/ConfigurationFile.h"
 
 TEST(ConfigurationFileTests, CanParseData)
 {
@@ -10,6 +10,16 @@ TEST(ConfigurationFileTests, CanParseData)
     auto [name, args] = cmd.value();
     EXPECT_EQ(name, "mute");
     EXPECT_EQ(args, (ConfigurationFile::ConverterArgs{"0", "30"}));
+}
+
+TEST(ConfigurationFileTests, CanParseSingleLine)
+{
+    ConfigurationFile config("files/single_line.txt");
+    auto cmd = config.getNextCommand();
+    EXPECT_TRUE(cmd.has_value());
+    auto [name, args] = cmd.value();
+    EXPECT_EQ(name, "dummy");
+    EXPECT_EQ(args, (ConfigurationFile::ConverterArgs{"1", "2", "3", "4"}));
 }
 
 TEST(ConfigurationFileTests, ThrowsOnNonExistentFile)
