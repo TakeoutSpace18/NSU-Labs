@@ -17,7 +17,7 @@ ConfigurationFile::ConfigurationFile(std::unique_ptr<std::istream> stream)
     m_stream = std::move(stream);
 }
 
-std::optional<std::tuple<ConfigurationFile::ConverterName,ConfigurationFile::ConverterArgs>>
+std::optional<std::pair<ConfigurationFile::ConverterName,ConfigurationFile::ConverterArgs>>
 ConfigurationFile::getNextCommand() const
 {
     std::string line;
@@ -29,17 +29,12 @@ ConfigurationFile::getNextCommand() const
         return std::nullopt;
     }
 
-    std::stringstream ss(line);
+    auto first_delim = line.find(' ');
 
-    ConverterName name;
-    ss >> name;
+    ConverterName name = line.substr(0, first_delim);
+    ConverterArgs args = line.substr(first_delim + 1);
 
-    ConverterArgs args;
-    std::copy(std::istream_iterator<std::string>(ss),
-        std::istream_iterator<std::string>(),
-        std::back_inserter(args));
-
-    return std::make_tuple(std::move(name), std::move(args));
+    return std::make_pair(std::move(name), std::move(args));
 }
 
 ConfigurationFile::CantOpenFileError::CantOpenFileError(const std::filesystem::path &path) : std::runtime_error(

@@ -15,11 +15,11 @@ public:
     explicit ConfigurationFile(std::unique_ptr<std::istream> stream);
 
     using ConverterName = std::string;
-    using ConverterArgs = std::vector<std::string>;
+    using ConverterArgs = std::string;
 
-    [[nodiscard]] std::optional<std::tuple<ConverterName, ConverterArgs>> getNextCommand() const;
+    [[nodiscard]] std::optional<std::pair<ConverterName, ConverterArgs>> getNextCommand() const;
 
-    struct CantOpenFileError final : public std::runtime_error
+    struct CantOpenFileError final : std::runtime_error
     {
         explicit CantOpenFileError(const std::filesystem::path& path);
     };

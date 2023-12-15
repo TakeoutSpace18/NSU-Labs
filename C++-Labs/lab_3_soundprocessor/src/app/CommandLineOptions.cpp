@@ -21,13 +21,27 @@ m_description("General options")
         .positional(pos_desc)
         .run(),
         m_variables_map);
-    po::notify(m_variables_map);
+
+    try
+    {
+        po::notify(m_variables_map);
+    }
+    catch (const po::required_option& e)
+    {
+        // ignore required options if --help needed
+        if (!m_variables_map.contains("help"))
+        {
+            throw;
+        }
+    }
 }
 
 bool CommandLineOptions::printHelpIfRequired(std::ostream& out) const
 {
     if (m_variables_map.contains("help")) {
         out << m_description;
+
+
         return true;
     }
 

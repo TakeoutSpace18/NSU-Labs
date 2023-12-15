@@ -8,7 +8,7 @@ class AudioOutput {
 public:
     virtual ~AudioOutput();
 
-    virtual void writeNextChannels(const std::vector<AudioFile::SampleBuffer>& channels) = 0;
+    virtual void writeNextSamplesChunk(const std::vector<AudioFile::SampleBuffer>& channels) = 0;
 
     [[nodiscard]] const AudioFile::Properties& properties() const;
 

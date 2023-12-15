@@ -64,7 +64,7 @@ class Pcm_s16le_AudioInput final : public AudioInput
 public:
     explicit Pcm_s16le_AudioInput(Pcm_s16le_AudioFile* audio_file);
 
-    [[nodiscard]] std::vector<AudioFile::SampleBuffer> readNextChannels() override;
+    [[nodiscard]] std::vector<AudioFile::SampleBuffer> readNextSamplesChunk() override;
 };
 
 class Pcm_s16le_AudioOutput final : public AudioOutput
@@ -72,7 +72,7 @@ class Pcm_s16le_AudioOutput final : public AudioOutput
 public:
     explicit Pcm_s16le_AudioOutput(Pcm_s16le_AudioFile* audio_file);
 
-    void writeNextChannels(const std::vector<AudioFile::SampleBuffer>& channels) override;
+    void writeNextSamplesChunk(const std::vector<AudioFile::SampleBuffer>& channels) override;
 };
 
 

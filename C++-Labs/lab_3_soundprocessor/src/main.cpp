@@ -4,14 +4,14 @@
 #include "app/CommandLineOptions.h"
 
 int main(int argc, char** argv) {
-    try {
+    // try {
         CommandLineOptions cmdOptions(argc, argv);
         SoundProcessorApp app;
         return app.launch(cmdOptions);
-    }
-    catch (const std::exception& e) {
-        logger << Logger::Error << e.what() << '\n';
-        return EXIT_FAILURE;
-    }
+    // }
+    // catch (const std::exception& e) {
+        // logger << Logger::Error << e.what() << '\n';
+        // return EXIT_FAILURE;
+    // }
 
 }

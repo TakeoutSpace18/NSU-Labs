@@ -42,6 +42,8 @@ add_executable(lab_3_soundprocessor
         src/convert/DummyConverter.cpp
         src/convert/DummyConverter.h
         src/convert/Converter.cpp
+        src/convert/ConverterArgumentsUtils.cpp
+        src/convert/ConverterArgumentsUtils.h
 )
 target_link_libraries(lab_3_soundprocessor soundprocessor_common)
 

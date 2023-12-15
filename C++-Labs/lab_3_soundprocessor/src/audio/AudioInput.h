@@ -8,7 +8,7 @@ class AudioInput {
 public:
     virtual ~AudioInput();
 
-    [[nodiscard]] virtual std::vector<std::vector<int64_t>> readNextChannels() = 0;
+    [[nodiscard]] virtual std::vector<std::vector<int64_t>> readNextSamplesChunk() = 0;
     [[nodiscard]] virtual bool hasData() const;
 
     [[nodiscard]] const AudioFile::Properties& properties() const;

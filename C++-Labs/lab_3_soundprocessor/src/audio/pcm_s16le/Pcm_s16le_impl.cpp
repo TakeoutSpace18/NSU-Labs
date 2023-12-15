@@ -69,7 +69,7 @@ Pcm_s16le_AudioInput::Pcm_s16le_AudioInput(Pcm_s16le_AudioFile* audio_file) : Au
 {
 }
 
-std::vector<AudioFile::SampleBuffer> Pcm_s16le_AudioInput::readNextChannels()
+std::vector<AudioFile::SampleBuffer> Pcm_s16le_AudioInput::readNextSamplesChunk()
 {
     auto& props = m_associated_audio_file->getProperties();
 
@@ -102,7 +102,7 @@ Pcm_s16le_AudioOutput::Pcm_s16le_AudioOutput(Pcm_s16le_AudioFile* audio_file) : 
 {
 }
 
-void Pcm_s16le_AudioOutput::writeNextChannels(const std::vector<AudioFile::SampleBuffer>& channels)
+void Pcm_s16le_AudioOutput::writeNextSamplesChunk(const std::vector<AudioFile::SampleBuffer>& channels)
 {
     assert(!channels.empty());
     for (std::size_t i = 0; i < channels[0].size(); ++i)

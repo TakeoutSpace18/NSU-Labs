@@ -6,8 +6,10 @@
 class DummyConverter : public Converter
 {
 public:
-    explicit DummyConverter(const ConfigurationFile::ConverterArgs& args);
+    explicit DummyConverter(const std::string& args);
     void apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output) override;
+
+    void printDescription(std::ostream& os) override;
 };
 
 
