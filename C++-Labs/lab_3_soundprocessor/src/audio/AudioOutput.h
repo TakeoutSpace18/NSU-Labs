@@ -6,9 +6,11 @@
 
 class AudioOutput {
 public:
+    virtual ~AudioOutput();
+
     virtual void writeNextChannels(const std::vector<AudioFile::SampleBuffer>& channels) = 0;
 
-    virtual ~AudioOutput();
+    [[nodiscard]] const AudioFile::Properties& properties() const;
 
 protected:
     explicit AudioOutput(AudioFile* audio_file);

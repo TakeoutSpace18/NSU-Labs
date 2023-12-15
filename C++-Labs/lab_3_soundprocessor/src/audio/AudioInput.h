@@ -11,6 +11,8 @@ public:
     [[nodiscard]] virtual std::vector<std::vector<int64_t>> readNextChannels() = 0;
     [[nodiscard]] virtual bool hasData() const;
 
+    [[nodiscard]] const AudioFile::Properties& properties() const;
+
 protected:
     explicit AudioInput(AudioFile* audio_file);
 

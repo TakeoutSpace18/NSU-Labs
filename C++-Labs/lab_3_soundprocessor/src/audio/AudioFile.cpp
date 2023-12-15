@@ -34,5 +34,40 @@ void AudioFile::openOutputHandle()
     m_output_handle = std::move(file_output);
 }
 
-AudioFile::AudioFileError::AudioFileError(const std::string& msg) :
-    std::runtime_error(msg){}
+void AudioFile::checkAvailableForReading() const
+{
+    switch (m_state)
+    {
+        case State::Reading:
+            throw AudioFileError(
+                fmt::format("Can't begin reading data in file {}: Object is already in reading state.",
+                            m_path.string()));
+        case State::Writing:
+            throw AudioFileError(
+                fmt::format("Can't begin reading data in file {}: Object is already in writing state.",
+                            m_path.string()));
+        default:
+            break;
+    }
+}
+
+void AudioFile::checkAvailableForWriting() const
+{
+    switch (m_state)
+    {
+        case State::Reading:
+            throw AudioFileError(fmt::format("Can't begin writing data to file {}: Object is already in reading state.",
+                                             m_path.string()));
+            break;
+        case State::Writing:
+            throw AudioFileError(fmt::format("Can't begin writing data to file {}: Object is already in writing state.",
+                                             m_path.string()));
+            break;
+        default:
+            break;
+    }
+}
+
+AudioFile::AudioFileError::AudioFileError(const std::string& msg) : std::runtime_error(msg)
+{
+}

@@ -28,10 +28,10 @@ public:
 
     virtual void open(const fs::path& file_path) = 0;
 
-    /// write to the same file path (overwrite)
-    virtual std::unique_ptr<AudioOutput> beginWriting() = 0;
     virtual std::unique_ptr<AudioFile> copyWithoutDataTo(const fs::path& file_path) = 0;
 
+    /// write to the same file path (overwrite)
+    virtual std::unique_ptr<AudioOutput> beginWriting() = 0;
     virtual std::unique_ptr<AudioInput> beginReading() = 0;
 
 
@@ -54,6 +54,9 @@ protected:
 
     void openInputHandle();
     void openOutputHandle();
+
+    void checkAvailableForReading() const;
+    void checkAvailableForWriting() const;
 
     fs::path m_path;
     std::unique_ptr<std::istream> m_input_handle;

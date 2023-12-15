@@ -6,6 +6,7 @@
 
 std::unique_ptr<AudioInput> Pcm_s16le_AudioFile::beginReading()
 {
+    AudioFile::checkAvailableForReading();
     return std::make_unique<Pcm_s16le_AudioInput>(this);
 }
 
@@ -41,7 +42,6 @@ void Pcm_s16le_AudioFile::open(const fs::path& file_path)
 
 std::unique_ptr<AudioFile> Pcm_s16le_AudioFile::copyWithoutDataTo(const fs::path& file_path)
 {
-    // TODO: check for same path
     auto new_file = std::make_unique<Pcm_s16le_AudioFile>();
     new_file->m_path = file_path;
     new_file->openOutputHandle();
@@ -52,6 +52,7 @@ std::unique_ptr<AudioFile> Pcm_s16le_AudioFile::copyWithoutDataTo(const fs::path
 
 std::unique_ptr<AudioOutput> Pcm_s16le_AudioFile::beginWriting()
 {
+    AudioFile::checkAvailableForWriting();
     openOutputHandle();
     m_state = State::Writing;
     m_output_handle->write(reinterpret_cast<char *>(&m_header), sizeof(m_header));
@@ -106,10 +107,10 @@ void Pcm_s16le_AudioOutput::writeNextChannels(const std::vector<AudioFile::Sampl
     assert(!channels.empty());
     for (std::size_t i = 0; i < channels[0].size(); ++i)
     {
-        for (auto& channel : channels)
+        for (auto& channel: channels)
         {
             //TODO: handle different sample types
-            getOutputHandle().write(reinterpret_cast<const char*>(&channel[i]), sizeof(int16_t));
+            getOutputHandle().write(reinterpret_cast<const char *>(&channel[i]), sizeof(int16_t));
         }
     }
 }

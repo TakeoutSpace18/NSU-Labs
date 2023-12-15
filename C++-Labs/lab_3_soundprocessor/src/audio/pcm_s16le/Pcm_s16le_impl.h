@@ -50,8 +50,7 @@ private:
         uint16_t bitsPerSample;
 
         char subchunk2Id[4]; // "data"
-        // numSamples * numChannels * bitsPerSample/8
-        uint32_t subchunk2Size;
+        uint32_t subchunk2Size; // numSamples * numChannels * bitsPerSample/8
     };
 
     friend Pcm_s16le_AudioInput;
