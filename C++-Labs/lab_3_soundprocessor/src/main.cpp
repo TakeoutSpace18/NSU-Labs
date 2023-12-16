@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     try {
         CommandLineOptions cmdOptions(argc, argv);
         SoundProcessorApp app;
-        return app.launch(cmdOptions);
+        return app.launchPipeline(cmdOptions);
     }
     catch (const std::exception& e) {
         logger << Logger::Error << e.what() << '\n';

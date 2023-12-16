@@ -27,7 +27,7 @@ std::unique_ptr<Converter> MuteConverterCreator::create(const std::string& args)
     auto vm = parseArguments(args);
 
     int64_t start_second = (*vm)["start"].as<int64_t>();
-    int64_t end_second = (*vm)["end"].as<int64_t>();
+    int64_t end_second = (*vm)["stop"].as<int64_t>();
     return std::make_unique<MuteConverter>(start_second, end_second);
 }
 

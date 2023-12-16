@@ -7,7 +7,7 @@
 
 class SoundProcessorApp {
 public:
-    int launch(const CommandLineOptions& cmdArgs);
+    int launchPipeline(const CommandLineOptions& cmdArgs);
 };
 
 
