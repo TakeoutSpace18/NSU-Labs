@@ -1,49 +1,28 @@
 #include "Converter.h"
 
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/positional_options.hpp>
+#include <boost/program_options.hpp>
 #include <fmt/format.h>
 
-#include "DummyConverter.h"
-#include "MuteConverter.h"
-
-std::unique_ptr<Converter> Converter::create(const std::string& name,
-                                             const std::string& args)
+std::unique_ptr<po::variables_map> AbstractConverterCreator::parseArguments(const std::string& args) const
 {
-    if (name == "dummy")
+    try
     {
-        return std::make_unique<DummyConverter>(args);
-    }
-    if (name == "mute")
-    {
-        return std::make_unique<MuteConverter>(args);
-    }
-    throw ConverterError(fmt::format("Unknown converter: {}", name));
-}
-
-Converter::ConverterError::ConverterError(const std::string& msg) : std::runtime_error(msg)
-{
-}
-
-Converter::WrongArgumentsCount::WrongArgumentsCount(std::size_t expected, std::size_t actual,
-                                                    std::string converter_name)
-    : ConverterError(fmt::format(
-        "Error while creating {} converter: expected {} arguments, found {}", converter_name, expected,
-        actual))
-{
-}
-
-std::unique_ptr<po::variables_map> Converter::parseArguments(const po::options_description& desc,
-                                                             const po::positional_options_description& pos_desc,
-                                                             const std::string& args)
-{
-    auto vm = std::make_unique<po::variables_map>();
-    po::store(po::command_line_parser(po::split_unix(args))
-              .options(desc)
-              .positional(pos_desc)
+        auto vm = std::make_unique<po::variables_map>();
+        po::store(po::command_line_parser(po::split_unix(args))
+              .options(m_options_description)
+              .positional(m_positional_description)
               .run(),
               *vm);
-    po::notify(*vm);
+        po::notify(*vm);
+        return vm;
 
-    return vm;
+    } catch (const po::error& e)
+    {
+        throw ConverterError(fmt::format("Failed to create {} converter: {}", name(), e.what()));
+    }
 }
+
+ConverterError::ConverterError(const std::string& msg) : std::runtime_error(msg)
+{
+}
+

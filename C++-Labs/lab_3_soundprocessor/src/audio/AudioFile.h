@@ -36,10 +36,6 @@ public:
 
 
     [[nodiscard]] const Properties& getProperties() const;
-    struct AudioFileError : std::runtime_error
-    {
-        explicit AudioFileError(const std::string& msg);
-    };
 
 protected:
     enum class State
@@ -65,6 +61,9 @@ protected:
     State m_state = State::Free;
 };
 
-
+struct AudioFileError : std::runtime_error
+{
+    explicit AudioFileError(const std::string& msg);
+};
 
 #endif //IAUDIOFILE_H

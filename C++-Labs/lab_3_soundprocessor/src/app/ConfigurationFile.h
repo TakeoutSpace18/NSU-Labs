@@ -19,15 +19,12 @@ public:
 
     [[nodiscard]] std::optional<std::pair<ConverterName, ConverterArgs>> getNextCommand() const;
 
-    struct CantOpenFileError final : std::runtime_error
-    {
-        explicit CantOpenFileError(const std::filesystem::path& path);
-    };
-
     class InputIterator;
 
     InputIterator begin();
     InputIterator end();
+
+    static void printHelpMessage(std::ostream& os);
 
 private:
     std::unique_ptr<std::istream> m_stream;
@@ -56,6 +53,11 @@ public:
 private:
     ConfigurationFile* m_configuration_file = nullptr;
     std::tuple<ConverterName, ConverterArgs> m_current_command;
+};
+
+struct ConfigurationFileError : std::runtime_error
+{
+    explicit ConfigurationFileError(const std::string& message);
 };
 
 #endif //CONFIGURATIONFILE_H

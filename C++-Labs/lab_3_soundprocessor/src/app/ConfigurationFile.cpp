@@ -7,7 +7,7 @@ ConfigurationFile::ConfigurationFile(const std::filesystem::path &path)
 {
     auto file_stream = std::make_unique<std::ifstream>(path);
     if (!file_stream->is_open()) {
-        throw CantOpenFileError(path);
+        throw ConfigurationFileError(fmt::format("Can't open configuration file {}", path.string()));
     }
     m_stream = std::move(file_stream);
 }
@@ -37,19 +37,23 @@ ConfigurationFile::getNextCommand() const
     return std::make_pair(std::move(name), std::move(args));
 }
 
-ConfigurationFile::CantOpenFileError::CantOpenFileError(const std::filesystem::path &path) : std::runtime_error(
-    fmt::format("Can't open configuration file {}", path.string())) {}
 
 ConfigurationFile::InputIterator ConfigurationFile::end()
 {
     return InputIterator();
 }
 
+void ConfigurationFile::printHelpMessage(std::ostream& os)
+{
+    os << "Configuration file syntax:\n";
+    os << "\t<converter name> <converter args...>\n";
+    os << "\t# comments are supported\n";
+}
+
 ConfigurationFile::InputIterator ConfigurationFile::begin()
 {
     return InputIterator(this);
 }
-
 
 ConfigurationFile::InputIterator::InputIterator(ConfigurationFile* configuration_file): m_configuration_file(configuration_file)
 {
@@ -94,4 +98,8 @@ ConfigurationFile::InputIterator ConfigurationFile::InputIterator::operator++(in
 bool operator==(const ConfigurationFile::InputIterator& a, const ConfigurationFile::InputIterator& b)
 {
     return a.m_configuration_file == b.m_configuration_file;
+}
+
+ConfigurationFileError::ConfigurationFileError(const std::string& message) : std::runtime_error(message)
+{
 }

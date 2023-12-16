@@ -2,6 +2,9 @@
 
 #include <filesystem>
 
+#include "ConfigurationFile.h"
+#include "convert/ConverterFactory.h"
+
 
 CommandLineOptions::CommandLineOptions(int argc, char* argv[]) :
 m_description("General options")
@@ -36,12 +39,13 @@ m_description("General options")
     }
 }
 
-bool CommandLineOptions::printHelpIfRequired(std::ostream& out) const
+bool CommandLineOptions::printHelpIfRequired(std::ostream& os) const
 {
     if (m_variables_map.contains("help")) {
-        out << m_description;
-
-
+        os << m_description << '\n';
+        ConfigurationFile::printHelpMessage(os);
+        os << '\n';
+        ConverterFactory::printDescriptions(os);
         return true;
     }
 

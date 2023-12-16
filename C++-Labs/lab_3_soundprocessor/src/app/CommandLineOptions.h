@@ -12,7 +12,7 @@ class CommandLineOptions
 public:
     CommandLineOptions(int argc, char* argv[]);
 
-	[[nodiscard]] bool printHelpIfRequired(std::ostream& out) const;
+	[[nodiscard]] bool printHelpIfRequired(std::ostream& os) const;
 	[[nodiscard]] fs::path getOutputFileName() const;
 	[[nodiscard]] fs::path getConfigurationFileName() const;
 	[[nodiscard]] std::vector<fs::path> getInputFileNames() const;

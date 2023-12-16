@@ -68,6 +68,6 @@ void AudioFile::checkAvailableForWriting() const
     }
 }
 
-AudioFile::AudioFileError::AudioFileError(const std::string& msg) : std::runtime_error(msg)
+AudioFileError::AudioFileError(const std::string& msg) : std::runtime_error(msg)
 {
 }

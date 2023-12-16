@@ -10,6 +10,7 @@
 #include "convert/Converter.h"
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
+#include "convert/ConverterFactory.h"
 
 int SoundProcessorApp::launch(const CommandLineOptions& cmdOptions)
 {
@@ -27,7 +28,7 @@ int SoundProcessorApp::launch(const CommandLineOptions& cmdOptions)
     for (auto [name, args] : config)
     {
         auto tmp_file = initial_file->copyWithoutDataTo(tmp_filename);
-        auto converter = Converter::create(name, args);
+        auto converter = ConverterFactory::create(name, args);
         converter->apply(initial_file->beginReading(), tmp_file->beginWriting());
     }
 

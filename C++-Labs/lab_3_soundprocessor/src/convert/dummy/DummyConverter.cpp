@@ -5,9 +5,19 @@
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
 
-DummyConverter::DummyConverter(const std::string& args)
+std::unique_ptr<Converter> DummyConverterCreator::create(const std::string& args)
 {
+    return std::make_unique<DummyConverter>();
+}
 
+void DummyConverterCreator::printDescription(std::ostream& os)
+{
+    os << "Dummy converter\n\tdoes nothing\n";
+}
+
+std::string DummyConverterCreator::name() const
+{
+    return "dummy";
 }
 
 void DummyConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output)
@@ -16,9 +26,4 @@ void DummyConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<Au
     {
         output->writeNextSamplesChunk(input->readNextSamplesChunk());
     }
-}
-
-void DummyConverter::printDescription(std::ostream& os)
-{
-    os << "Dummy converter: does nothing\n";
 }

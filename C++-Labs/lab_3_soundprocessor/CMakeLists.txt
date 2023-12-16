@@ -27,6 +27,8 @@ add_library(soundprocessor_common
         src/audio/AudioOutput.h
         src/audio/AudioInput.cpp
         src/audio/AudioOutput.cpp
+        src/convert/ConverterFactory.cpp
+        src/convert/ConverterFactory.h
 )
 
 target_include_directories(soundprocessor_common PUBLIC src ${Boost_INCLUDE_DIR})
@@ -37,13 +39,11 @@ target_link_libraries(soundprocessor_common PUBLIC GTest::gtest_main fmt Boost::
 add_executable(lab_3_soundprocessor
         src/main.cpp
         ${COMMON_SRC}
-        src/convert/MuteConverter.cpp
-        src/convert/MuteConverter.h
-        src/convert/DummyConverter.cpp
-        src/convert/DummyConverter.h
+        src/convert/mute/MuteConverter.cpp
+        src/convert/mute/MuteConverter.h
+        src/convert/dummy/DummyConverter.cpp
+        src/convert/dummy/DummyConverter.h
         src/convert/Converter.cpp
-        src/convert/ConverterArgumentsUtils.cpp
-        src/convert/ConverterArgumentsUtils.h
 )
 target_link_libraries(lab_3_soundprocessor soundprocessor_common)
 
