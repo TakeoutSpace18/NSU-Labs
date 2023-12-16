@@ -5,6 +5,7 @@
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
 
+#define WAVE_FORMAT_PCM 0x0001
 
 class Pcm_s16le_AudioOutput;
 class Pcm_s16le_AudioInput;

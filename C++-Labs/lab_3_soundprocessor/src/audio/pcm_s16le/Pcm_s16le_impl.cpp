@@ -18,10 +18,19 @@ void Pcm_s16le_AudioFile::parseHeader()
         throw AudioFileError(fmt::format("Failed to read header in file {}", m_path.string()));
     }
 
+    if (std::memcmp(m_header.chunkId, "RIFF", 4) != 0)
+    {
+        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: RIFF chunk not found", m_path.string()));
+    }
+
+    if (m_header.audioFormat != WAVE_FORMAT_PCM)
+    {
+        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: file is not in PCM format", m_path.string()));
+    }
+
     // skip uninteresting chunks until data is found
     while (std::memcmp(m_header.subchunk2Id, "data", 4) != 0)
     {
-        // TODO: save unused chunks
         m_input_handle->seekg(m_header.subchunk2Size, std::ios::cur);
         m_input_handle->read(m_header.subchunk2Id, sizeof(m_header.subchunk2Id));
         m_input_handle->read(reinterpret_cast<char *>(&m_header.subchunk2Size), sizeof(m_header.subchunk2Size));
