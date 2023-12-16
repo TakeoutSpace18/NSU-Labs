@@ -2,10 +2,7 @@
 
 #include <fmt/format.h>
 #include <iostream>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/positional_options.hpp>
-#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options.hpp>
 
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
@@ -22,7 +19,7 @@ MuteConverterCreator::MuteConverterCreator()
 
 }
 
-std::unique_ptr<Converter> MuteConverterCreator::create(const std::string& args)
+std::unique_ptr<Converter> MuteConverterCreator::create(const std::string& args, InputFilesLoader& input_files)
 {
     auto vm = parseArguments(args);
 

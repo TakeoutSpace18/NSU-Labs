@@ -3,12 +3,16 @@
 #include <memory>
 
 #include "Converter.h"
+#include "app/InputFilesLoader.h"
 
 
 class ConverterFactory
 {
 public:
-    static std::unique_ptr<Converter> create(const std::string& name, const std::string& args);
+    static std::unique_ptr<Converter> create(const std::string& name,
+                                             const std::string& args,
+                                             InputFilesLoader& input_files);
+
     static void printDescriptions(std::ostream& os);
 
 private:

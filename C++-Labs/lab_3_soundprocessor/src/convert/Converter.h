@@ -2,6 +2,7 @@
 #define CONVERTER_H
 #include <boost/program_options.hpp>
 
+#include "app/InputFilesLoader.h"
 #include "audio/AudioFile.h"
 
 namespace po = boost::program_options;
@@ -19,7 +20,7 @@ class AbstractConverterCreator
 public:
     virtual ~AbstractConverterCreator() = default;
 
-    virtual std::unique_ptr<Converter> create(const std::string& args) = 0;
+    virtual std::unique_ptr<Converter> create(const std::string& args, InputFilesLoader& input_files) = 0;
     virtual void printDescription(std::ostream& os) = 0;
     virtual std::string name() const = 0;
 

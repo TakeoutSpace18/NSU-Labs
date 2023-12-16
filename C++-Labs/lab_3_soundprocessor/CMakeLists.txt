@@ -16,7 +16,6 @@ add_library(soundprocessor_common
         src/app/ConfigurationFile.h
         src/app/CommandLineOptions.cpp
         src/app/CommandLineOptions.h
-        src/convert/Converter.h
         src/audio/AudioFile.h
         src/audio/AudioFile.cpp
         src/audio/pcm_s16le/Pcm_s16le_impl.cpp
@@ -29,6 +28,17 @@ add_library(soundprocessor_common
         src/audio/AudioOutput.cpp
         src/convert/ConverterFactory.cpp
         src/convert/ConverterFactory.h
+
+        src/convert/Converter.h
+        src/convert/Converter.cpp
+        src/convert/mute/MuteConverter.cpp
+        src/convert/mute/MuteConverter.h
+        src/convert/dummy/DummyConverter.cpp
+        src/convert/dummy/DummyConverter.h
+        src/convert/mix/MixConverter.h
+        src/convert/mix/MixConverter.cpp
+        src/convert/InputFileRef.cpp
+        src/convert/InputFileRef.h
 )
 
 target_include_directories(soundprocessor_common PUBLIC src ${Boost_INCLUDE_DIR})
@@ -39,11 +49,6 @@ target_link_libraries(soundprocessor_common PUBLIC GTest::gtest_main fmt Boost::
 add_executable(lab_3_soundprocessor
         src/main.cpp
         ${COMMON_SRC}
-        src/convert/mute/MuteConverter.cpp
-        src/convert/mute/MuteConverter.h
-        src/convert/dummy/DummyConverter.cpp
-        src/convert/dummy/DummyConverter.h
-        src/convert/Converter.cpp
 )
 target_link_libraries(lab_3_soundprocessor soundprocessor_common)
 

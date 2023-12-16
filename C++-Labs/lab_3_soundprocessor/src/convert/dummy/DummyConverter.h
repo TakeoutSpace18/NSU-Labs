@@ -9,7 +9,8 @@ class DummyConverterCreator : public AbstractConverterCreator
 public:
     DummyConverterCreator() = default;
 
-    std::unique_ptr<Converter> create(const std::string& args) override;
+    std::unique_ptr<Converter> create(const std::string& args,
+                                      InputFilesLoader& input_files) override;
 
     void printDescription(std::ostream& os) override;
 
@@ -24,7 +25,6 @@ public:
 
     void apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output) override;
 };
-
 
 
 #endif //DUMMYCONVERTER_H

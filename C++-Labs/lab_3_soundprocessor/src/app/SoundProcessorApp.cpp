@@ -33,7 +33,7 @@ int SoundProcessorApp::launchPipeline(const CommandLineOptions& cmdOptions)
         std::shared_ptr<AudioFile> output_file = input_file->copyWithoutDataTo(
             temp_directory / fmt::format("tmp_{}.wav", stage_count));
 
-        auto converter = ConverterFactory::create(name, args);
+        auto converter = ConverterFactory::create(name, args, input_files_loader);
         converter->apply(input_file->beginReading(), output_file->beginWriting());
 
         std::swap(input_file, output_file);

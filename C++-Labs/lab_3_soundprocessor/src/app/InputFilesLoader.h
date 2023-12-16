@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "audio/AudioFile.h"
+#include "convert/InputFileRef.h"
 
 namespace fs = std::filesystem;
 
@@ -12,6 +13,7 @@ public:
     explicit InputFilesLoader(const std::vector<fs::path>& file_paths);
     explicit InputFilesLoader(std::vector<fs::path>&& file_paths);
 
+    std::shared_ptr<AudioFile> getByIndex(InputFileRef ref);
     std::shared_ptr<AudioFile> getByIndex(std::size_t index);
 
 private:

@@ -5,7 +5,8 @@
 #include "audio/AudioInput.h"
 #include "audio/AudioOutput.h"
 
-std::unique_ptr<Converter> DummyConverterCreator::create(const std::string& args)
+std::unique_ptr<Converter> DummyConverterCreator::create(const std::string& args,
+                                                         InputFilesLoader& input_files)
 {
     return std::make_unique<DummyConverter>();
 }
