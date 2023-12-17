@@ -5,6 +5,7 @@
 
 #define MOUSE_INTERFACE_NUM 1
 #define MOUSE_ENDPOINT_ADDRESS 0x82
+#define MOUSE_PRODUCT_ID 0x7cc6
 
 struct mouse_packet
 {
@@ -20,7 +21,7 @@ libusb_device* find_mouse(libusb_device** devices, int num_devices)
     {
         libusb_device_descriptor desc;
         libusb_get_device_descriptor(devices[i], &desc);
-        if (desc.idProduct == 0x7cc6)
+        if (desc.idProduct == MOUSE_PRODUCT_ID)
         {
             return devices[i];
         }
@@ -39,7 +40,7 @@ void update_console_loop(libusb_device_handle* mouse_handle)
         mouse_packet data;
         int actual_length;
         int err = libusb_interrupt_transfer(mouse_handle, MOUSE_ENDPOINT_ADDRESS,
-                                        reinterpret_cast<unsigned char *>(&data), sizeof(data), &actual_length, 0);
+                                            reinterpret_cast<unsigned char *>(&data), sizeof(data), &actual_length, 0);
         if (err)
         {
             std::cerr << "Error: failed to read mouse data. " << libusb_strerror(err) << std::endl;
@@ -68,7 +69,7 @@ void update_console_loop(libusb_device_handle* mouse_handle)
         // Move to the cursor pos and print something
         std::printf("\033[%i;%iH", cursor_y, cursor_x);
         std::printf("OOO");
-        std::printf("\033[%i;%iH", cursor_y+1, cursor_x);
+        std::printf("\033[%i;%iH", cursor_y + 1, cursor_x);
         std::printf("OOO");
 
         std::fflush(stdout);
