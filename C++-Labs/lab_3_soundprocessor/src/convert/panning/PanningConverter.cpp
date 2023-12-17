@@ -60,9 +60,9 @@ void PanningConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<
     while (input->hasData())
     {
         auto channels = input->readNextSamplesChunk();
-        auto chunk_size = static_cast<int64_t>(channels[0].size());
+        auto chunk_size = channels[0].size();
 
-        for (int64_t cur_sample = 0; cur_sample < chunk_size; ++cur_sample)
+        for (std::size_t cur_sample = 0; cur_sample < chunk_size; ++cur_sample)
         {
             const double left_factor = std::sqrt(
                 (1.0 + m_ear_dist_factor * m_ear_dist_factor + 2 * m_ear_dist_factor * std::cos(cur_angle)) /
@@ -76,12 +76,12 @@ void PanningConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<
             channels[1][cur_sample] *= right_factor;
 
             cur_angle += angle_addition;
-            while (cur_angle >= 2 * std::numbers::pi)
-            {
-                cur_angle -= 2 * std::numbers::pi;
-            }
         }
 
+        while (cur_angle >= 2 * std::numbers::pi)
+        {
+            cur_angle -= 2 * std::numbers::pi;
+        }
 
         processed_samples_count += chunk_size;
         output->writeNextSamplesChunk(channels);
