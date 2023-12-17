@@ -39,6 +39,8 @@ add_library(soundprocessor_common
         src/convert/mix/MixConverter.cpp
         src/convert/InputFileRef.cpp
         src/convert/InputFileRef.h
+        src/convert/panning/PanningConverter.cpp
+        src/convert/panning/PanningConverter.h
 )
 
 target_include_directories(soundprocessor_common PUBLIC src ${Boost_INCLUDE_DIR})

@@ -6,11 +6,13 @@
 #include "dummy/DummyConverter.h"
 #include "mute/MuteConverter.h"
 #include "mix/MixConverter.h"
+#include "panning/PanningConverter.h"
 
 std::map<const std::string, std::shared_ptr<AbstractConverterCreator>> ConverterFactory::m_creators = {
     {"dummy", std::make_shared<DummyConverterCreator>()},
     {"mute", std::make_shared<MuteConverterCreator>()},
-    {"mix", std::make_shared<MixConverterCreator>()}
+    {"mix", std::make_shared<MixConverterCreator>()},
+    {"panning", std::make_shared<PanningConverterCreator>()}
 };
 
 std::unique_ptr<Converter> ConverterFactory::create(const std::string& name,
