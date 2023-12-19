@@ -44,6 +44,10 @@ PanningConverter::PanningConverter(const double ear_dist, const double speed) :
     m_ear_dist_factor(ear_dist / 100), // convert percentage to fraction
     m_speed(speed)
 {
+    if (ear_dist < 0 || ear_dist > 100)
+    {
+        throw ConverterError("Panning converter: ear distance value should be in [0, 100] bounds.")
+    }
 }
 
 void PanningConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output)
@@ -78,9 +82,9 @@ void PanningConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<
             cur_angle += angle_addition;
         }
 
-        while (cur_angle >= 2 * std::numbers::pi)
+        while (std::abs(cur_angle) >= 2 * std::numbers::pi)
         {
-            cur_angle -= 2 * std::numbers::pi;
+            cur_angle -= cur_angle > 0 ? 2 * std::numbers::pi : -2 * std::numbers::pi;
         }
 
         processed_samples_count += chunk_size;

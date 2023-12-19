@@ -20,12 +20,14 @@ void Pcm_s16le_AudioFile::parseHeader()
 
     if (std::memcmp(m_header.chunkId, "RIFF", 4) != 0)
     {
-        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: RIFF chunk not found", m_path.string()));
+        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: RIFF chunk not found",
+                                         m_path.string()));
     }
 
     if (m_header.audioFormat != WAVE_FORMAT_PCM)
     {
-        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: file is not in PCM format", m_path.string()));
+        throw AudioFileError(fmt::format("Failed to open wav PCM s16le file {}: file is not in PCM format",
+                                         m_path.string()));
     }
 
     // skip uninteresting chunks until data is found
@@ -91,16 +93,19 @@ std::vector<AudioFile::SampleBuffer> Pcm_s16le_AudioInput::readNextSamplesChunk(
         channels.back().reserve(props.sample_rate);
     }
 
+    if (!getInputHandle().good())
+        return channels;
+
     for (std::size_t i = 0; i < props.sample_rate; ++i)
     {
         for (auto& channel: channels)
         {
             int16_t sample;
             getInputHandle().read(reinterpret_cast<char *>(&sample), sizeof(sample));
+            channel.push_back(sample);
+
             if (!getInputHandle().good())
                 return channels;
-
-            channel.push_back(sample);
         }
     }
     return channels;
@@ -118,7 +123,6 @@ void Pcm_s16le_AudioOutput::writeNextSamplesChunk(const std::vector<AudioFile::S
     {
         for (auto& channel: channels)
         {
-            //TODO: handle different sample types
             getOutputHandle().write(reinterpret_cast<const char *>(&channel[i]), sizeof(int16_t));
         }
     }

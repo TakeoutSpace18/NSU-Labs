@@ -35,9 +35,10 @@ std::unique_ptr<Converter> MixConverterCreator::create(const std::string& args,
     try
     {
         mix_with_file = input_files.getByIndex(mix_with);
-    } catch (const std::invalid_argument& e)
+    }
+    catch (const std::invalid_argument& e)
     {
-        throw ConverterError(fmt::format("Failed to create mix converter: {}",e.what()));
+        throw ConverterError(fmt::format("Failed to create mix converter: {}", e.what()));
     }
     return std::make_unique<MixConverter>(mix_with_file, start_second,
                                           stop_second);
@@ -61,6 +62,15 @@ MixConverter::MixConverter(std::shared_ptr<AudioFile> mix_with,
       m_stop_second(stop_second),
       m_mix_with(mix_with)
 {
+    if (m_start_second > m_stop_second)
+    {
+        throw ConverterError("Mix converter: Start time should be less than stop time.");
+    }
+
+    if (m_start_second < 0 || m_stop_second < 0)
+    {
+        throw ConverterError("Mix converter: Time parameter shouldn't be negative");
+    }
 }
 
 void MixConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output)
@@ -79,20 +89,23 @@ void MixConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<Audi
     while (input->hasData())
     {
         auto channels = input->readNextSamplesChunk();
-        auto mix_with_channels = mix_with_input->readNextSamplesChunk();
         auto chunk_size = static_cast<int64_t>(channels[0].size());
+
+        auto mix_with_channels = mix_with_input->readNextSamplesChunk();
+        auto mix_with_chunk_size = static_cast<int64_t>(mix_with_channels[0].size());
 
 
         if (mix_start_sample <= processed_samples_count + chunk_size && processed_samples_count < mix_stop_sample)
         {
             const int64_t chunk_mix_start = std::max(0l, mix_start_sample - processed_samples_count);
-            const int64_t chunk_mix_stop = std::min(chunk_size, mix_stop_sample - processed_samples_count);
+            const int64_t chunk_mix_stop = std::min(std::min(chunk_size, mix_stop_sample - processed_samples_count),
+                                                    mix_with_chunk_size);
 
             for (int i = 0; i < channels.size(); ++i)
             {
                 for (std::size_t j = chunk_mix_start; j < chunk_mix_stop; ++j)
                 {
-                    channels[i][j] += mix_with_channels[i][j];
+                    channels[i].at(j) += mix_with_channels[i].at(j);
                     channels[i][j] /= 2;
                 }
             }

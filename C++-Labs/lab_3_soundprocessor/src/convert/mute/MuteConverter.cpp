@@ -42,6 +42,15 @@ std::string MuteConverterCreator::name() const
 MuteConverter::MuteConverter(int64_t start_second, int64_t stop_second) : m_start_second(start_second),
                                                                           m_stop_second(stop_second)
 {
+    if (m_start_second > m_stop_second)
+    {
+        throw ConverterError("Mute converter: Start time should be less than stop time.");
+    }
+
+    if (m_start_second < 0 || m_stop_second < 0)
+    {
+        throw ConverterError("Mute converter: Time parameter shouldn't be negative");
+    }
 }
 
 void MuteConverter::apply(std::unique_ptr<AudioInput> input, std::unique_ptr<AudioOutput> output)
