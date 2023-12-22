@@ -1,0 +1,10 @@
+# comment 1
+mute 0 30
+# comment 2
+mix $2 10
+
+# comment 3
+mute 120 180
+# comment 4
+empty
+# comment 5
