@@ -1,16 +1,16 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic
-LDFLAGS=
+CFLAGS=$(shell cat ../../build-cflags.txt)
+
 EXECUTABLE=hello_world
 BUILDDIR=$(CURDIR)/build
 
 .PHONY: all
 all: hello_world
 
-hello_world: $(BUILDDIR)/hello_world.o | $(BUILDDIR)
-	$(CC) $(LDFLAGS) $(BUILDDIR)/main.o -o $(BUILDDIR)/$(EXECUTABLE)
+hello_world: $(BUILDDIR)/hello.o | $(BUILDDIR)
+	$(CC) $(CFLAGS) $(BUILDDIR)/hello.o -o $(BUILDDIR)/$(EXECUTABLE)
 
-$(BUILDDIR)/hello_world.o: hello_world.c | $(BUILDDIR)
+$(BUILDDIR)/hello.o: hello.c | $(BUILDDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR):
