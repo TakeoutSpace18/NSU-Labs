@@ -5,6 +5,7 @@ import nsu.urdin.stackcalculator.commands.CommandFactory;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import org.apache.commons.cli.*;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class StackCalculator {
@@ -15,9 +16,14 @@ public class StackCalculator {
     public StackCalculator(String[] args) {
         context = new CalcContext();
 
-        commandFileCLIOption = new Option("input",
-                true,
-                "Path to the file containing list of calculator commands to be executed");
+        commandFileCLIOption = Option.builder()
+                .option("i")
+                .longOpt("input")
+                .hasArg()
+                .argName("path")
+                .desc("text file containing list of calculator commands to be executed")
+                .build();
+
         Options cliOptions = new Options();
         cliOptions.addOption(commandFileCLIOption);
 
@@ -29,7 +35,7 @@ public class StackCalculator {
         }
     }
 
-    public void run() {
+    public void run() throws IOException {
         CommandParser cmdParser;
 
         if (parsedCLI.hasOption(commandFileCLIOption)) {
@@ -44,8 +50,8 @@ public class StackCalculator {
 
         while (cmdParser.hasNext()) {
             CommandParser.Data commandData = cmdParser.getNext();
-            Command command = factory.create(commandData.name());
-            command.apply(context, commandData.args());
+            Command command = factory.create(commandData);
+            command.exec(context);
         }
 
         cmdParser.close();

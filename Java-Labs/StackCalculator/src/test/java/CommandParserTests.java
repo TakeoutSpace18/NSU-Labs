@@ -20,10 +20,10 @@ public class CommandParserTests {
                                 4
                                 """,
 
-                        List.of(new CommandParser.Data("1", new String[0]),
-                                new CommandParser.Data("2", new String[0]),
-                                new CommandParser.Data("3", new String[0]),
-                                new CommandParser.Data("4", new String[0])
+                        List.of(new CommandParser.Data("1", new String[0], "1", 1),
+                                new CommandParser.Data("2", new String[0], "2", 2),
+                                new CommandParser.Data("3", new String[0], "3", 3),
+                                new CommandParser.Data("4", new String[0], "4", 4)
                         )),
 
                 Arguments.of(
@@ -31,7 +31,7 @@ public class CommandParserTests {
                                 name a b c   
                                 """,
 
-                        List.of(new CommandParser.Data("name", new String[]{"a", "b", "c"})
+                        List.of(new CommandParser.Data("name", new String[]{"a", "b", "c"}, "name a b c", 1)
                         )),
 
                 Arguments.of(
@@ -43,8 +43,8 @@ public class CommandParserTests {
                                 #comment
                                 """,
 
-                        List.of(new CommandParser.Data("1", new String[0]),
-                                new CommandParser.Data("2", new String[]{"e"})
+                        List.of(new CommandParser.Data("1", new String[0], "1", 2),
+                                new CommandParser.Data("2", new String[]{"e"}, "2 e", 4)
                         )),
 
                 Arguments.of("", List.of())

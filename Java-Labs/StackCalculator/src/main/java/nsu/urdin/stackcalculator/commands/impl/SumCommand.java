@@ -21,7 +21,7 @@ public class SumCommand extends Command {
             double o2 = context.getStack().pop();
             double result = o1 + o2;
             context.getStack().push(result);
-            getLogger().debug("Executed Sum command: {} + {} = {}", o1, o2, result);
+//            getLogger().debug("Executed Sum command: {} + {} = {}", o1, o2, result);
         } catch (EmptyStackException e) {
             throw new CommandExecuteException(getRawCommandText(), getLineNumber(), "Not enough operands on the stack");
         }

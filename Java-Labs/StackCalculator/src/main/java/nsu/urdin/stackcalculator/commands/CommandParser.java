@@ -1,7 +1,7 @@
 package nsu.urdin.stackcalculator.commands;
 
-import nsu.urdin.stackcalculator.exceptions.CommandFileNotFoundException;
-import nsu.urdin.stackcalculator.exceptions.CommandParserException;
+import nsu.urdin.stackcalculator.commands.exceptions.CommandFileNotFoundException;
+import nsu.urdin.stackcalculator.commands.exceptions.CommandParserException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,16 +11,32 @@ import java.util.Scanner;
 
 public class CommandParser implements AutoCloseable {
 
-    public record Data(String name, String[] args) {
+    public record Data(String name, String[] args, String rawCommandText, int line) {
+        public Data(String name) {
+            this(name, new String[0], null, 0);
+        }
+
         @Override
-        public boolean equals(Object another1) {
-            Data another = (Data)another1;
-            return name.equals(another.name) && Arrays.equals(args, another.args);
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+
+            Data another = (Data)obj;
+            return name.equals(another.name) &&
+                    Arrays.equals(args, another.args) &&
+                    rawCommandText.equals(another.rawCommandText) &&
+                    line == another.line;
         }
     }
 
     private final Scanner cmdInput;
     private Data currentData;
+    private int currentLineNumber = 0;
 
     /**
      * Create CommandParser using default System.in input
@@ -75,15 +91,16 @@ public class CommandParser implements AutoCloseable {
 
         while (cmdInput.hasNextLine() && line.isBlank()) {
             line = cmdInput.nextLine();
+            currentLineNumber++;
             int commentStart = line.indexOf('#');
             if (commentStart != -1) {
-                line = line.substring(0, commentStart);
+                line = line.substring(0, commentStart).strip();
             }
         }
 
         if (!line.isBlank()) {
             String[] tokens = line.split(" ");
-            currentData = new Data(tokens[0], Arrays.copyOfRange(tokens, 1, tokens.length));
+            currentData = new Data(tokens[0], Arrays.copyOfRange(tokens, 1, tokens.length), line, currentLineNumber);
         }
         else {
             currentData = null;
@@ -94,6 +111,4 @@ public class CommandParser implements AutoCloseable {
     public void close() {
         cmdInput.close();
     }
-
-
 }

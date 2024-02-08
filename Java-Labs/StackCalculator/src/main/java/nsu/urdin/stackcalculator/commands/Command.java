@@ -2,8 +2,26 @@ package nsu.urdin.stackcalculator.commands;
 
 import nsu.urdin.stackcalculator.CalcContext;
 
-import java.util.List;
+public abstract class Command {
+    private final String rawCommandText;
+    private final int lineNumber;
 
-public interface Command {
-    void apply(CalcContext context, String[] arguments);
+    public Command(String rawCommandText, int lineNumber) {
+        this.rawCommandText = rawCommandText;
+        this.lineNumber = lineNumber;
+    }
+
+    protected String getRawCommandText() {
+        return rawCommandText;
+    }
+
+    protected int getLineNumber() {
+        return lineNumber;
+    }
+
+//    protected Logger getLogger() {
+//        return Command.logger;
+//    }
+
+    public abstract void exec(CalcContext context);
 }

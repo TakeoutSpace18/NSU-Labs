@@ -11,7 +11,7 @@ public class CommandFactory {
     public static String mappingsFilename = "/commandMappings.properties";
 
     private final Properties mappings;
-    public CommandFactory(){
+    public CommandFactory() {
         mappings = new Properties();
         try (InputStream stream = CommandFactory.class.getResourceAsStream(mappingsFilename)) {
             mappings.load(stream);
@@ -20,14 +20,15 @@ public class CommandFactory {
         }
     }
 
-    public Command create(String commandName) {
-        String cmdClassPath = mappings.getProperty(commandName);
+    public Command create(CommandParser.Data commandData) {
+        String cmdClassPath = mappings.getProperty(commandData.name());
         if (cmdClassPath == null) {
-            throw new UnknownCommandException(commandName);
+            throw new UnknownCommandException(commandData.name());
         }
         try {
-            return (Command) Class.forName(cmdClassPath).getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+            return (Command) Class.forName(cmdClassPath).getDeclaredConstructor(commandData.getClass()).newInstance(commandData);
+        } catch (InstantiationException | ClassNotFoundException |
+                 NoSuchMethodException | InvocationTargetException |
                  IllegalAccessException e) {
             throw new RuntimeException("Failed to create desired command class!", e);
         }
