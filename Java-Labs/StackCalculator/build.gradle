@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'nsu.urdin'
@@ -14,8 +15,19 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation 'commons-cli:commons-cli:1.6.0'
+
+    implementation 'org.apache.logging.log4j:log4j-api:2.22.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.22.1'
 }
 
 test {
     useJUnitPlatform()
+}
+
+def mainClassName = "nsu.urdin.stackcalculator.Main"
+
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
 }

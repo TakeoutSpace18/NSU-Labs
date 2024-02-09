@@ -4,8 +4,11 @@ import nsu.urdin.stackcalculator.CalcContext;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandArgumentsFormatException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PushCommand extends Command {
+    private static final Logger LOGGER = LogManager.getLogger(PushCommand.class);
     private final double value;
     
     public PushCommand(CommandParser.Data commandData) {
@@ -24,6 +27,6 @@ public class PushCommand extends Command {
     @Override
     public void exec(CalcContext context) {
         context.getStack().push(value);
-//        getLogger().debug("Pushed value {} on the stack", value);
+        LOGGER.debug("Pushed value {} on the stack", value);
     }
 }

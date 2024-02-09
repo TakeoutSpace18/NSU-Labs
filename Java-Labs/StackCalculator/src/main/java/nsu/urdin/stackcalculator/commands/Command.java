@@ -19,9 +19,5 @@ public abstract class Command {
         return lineNumber;
     }
 
-//    protected Logger getLogger() {
-//        return Command.logger;
-//    }
-
     public abstract void exec(CalcContext context);
 }
