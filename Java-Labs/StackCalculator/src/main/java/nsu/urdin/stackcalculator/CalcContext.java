@@ -19,8 +19,24 @@ public class CalcContext {
         this.outputCLIStream = System.out;
     }
 
-    public Stack<Double> getStack() {
-        return stack;
+    public double pushValue(double val) {
+        return stack.push(val);
+    }
+
+    public double popValue()  {
+        return stack.pop();
+    }
+
+    public int stackSize() {
+        return stack.size();
+    }
+
+    public boolean isStackEmpty() {
+        return stack.isEmpty();
+    }
+
+    public double peekValue() {
+        return stack.peek();
     }
 
     public PrintStream getOutputCLIStream() {

@@ -11,6 +11,10 @@ import java.util.Optional;
 public class CommandParser implements AutoCloseable {
 
     public record Data(String name, String[] args, String rawCommandText, int line) {
+        public Data() {
+            this("unnamed");
+        }
+
         public Data(String name) {
             this(name, new String[0], null, 0);
         }

@@ -26,7 +26,7 @@ public class PushCommand extends Command {
     
     @Override
     public void exec(CalcContext context) {
-        context.getStack().push(value);
+        context.pushValue(value);
         LOGGER.debug("Pushed value {} on the stack", value);
     }
 }

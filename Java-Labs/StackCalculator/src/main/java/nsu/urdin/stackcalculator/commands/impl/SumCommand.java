@@ -19,14 +19,14 @@ public class SumCommand extends Command {
 
     @Override
     public void exec(CalcContext context) {
-        if (context.getStack().size() < 2) {
+        if (context.stackSize() < 2) {
             throw new CommandExecuteException(getRawCommandText(), getLineNumber(), "Not enough operands on the stack");
         }
 
-        double o1 = context.getStack().pop();
-        double o2 = context.getStack().pop();
+        double o1 = context.popValue();
+        double o2 = context.popValue();
         double result = o1 + o2;
-        context.getStack().push(result);
+        context.pushValue(result);
         LOGGER.debug("Executed Sum command: {} + {} = {}", o1, o2, result);
     }
 }
