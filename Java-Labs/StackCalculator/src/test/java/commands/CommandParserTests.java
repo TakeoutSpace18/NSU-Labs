@@ -1,4 +1,5 @@
-import nsu.urdin.stackcalculator.commands.Command;
+package commands;
+
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

@@ -1,10 +1,9 @@
-package commands;
+package commands.impl;
 
 import nsu.urdin.stackcalculator.CalcContext;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.impl.MultiplyCommand;
-import nsu.urdin.stackcalculator.commands.impl.SumCommand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

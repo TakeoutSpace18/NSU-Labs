@@ -1,11 +1,10 @@
-package commands;
+package commands.impl;
 
 import nsu.urdin.stackcalculator.CalcContext;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
 import nsu.urdin.stackcalculator.commands.impl.DivideCommand;
-import nsu.urdin.stackcalculator.commands.impl.MultiplyCommand;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

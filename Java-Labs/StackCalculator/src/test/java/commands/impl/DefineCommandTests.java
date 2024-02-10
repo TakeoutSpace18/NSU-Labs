@@ -1,8 +1,9 @@
-package commands;
+package commands.impl;
 
 import nsu.urdin.stackcalculator.CalcContext;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
+import nsu.urdin.stackcalculator.commands.exceptions.ArgumentsCountMismatchException;
 import nsu.urdin.stackcalculator.commands.exceptions.WrongArgumentsFormatException;
 import nsu.urdin.stackcalculator.commands.impl.DefineCommand;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,10 @@ public class DefineCommandTests {
     }
     @Test
     void throwsOnNoArgs() {
-        assertThrows(WrongArgumentsFormatException.class, () -> new DefineCommand(new CommandParser.Data(new String[0])));
+        assertThrows(ArgumentsCountMismatchException.class, () -> new DefineCommand(new CommandParser.Data(new String[0])));
+    }
+    @Test
+    void throwsOnOneArg() {
+        assertThrows(ArgumentsCountMismatchException.class, () -> new DefineCommand(new CommandParser.Data(new String[]{"abcd"})));
     }
 }

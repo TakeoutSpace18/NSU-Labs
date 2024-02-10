@@ -4,6 +4,7 @@ import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandFactory;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
+import nsu.urdin.stackcalculator.commands.exceptions.UnknownCommandException;
 import nsu.urdin.stackcalculator.commands.exceptions.WrongArgumentsException;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +42,7 @@ public class StackCalculator {
         }
     }
 
-    public void run() throws IOException {
+    public void run() {
         CommandParser cmdParser;
 
         if (parsedCLI.hasOption(commandFileCLIOption)) {
@@ -62,7 +63,7 @@ public class StackCalculator {
                 Command command = factory.create(commandData.get());
                 command.exec(context);
             }
-            catch (CommandExecuteException | WrongArgumentsException e) {
+            catch (CommandExecuteException | WrongArgumentsException | UnknownCommandException e) {
                 LOGGER.error(e.getMessage());
             }
         }
