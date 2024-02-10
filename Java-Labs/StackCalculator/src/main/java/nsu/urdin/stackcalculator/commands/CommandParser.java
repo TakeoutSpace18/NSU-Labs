@@ -12,11 +12,15 @@ public class CommandParser implements AutoCloseable {
 
     public record Data(String name, String[] args, String rawCommandText, int line) {
         public Data() {
-            this("unnamed");
+            this(null, null, null, 0);
         }
 
         public Data(String name) {
             this(name, new String[0], null, 0);
+        }
+
+        public Data(String[] args) {
+            this(null, args, null, 0);
         }
 
         @Override

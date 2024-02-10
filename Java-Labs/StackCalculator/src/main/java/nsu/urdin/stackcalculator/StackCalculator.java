@@ -4,12 +4,11 @@ import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandFactory;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
-import nsu.urdin.stackcalculator.commands.impl.SumCommand;
+import nsu.urdin.stackcalculator.commands.exceptions.WrongArgumentsException;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.naming.Context;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -59,10 +58,11 @@ public class StackCalculator {
 
         Optional<CommandParser.Data> commandData;
         while ((commandData = cmdParser.parseNext()).isPresent()) {
-            Command command = factory.create(commandData.get());
             try {
+                Command command = factory.create(commandData.get());
                 command.exec(context);
-            } catch (CommandExecuteException e) {
+            }
+            catch (CommandExecuteException | WrongArgumentsException e) {
                 LOGGER.error(e.getMessage());
             }
         }

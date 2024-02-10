@@ -1,6 +1,7 @@
 package nsu.urdin.stackcalculator.commands;
 
 import nsu.urdin.stackcalculator.commands.exceptions.UnknownCommandException;
+import nsu.urdin.stackcalculator.commands.exceptions.WrongArgumentsException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ public class CommandFactory {
         }
     }
 
-    public Command create(CommandParser.Data commandData) {
+    public Command create(CommandParser.Data commandData) throws WrongArgumentsException {
         String cmdClassPath = mappings.getProperty(commandData.name());
         if (cmdClassPath == null) {
             throw new UnknownCommandException(commandData.name());

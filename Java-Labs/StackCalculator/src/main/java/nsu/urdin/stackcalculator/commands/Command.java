@@ -1,6 +1,7 @@
 package nsu.urdin.stackcalculator.commands;
 
 import nsu.urdin.stackcalculator.CalcContext;
+import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
 
 public abstract class Command {
     private final String rawCommandText;
@@ -19,5 +20,5 @@ public abstract class Command {
         return lineNumber;
     }
 
-    public abstract void exec(CalcContext context);
+    public abstract void exec(CalcContext context) throws CommandExecuteException;
 }

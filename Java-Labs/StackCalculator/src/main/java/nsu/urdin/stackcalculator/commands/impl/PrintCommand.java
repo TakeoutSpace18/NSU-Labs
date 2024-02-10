@@ -3,6 +3,7 @@ package nsu.urdin.stackcalculator.commands.impl;
 import nsu.urdin.stackcalculator.CalcContext;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
+import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,7 +19,7 @@ public class PrintCommand extends Command {
     }
 
     @Override
-    public void exec(CalcContext context) {
+    public void exec(CalcContext context) throws CommandExecuteException {
         if (context.isStackEmpty()) {
             context.getOutputCLIStream().println("Stack is empty, nothing to print");
             LOGGER.debug("Stack is empty, nothing to print");

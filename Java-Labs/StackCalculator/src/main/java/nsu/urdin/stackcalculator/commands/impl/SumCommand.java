@@ -7,8 +7,6 @@ import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.EmptyStackException;
-
 
 public class SumCommand extends Command {
     private static final Logger LOGGER = LogManager.getLogger(SumCommand.class);
@@ -18,7 +16,7 @@ public class SumCommand extends Command {
     }
 
     @Override
-    public void exec(CalcContext context) {
+    public void exec(CalcContext context) throws CommandExecuteException {
         if (context.stackSize() < 2) {
             throw new CommandExecuteException(getRawCommandText(), getLineNumber(), "Not enough operands on the stack");
         }

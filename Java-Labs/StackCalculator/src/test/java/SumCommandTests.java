@@ -3,10 +3,7 @@ import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
 import nsu.urdin.stackcalculator.commands.impl.SumCommand;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import javax.naming.Context;
 
 import static org.junit.jupiter.api.Assertions.*;
 

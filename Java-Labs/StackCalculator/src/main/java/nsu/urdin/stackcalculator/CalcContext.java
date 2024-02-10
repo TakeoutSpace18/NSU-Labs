@@ -1,6 +1,8 @@
 package nsu.urdin.stackcalculator;
 
 import nsu.urdin.stackcalculator.exceptions.UndefinedParameterException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -8,8 +10,7 @@ import java.util.Map;
 import java.util.Stack;
 
 public class CalcContext {
-    private final
-    Map<String, Double> parameters;
+    private final Map<String, Double> parameters;
     private final Stack<Double> stack;
     private final PrintStream outputCLIStream;
 
@@ -52,7 +53,7 @@ public class CalcContext {
         return value;
     }
 
-    public void addParameter(String name, Double value) {
-        parameters.put(name, value);
+    public Double addParameter(String name, Double value) {
+        return parameters.put(name, value);
     }
 }
