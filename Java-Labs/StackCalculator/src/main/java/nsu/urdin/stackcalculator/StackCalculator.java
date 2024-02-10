@@ -7,6 +7,7 @@ import org.apache.commons.cli.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class StackCalculator {
     private final CalcContext context;
@@ -48,9 +49,9 @@ public class StackCalculator {
 
         CommandFactory factory = new CommandFactory();
 
-        while (cmdParser.hasNext()) {
-            CommandParser.Data commandData = cmdParser.getNext();
-            Command command = factory.create(commandData);
+        Optional<CommandParser.Data> commandData;
+        while ((commandData = cmdParser.parseNext()).isPresent()) {
+            Command command = factory.create(commandData.get());
             command.exec(context);
         }
 

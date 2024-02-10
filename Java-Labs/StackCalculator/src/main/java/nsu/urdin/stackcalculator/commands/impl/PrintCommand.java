@@ -20,11 +20,13 @@ public class PrintCommand extends Command {
     @Override
     public void exec(CalcContext context) {
         if (context.getStack().isEmpty()) {
-            context.getOutputCLIStream().println("Stack is empty, nothing to print!");
-            LOGGER.debug("Stack top is empty, can't print");
+            context.getOutputCLIStream().println("Stack is empty, nothing to print");
+            LOGGER.debug("Stack is empty, nothing to print");
         }
         else {
-            context.getOutputCLIStream().println(MessageFormat.format("Top of the stack: {0}", context.getStack().peek()));
+            double value = context.getStack().peek();
+            context.getOutputCLIStream().println(MessageFormat.format("Top of the stack: {0}", value));
+            LOGGER.debug(MessageFormat.format("Printed top of the stack: {0}", value));
         }
     }
 }

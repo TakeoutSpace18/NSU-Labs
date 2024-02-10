@@ -1,3 +1,4 @@
+import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -5,6 +6,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -57,8 +59,9 @@ public class CommandParserTests {
         CommandParser parser = new CommandParser(source);
         List<CommandParser.Data> result = new ArrayList<>();
 
-        while (parser.hasNext()) {
-            result.add(parser.getNext());
+        Optional<CommandParser.Data> commandData;
+        while ((commandData = parser.parseNext()).isPresent()) {
+            result.add(commandData.get());
         }
 
         parser.close();

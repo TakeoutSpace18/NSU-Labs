@@ -6,4 +6,8 @@ public class CommandParserException extends StackCalculatorException {
     public CommandParserException(String message) {
         super(message);
     }
+
+    public CommandParserException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

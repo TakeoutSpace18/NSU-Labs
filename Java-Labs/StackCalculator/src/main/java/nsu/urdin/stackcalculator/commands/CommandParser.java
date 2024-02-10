@@ -3,11 +3,10 @@ package nsu.urdin.stackcalculator.commands;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandFileNotFoundException;
 import nsu.urdin.stackcalculator.commands.exceptions.CommandParserException;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Scanner;
+import java.util.Optional;
 
 public class CommandParser implements AutoCloseable {
 
@@ -26,7 +25,7 @@ public class CommandParser implements AutoCloseable {
                 return false;
             }
 
-            Data another = (Data)obj;
+            Data another = (Data) obj;
             return name.equals(another.name) &&
                     Arrays.equals(args, another.args) &&
                     rawCommandText.equals(another.rawCommandText) &&
@@ -34,16 +33,14 @@ public class CommandParser implements AutoCloseable {
         }
     }
 
-    private final Scanner cmdInput;
-    private Data currentData;
+    private final BufferedReader cmdInput;
     private int currentLineNumber = 0;
 
     /**
      * Create CommandParser using default System.in input
      */
     public CommandParser() {
-        cmdInput = new Scanner(System.in);
-        parseNext();
+        cmdInput = new BufferedReader(new InputStreamReader(System.in));
     }
 
     /**
@@ -51,28 +48,14 @@ public class CommandParser implements AutoCloseable {
      */
     public CommandParser(Path filePath) {
         try {
-            cmdInput = new Scanner(filePath);
+            cmdInput = new BufferedReader(new InputStreamReader(new FileInputStream(filePath.toFile())));
         } catch (FileNotFoundException e) {
             throw new CommandFileNotFoundException(filePath);
         }
-        catch (IOException e) {
-            throw new CommandParserException(e.getLocalizedMessage());
-        }
-
-        parseNext();
     }
 
     public CommandParser(String source) {
-        cmdInput = new Scanner(source);
-        parseNext();
-    }
-
-
-    /**
-     * Check if a command is available for reading
-     */
-    public boolean hasNext() {
-        return currentData != null;
+        cmdInput = new BufferedReader(new StringReader(source));
     }
 
     /**
@@ -80,35 +63,43 @@ public class CommandParser implements AutoCloseable {
      * @apiNote May return null if no command is available (because of EOF),
      * so the caller must check this situation by previously calling {@code hasNext() }
      */
-    public Data getNext() {
-        Data ret = currentData;
-        parseNext();
-        return ret;
+    public Optional<Data> parseNext() {
+        try {
+            String line;
+            while ((line = cmdInput.readLine()) != null) {
+                currentLineNumber++;
+
+                line = eraseComment(line);
+
+                if (!line.isEmpty()) {
+                    if (line.equalsIgnoreCase("exit")) {
+                        return Optional.empty();
+                    }
+
+                    String[] tokens = line.split(" ");
+                    return Optional.of(new Data(tokens[0], Arrays.copyOfRange(tokens, 1, tokens.length), line, currentLineNumber));
+                }
+            }
+        } catch (IOException e) {
+            throw new CommandParserException("Failed to parse next command!", e);
+        }
+        return Optional.empty();
     }
 
-    private void parseNext() {
-        String line = "";
-
-        while (cmdInput.hasNextLine() && line.isBlank()) {
-            line = cmdInput.nextLine();
-            currentLineNumber++;
-            int commentStart = line.indexOf('#');
-            if (commentStart != -1) {
-                line = line.substring(0, commentStart).strip();
-            }
+    private static String eraseComment(String line) {
+        int commentStart = line.indexOf('#');
+        if (commentStart != -1) {
+            line = line.substring(0, commentStart).strip();
         }
-
-        if (!line.isBlank()) {
-            String[] tokens = line.split(" ");
-            currentData = new Data(tokens[0], Arrays.copyOfRange(tokens, 1, tokens.length), line, currentLineNumber);
-        }
-        else {
-            currentData = null;
-        }
+        return line.strip();
     }
 
     @Override
     public void close() {
-        cmdInput.close();
+        try {
+            cmdInput.close();
+        } catch (IOException e) {
+            throw new CommandParserException("Failed to close input stream!", e);
+        }
     }
 }
