@@ -3,13 +3,19 @@ package nsu.urdin.stackcalculator;
 import nsu.urdin.stackcalculator.commands.Command;
 import nsu.urdin.stackcalculator.commands.CommandFactory;
 import nsu.urdin.stackcalculator.commands.CommandParser;
+import nsu.urdin.stackcalculator.commands.exceptions.CommandExecuteException;
+import nsu.urdin.stackcalculator.commands.impl.SumCommand;
 import org.apache.commons.cli.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import javax.naming.Context;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class StackCalculator {
+    private static final Logger LOGGER = LogManager.getLogger(StackCalculator.class);
     private final CalcContext context;
     Option commandFileCLIOption;
     private final CommandLine parsedCLI;
@@ -42,9 +48,11 @@ public class StackCalculator {
         if (parsedCLI.hasOption(commandFileCLIOption)) {
             Path commandFilePath = Path.of(parsedCLI.getOptionValue(commandFileCLIOption));
             cmdParser = new CommandParser(commandFilePath);
+            LOGGER.info("Starting Stack Calculator with file input: {}", commandFilePath);
         }
         else {
             cmdParser = new CommandParser();
+            LOGGER.info("Starting Stack Calculator with console input");
         }
 
         CommandFactory factory = new CommandFactory();
@@ -52,7 +60,11 @@ public class StackCalculator {
         Optional<CommandParser.Data> commandData;
         while ((commandData = cmdParser.parseNext()).isPresent()) {
             Command command = factory.create(commandData.get());
-            command.exec(context);
+            try {
+                command.exec(context);
+            } catch (CommandExecuteException e) {
+                LOGGER.error(e.getMessage());
+            }
         }
 
         cmdParser.close();

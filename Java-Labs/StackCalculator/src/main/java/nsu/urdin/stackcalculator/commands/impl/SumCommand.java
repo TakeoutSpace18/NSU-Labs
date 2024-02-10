@@ -20,7 +20,6 @@ public class SumCommand extends Command {
     @Override
     public void exec(CalcContext context) {
         if (context.getStack().size() < 2) {
-            LOGGER.error("Not enough operands on the stack!");
             throw new CommandExecuteException(getRawCommandText(), getLineNumber(), "Not enough operands on the stack");
         }
 
