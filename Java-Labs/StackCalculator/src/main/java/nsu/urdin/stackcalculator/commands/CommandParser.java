@@ -66,11 +66,6 @@ public class CommandParser implements AutoCloseable {
         cmdInput = new BufferedReader(new StringReader(source));
     }
 
-    /**
-     * @return previously parsed command data (name and arguments).
-     * @apiNote May return null if no command is available (because of EOF),
-     * so the caller must check this situation by previously calling {@code hasNext() }
-     */
     public Optional<Data> parseNext() {
         try {
             String line;
