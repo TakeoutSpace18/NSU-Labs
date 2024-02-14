@@ -2,15 +2,23 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iterator>
+#include <iostream>
 #include <vector>
 
-const SLESolver::DataType SLESolver::sParam = 0.01;
+const SLESolver::DataType SLESolver::sParam = -0.01;
 
-void SLESolver::operator()(const DataType* matA, const DataType* vecB, DataType* foundX, const std::size_t N, const DataType eps)
+void SLESolver::Solve(const DataType* matA, const DataType* vecB, DataType* foundX, std::size_t N, DataType eps)
+{
+    SLESolver solver;
+    solver.solve(matA, vecB, foundX, N, eps);
+}
+
+void SLESolver::solve(const DataType* matA, const DataType* vecB, DataType* foundX, const std::size_t N, const DataType eps)
 {
     mMatA = matA;
     mVecB = vecB;
+
+    mVecBLength = vectorLength(mVecB, N);
 
     std::vector<DataType> vecAxMinusB(N);
 
@@ -24,19 +32,19 @@ void SLESolver::operator()(const DataType* matA, const DataType* vecB, DataType*
         multiplyVectorByScalar(vecAxMinusB.data(), sParam, N);
         vectorSubtract(foundX, vecAxMinusB.data(), N);
     }
-    while (!checkPrecision(vecAxMinusB.data(), mVecB, eps, N));
+    while (!checkPrecision(vecAxMinusB.data(), eps, N));
 }
 
 void SLESolver::multiplyMatrixByVector(const DataType* mat, const DataType* vec, DataType* vecOut, std::size_t N)
 {
-    std::fill_n(vecOut, N * N, 0);
+    std::fill_n(vecOut, N, 0);
 
     #pragma omp parallel for
-    for (std::size_t i = 0; i < N; ++i)
+    for (std::size_t i = 0; i < N; ++i) // row
     {
-        for (std::size_t j = 0; j < N; ++j)
+        for (std::size_t j = 0; j < N; ++j) // col
         {
-            vecOut[i * N] += mat[i * N + j] * vec[j * N];
+            vecOut[i] += mat[i * N + j] * vec[j];
         }
     }
 }
@@ -63,7 +71,7 @@ SLESolver::DataType SLESolver::vectorLength(const DataType* vec, std::size_t N)
 {
     DataType ret = 0;
 
-    #pragma omp parallel for
+    #pragma omp parallel for reduction(+: ret)
     for (std::size_t i = 0; i < N; ++i)
     {
         ret += vec[i] * vec[i];
@@ -72,10 +80,8 @@ SLESolver::DataType SLESolver::vectorLength(const DataType* vec, std::size_t N)
     return std::sqrt(ret);
 }
 
-bool SLESolver::checkPrecision(const DataType* vecAxMinusB, const DataType* vecB, DataType eps, std::size_t N)
+bool SLESolver::checkPrecision(const DataType* vecAxMinusB, DataType eps, std::size_t N)
 {
     DataType vecAxMinusBLength = vectorLength(vecAxMinusB, N);
-    DataType vecBLength = vectorLength(vecAxMinusB, N);
-    return vecAxMinusBLength / vecBLength < eps;
-
+    return vecAxMinusBLength / mVecBLength < eps;
 }
