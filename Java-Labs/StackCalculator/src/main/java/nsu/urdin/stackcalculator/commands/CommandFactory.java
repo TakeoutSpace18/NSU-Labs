@@ -29,9 +29,15 @@ public class CommandFactory {
         try {
             return (Command) Class.forName(cmdClassPath).getDeclaredConstructor(commandData.getClass()).newInstance(commandData);
         } catch (InstantiationException | ClassNotFoundException |
-                 NoSuchMethodException | InvocationTargetException |
-                 IllegalAccessException e) {
+                 NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException("Failed to create desired command class!", e);
+        }
+        catch (InvocationTargetException e) {
+            Throwable constructorException = e.getTargetException();
+            if (constructorException instanceof WrongArgumentsException) {
+                throw (WrongArgumentsException)constructorException;
+            }
+            else throw new RuntimeException("Failed to create desired command class!", e);
         }
     }
 }
