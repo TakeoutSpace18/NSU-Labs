@@ -9,20 +9,15 @@ BUILDDIR=$(CURDIR)/build
 all: $(PROJECT)
 
 # project
-$(PROJECT): $(BUILDDIR)/main.o $(BUILDDIR)/hello_static_lib.a | $(BUILDDIR)
-	$(CC) $(CFLAGS) $(BUILDDIR)/main.o -l:$(BUILDDIR)/hello_static_lib.a -o $(BUILDDIR)/$(EXECUTABLE)
+$(PROJECT): main.c $(BUILDDIR)/hello_static_lib.a | $(BUILDDIR)
+	$(CC) $(CFLAGS) main.c $(BUILDDIR)/hello_static_lib.a -o $(BUILDDIR)/$(EXECUTABLE)
 
 # static library
-$(BUILDDIR)/hello_static_lib.a: hello_static_lib.o | $(BUILDDIR)
+$(BUILDDIR)/hello_static_lib.a: $(BUILDDIR)/hello_static_lib.o | $(BUILDDIR)
 	ar rcs -o $(BUILDDIR)/hello_static_lib.a $(BUILDDIR)/hello_static_lib.o
 
-# main.o
-$(BUILDDIR)/main.o: main.c | $(BUILDDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# hello_static_lib.o
 $(BUILDDIR)/hello_static_lib.o: hello_static_lib.c | $(BUILDDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c hello_static_lib.c -o build/hello_static_lib.o
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
