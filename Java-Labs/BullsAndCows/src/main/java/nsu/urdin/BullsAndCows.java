@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class BullsAndCows {
-    private static final int NUMBER_LENGTH = 6;
+    private static final int NUMBER_LENGTH = 4;
 
     public static void main(String[] args) {
         BullsAndCows gameInstance = new BullsAndCows();
