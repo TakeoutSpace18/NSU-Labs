@@ -60,27 +60,39 @@ int benchmark()
     std::size_t N = 50 * 50;
     int maxThreads = omp_get_max_threads();
 
-    std::vector<std::pair<int, int64_t>> threadsToTimeGraph(maxThreads);
-    std::vector<std::pair<int, int64_t>> accelerationGraph(maxThreads);
-    std::vector<std::pair<int, int64_t>> parallelizeEfficiencyGraph(maxThreads);
+    std::vector<std::pair<int, double>> threadsToTimeGraph;
+    std::vector<std::pair<int, double>> speedupGraph;
+    std::vector<std::pair<int, double>> parallelEfficiencyGraph;
+    threadsToTimeGraph.reserve(maxThreads);
+    speedupGraph.reserve(maxThreads);
+    parallelEfficiencyGraph.reserve(maxThreads);
 
     auto matA = loadData("matA.bin", N * N);
     auto vecB = loadData("vecB.bin", N);
 
     std::vector<SLESolver::DataType> foundVecX(N);
 
+
+    std::int64_t singleThreadTime;
     for (int numThreads = 1; numThreads <= maxThreads; ++numThreads)
     {
         std::cout << "Computing with " << numThreads << " thread(s)... ";
         std::cout.flush();
 
         omp_set_num_threads(numThreads);
-        auto elapsedTime = measureFunctionRuntimeWithRepeats(MEASURE_REPEATS, SLESolver::Solve, matA.data(), vecB.data(), foundVecX.data(), N, PRECISION);
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count() << "ms\n";
+        auto elapsedTime = measureFunctionRuntimeWithRepeats(MEASURE_REPEATS, SLESolver::Solve, matA.data(),
+                                                             vecB.data(), foundVecX.data(), N, PRECISION);
+        std::int64_t elapsedTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+        std::cout << elapsedTimeMilliseconds << "ms\n";
 
-        threadsToTimeGraph.emplace_back(numThreads, elapsedTime.count());
-        accelerationGraph.emplace_back(numThreads, elapsedTime.count() / numThreads);
-        parallelizeEfficiencyGraph.emplace_back(numThreads, elapsedTime.count() / (numThreads * numThreads));
+        if (numThreads == 1)
+        {
+            singleThreadTime = elapsedTimeMilliseconds;
+        }
+
+        threadsToTimeGraph.emplace_back(numThreads, elapsedTimeMilliseconds);
+        speedupGraph.emplace_back(numThreads, (double)singleThreadTime / elapsedTimeMilliseconds);
+        parallelEfficiencyGraph.emplace_back(numThreads, (double)singleThreadTime / (elapsedTimeMilliseconds * numThreads));
     }
     saveData(foundVecX, "foundVecX.bin");
 
@@ -88,9 +100,11 @@ int benchmark()
     std::filesystem::create_directory("plot");
     Gnuplot gp("tee plot/script.gp | gnuplot -persist");
     gp << "set multiplot layout 2, 2\n";
-    gp << "plot" << gp.file1d(threadsToTimeGraph, "plot/threadsToTimeGraph.dat") << "with lines title 'raw time'\n";
-    gp << "plot" << gp.file1d(accelerationGraph, "plot/accelerationGraph.dat") << "with lines title 'acceleration'\n";
-    gp << "plot" << gp.file1d(parallelizeEfficiencyGraph, "plot/parallelizeEfficiencyGraph.dat") << "with lines title 'paralellize efficiency'\n";
+    gp << "plot" << gp.file1d(threadsToTimeGraph, "plot/rawTimeGraph.dat") << "with lines title 'raw time'\n";
+    gp << "set size ratio -1\n";
+    gp << "plot" << gp.file1d(speedupGraph, "plot/speedupGraph.dat") << "with lines title 'speedup'\n";
+    gp << "set size noratio\n";
+    gp << "plot" << gp.file1d(parallelEfficiencyGraph, "plot/parallelEfficiencyGraph.dat") << "with lines title 'parallel efficiency'\n";
 
     return EXIT_SUCCESS;
 }
