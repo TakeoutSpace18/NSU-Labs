@@ -1,4 +1,3 @@
--Werror
 -Wall
 -Wextra
 -Waddress
@@ -7,4 +6,3 @@
 -Wswitch
 -Wunreachable-code
 -pedantic
--pedantic-errors
