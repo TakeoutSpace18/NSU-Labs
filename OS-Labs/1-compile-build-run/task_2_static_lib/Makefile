@@ -17,7 +17,7 @@ $(BUILDDIR)/hello_static_lib.a: $(BUILDDIR)/hello_static_lib.o | $(BUILDDIR)
 	ar rcs -o $(BUILDDIR)/hello_static_lib.a $(BUILDDIR)/hello_static_lib.o
 
 $(BUILDDIR)/hello_static_lib.o: hello_static_lib.c | $(BUILDDIR)
-	$(CC) -c hello_static_lib.c -o build/hello_static_lib.o
+	$(CC) $(CFLAGS) -c hello_static_lib.c -o $(BUILDDIR)/hello_static_lib.o
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)

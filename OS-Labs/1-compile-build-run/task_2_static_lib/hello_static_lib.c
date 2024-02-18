@@ -4,5 +4,5 @@
 
 void print_hello()
 {
-    printf("Hello world!");
+    printf("Hello from static library!");
 }
