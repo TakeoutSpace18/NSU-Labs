@@ -1,0 +1,8 @@
+-Wall
+-Wextra
+-Waddress
+-Warray-bounds
+-Wbuiltin-macro-redefined
+-Wswitch
+-Wunreachable-code
+-pedantic
