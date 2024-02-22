@@ -29,10 +29,7 @@ auto measureFunctionRuntimeWithRepeats(int repeats, F func, Args&&... args)
     for (int i = 1; i < repeats; ++i)
     {
         auto time = measureFunctionRuntime(func, std::forward<Args>(args)...);
-        if (time < minTime)
-        {
-            minTime = time;
-        }
+        minTime = std::min(time, minTime);
     }
     return minTime;
 }
@@ -72,8 +69,9 @@ int benchmark()
 
     std::vector<SLESolver::DataType> foundVecX(N);
 
-
     std::int64_t singleThreadTime;
+    std::int64_t minTime = std::numeric_limits<std::int64_t>::max();
+    int numThreadsWithMinTime;
     for (int numThreads = 1; numThreads <= maxThreads; ++numThreads)
     {
         std::cout << "Computing with " << numThreads << " thread(s)... ";
@@ -90,6 +88,12 @@ int benchmark()
             singleThreadTime = elapsedTimeMilliseconds;
         }
 
+        if (elapsedTimeMilliseconds < minTime)
+        {
+            minTime = elapsedTimeMilliseconds;
+            numThreadsWithMinTime = numThreads;
+        }
+
         threadsToTimeGraph.emplace_back(numThreads, elapsedTimeMilliseconds);
         speedupGraph.emplace_back(numThreads, (double)singleThreadTime / elapsedTimeMilliseconds);
         parallelEfficiencyGraph.emplace_back(numThreads, (double)singleThreadTime / (elapsedTimeMilliseconds * numThreads));
@@ -100,6 +104,7 @@ int benchmark()
     std::filesystem::create_directory("plot");
     Gnuplot gp("tee plot/script.gp | gnuplot -persist");
     gp << "set multiplot layout 2, 2\n";
+    gp << "set label \"min time: " << minTime << "ms, threads: " << numThreadsWithMinTime << "\" at 25,8\n";
     gp << "plot" << gp.file1d(threadsToTimeGraph, "plot/rawTimeGraph.dat") << "with lines title 'raw time'\n";
     gp << "set size ratio -1\n";
     gp << "plot" << gp.file1d(speedupGraph, "plot/speedupGraph.dat") << "with lines title 'speedup'\n";
