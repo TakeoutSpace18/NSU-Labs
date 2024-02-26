@@ -1,10 +1,40 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/ptrace.h>
+#include <linux/ptrace.h>
 #include <sys/wait.h>
 
-int trace_syscalls(pid_t tracee_pid)
+#include "syscall_table.h"
+
+void print_syscall_info(const struct ptrace_syscall_info* info)
+{
+    if (info->op == PTRACE_SYSCALL_INFO_ENTRY)
+    {
+        printf("%03llu:   %s(", info->entry.nr, get_syscall_name(info->entry.nr));
+        for (int i = 0; i < 5; i++)
+        {
+            printf("0x%llx, ", info->entry.args[i]);
+        }
+        printf("0x%llx)", info->entry.args[5]);
+    }
+
+    else if (info->op == PTRACE_SYSCALL_INFO_EXIT)
+    {
+        printf(" --> 0x%llx ", info->exit.rval);
+        if (!info->exit.is_error)
+        {
+            puts("(SUCCESS)");
+        }
+        else
+        {
+            puts("(ERROR)");
+        }
+    }
+}
+
+int tracer(pid_t tracee_pid)
 {
     int status;
 
@@ -15,9 +45,12 @@ int trace_syscalls(pid_t tracee_pid)
         return EXIT_FAILURE;
     }
 
-    if (!WIFSTOPPED(status) || WSTOPSIG(status) != SIGSTOP) {
+    if (!WIFSTOPPED(status) || WSTOPSIG(status) != SIGSTOP)
+    {
         fprintf(stderr, "tracer: unexpected wait status: %x", status);
     }
+
+    ptrace(PTRACE_SETOPTIONS, tracee_pid, 0, PTRACE_O_TRACESYSGOOD);
 
     if (ptrace(PTRACE_SYSCALL, tracee_pid, &status, NULL) < 0)
     {
@@ -27,12 +60,17 @@ int trace_syscalls(pid_t tracee_pid)
 
     while (waitpid(tracee_pid, &status, 0) > 0 && !WIFEXITED(status))
     {
-        struct __ptrace_syscall_info syscall_info;
-
-        if (ptrace(PTRACE_GET_SYSCALL_INFO, tracee_pid, sizeof(syscall_info), &syscall_info) < 0)
+        if (WIFSTOPPED(status) && WSTOPSIG(status) == (SIGTRAP | 0x80))
         {
-            perror("ptrace(PTRACE_GET_SYSCALL_INFO)");
-            return EXIT_FAILURE;
+            struct ptrace_syscall_info syscall_info;
+
+            if (ptrace(PTRACE_GET_SYSCALL_INFO, tracee_pid, sizeof(syscall_info), &syscall_info) < 0)
+            {
+                perror("ptrace(PTRACE_GET_SYSCALL_INFO)");
+                return EXIT_FAILURE;
+            }
+
+            print_syscall_info(&syscall_info);
         }
 
         // continue tracee and stop on syscall
@@ -46,11 +84,11 @@ int trace_syscalls(pid_t tracee_pid)
     return WEXITSTATUS(status);
 }
 
-int launch_child(const char* file, char** argv)
+int tracee(const char* file, char** argv)
 {
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0)
     {
-        perror("ptrace");
+        perror("ptrace(TRACEME)");
         return EXIT_FAILURE;
     }
 
@@ -86,10 +124,10 @@ int main(int argc, char** argv)
             perror("fork");
             return EXIT_FAILURE;
         case 0:
-            launch_child(tracee_path, &argv[1]);
+            tracee(tracee_path, &argv[1]);
             break;
         default:
-            trace_syscalls(pid);
+            tracer(pid);
     }
     return EXIT_SUCCESS;
 }

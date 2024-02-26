@@ -6,7 +6,7 @@ BUILDDIR=$(CURDIR)/build
 all: trace_syscalls
 
 trace_syscalls: trace_syscalls.c | $(BUILDDIR)
-	gcc $(CFLAGS) trace_syscalls.c -Og -o $(BUILDDIR)/trace_syscalls
+	gcc $(CFLAGS) trace_syscalls.c -o $(BUILDDIR)/trace_syscalls
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
