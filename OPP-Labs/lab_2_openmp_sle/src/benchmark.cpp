@@ -7,9 +7,12 @@
 #include <vector>
 
 #include "SLESolver.h"
+#include "SLESolverNaive.h"
+#include "SLESolverEffective.h"
 
-constexpr SLESolver::DataType PRECISION = 1e-3;
-constexpr int MEASURE_REPEATS = 3;
+constexpr SLESolver::DataType PRECISION = 5e-2;
+constexpr int MEASURE_REPEATS = 1;
+constexpr auto SOLVER = SLESolverEffective::Solve;
 
 template<class F, class... Args>
 auto measureFunctionRuntime(F func, Args&&... args)
@@ -52,68 +55,92 @@ void saveData(const std::vector<SLESolver::DataType>& dataToSave, const std::str
     output.write(reinterpret_cast<const char *>(dataToSave.data()), sizeof(SLESolver::DataType) * dataToSave.size());
 }
 
+struct Graphs {
+    std::vector<std::pair<int, double>> threadsToTime;
+    std::vector<std::pair<int, double>> speedup;
+    std::vector<std::pair<int, double>> parallelEfficiency;
+
+    std::int64_t singleThreadTime;
+    std::int64_t minTime;
+    int numThreadsWithMinTime;
+
+
+    explicit Graphs(int maxThreads)
+    {
+        minTime = std::numeric_limits<std::int64_t>::max();
+
+        speedup.reserve(maxThreads);
+        parallelEfficiency.reserve(maxThreads);
+        threadsToTime.reserve(maxThreads);
+    }
+
+    void addMeasure(int numThreads, std::int64_t time)
+    {
+        if (numThreads == 1)
+        {
+            singleThreadTime = time;
+        }
+
+        if (time < minTime)
+        {
+            minTime = time;
+            numThreadsWithMinTime = numThreads;
+        }
+
+        threadsToTime.emplace_back(numThreads, time);
+        speedup.emplace_back(numThreads, (double)singleThreadTime / time);
+        parallelEfficiency.emplace_back(numThreads, (double)singleThreadTime / (time * numThreads));
+    }
+
+    void pipeToGnuplot()
+    {
+        std::filesystem::create_directory("plot");
+        Gnuplot gp("tee plot/script.gp | gnuplot -persist");
+        gp << "set multiplot layout 2, 2\n";
+        gp << "set label \"min time: " << minTime << "ms, threads: " << numThreadsWithMinTime << "\" at 25,8\n";
+        gp << "plot" << gp.file1d(threadsToTime, "plot/rawTimeGraph.dat") << "with lines title 'raw time'\n";
+        gp << "set size ratio -1\n";
+        gp << "plot" << gp.file1d(speedup, "plot/speedupGraph.dat") << "with lines title 'speedup'\n";
+        gp << "set size noratio\n";
+        gp << "plot" << gp.file1d(parallelEfficiency, "plot/parallelEfficiencyGraph.dat") << "with lines title 'parallel efficiency'\n";
+    }
+};
+
 int benchmark()
 {
     std::size_t N = 50 * 50;
     int maxThreads = omp_get_max_threads();
 
-    std::vector<std::pair<int, double>> threadsToTimeGraph;
-    std::vector<std::pair<int, double>> speedupGraph;
-    std::vector<std::pair<int, double>> parallelEfficiencyGraph;
-    threadsToTimeGraph.reserve(maxThreads);
-    speedupGraph.reserve(maxThreads);
-    parallelEfficiencyGraph.reserve(maxThreads);
+    Graphs graphs(maxThreads);
 
     auto matA = loadData("matA.bin", N * N);
     auto vecB = loadData("vecB.bin", N);
 
     std::vector<SLESolver::DataType> foundVecX(N);
 
-    std::int64_t singleThreadTime;
-    std::int64_t minTime = std::numeric_limits<std::int64_t>::max();
-    int numThreadsWithMinTime;
     for (int numThreads = 1; numThreads <= maxThreads; ++numThreads)
     {
         std::cout << "Computing with " << numThreads << " thread(s)... ";
         std::cout.flush();
 
         omp_set_num_threads(numThreads);
-        auto elapsedTime = measureFunctionRuntimeWithRepeats(MEASURE_REPEATS, SLESolver::Solve, matA.data(),
+
+        auto elapsedTime = measureFunctionRuntimeWithRepeats(MEASURE_REPEATS, SOLVER, matA.data(),
                                                              vecB.data(), foundVecX.data(), N, PRECISION);
-        std::int64_t elapsedTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
-        std::cout << elapsedTimeMilliseconds << "ms\n";
 
-        if (numThreads == 1)
-        {
-            singleThreadTime = elapsedTimeMilliseconds;
-        }
+        std::int64_t elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+        std::cout << elapsedTimeMs << "ms\n";
 
-        if (elapsedTimeMilliseconds < minTime)
-        {
-            minTime = elapsedTimeMilliseconds;
-            numThreadsWithMinTime = numThreads;
-        }
-
-        threadsToTimeGraph.emplace_back(numThreads, elapsedTimeMilliseconds);
-        speedupGraph.emplace_back(numThreads, (double)singleThreadTime / elapsedTimeMilliseconds);
-        parallelEfficiencyGraph.emplace_back(numThreads, (double)singleThreadTime / (elapsedTimeMilliseconds * numThreads));
+        graphs.addMeasure(numThreads, elapsedTimeMs);
+        saveData(foundVecX, "foundVecX.bin");
     }
-    saveData(foundVecX, "foundVecX.bin");
 
 
-    std::filesystem::create_directory("plot");
-    Gnuplot gp("tee plot/script.gp | gnuplot -persist");
-    gp << "set multiplot layout 2, 2\n";
-    gp << "set label \"min time: " << minTime << "ms, threads: " << numThreadsWithMinTime << "\" at 25,8\n";
-    gp << "plot" << gp.file1d(threadsToTimeGraph, "plot/rawTimeGraph.dat") << "with lines title 'raw time'\n";
-    gp << "set size ratio -1\n";
-    gp << "plot" << gp.file1d(speedupGraph, "plot/speedupGraph.dat") << "with lines title 'speedup'\n";
-    gp << "set size noratio\n";
-    gp << "plot" << gp.file1d(parallelEfficiencyGraph, "plot/parallelEfficiencyGraph.dat") << "with lines title 'parallel efficiency'\n";
+    graphs.pipeToGnuplot();
+    system("python3 visualize.py foundVecX.bin");
 
     return EXIT_SUCCESS;
 }
-
 
 int main()
 {
