@@ -5,14 +5,16 @@
 #include <sys/ptrace.h>
 #include <linux/ptrace.h>
 #include <sys/wait.h>
-
-#include "syscall_table.h"
+#include <seccomp.h>
 
 void print_syscall_info(const struct ptrace_syscall_info* info)
 {
     if (info->op == PTRACE_SYSCALL_INFO_ENTRY)
     {
-        printf("%03llu:   %s(", info->entry.nr, get_syscall_name(info->entry.nr));
+        char* syscall_name = seccomp_syscall_resolve_num_arch(SCMP_ARCH_NATIVE, info->entry.nr);
+        printf("%03llu:   %s(", info->entry.nr, syscall_name);
+        free(syscall_name);
+
         for (int i = 0; i < 5; i++)
         {
             printf("0x%llx, ", info->entry.args[i]);
