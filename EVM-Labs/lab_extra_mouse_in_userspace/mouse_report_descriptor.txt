@@ -1,0 +1,58 @@
+/sys/kernel/debug/hid/0003:09DA:7CC6.0020/rdesc
+
+05 01 09 02 a1 01 09 01 a1 00 05 09 19 01 29 08 15 00 25 01 75 01 95 08 81 02 05 01 09 30 09 31 16 01 80 26 ff 7f 75 10 95 02 81 06 09 38 15 81 25 7f 75 08 95 01 81 06 c0 c0
+
+  INPUT[INPUT]
+    Field(0)
+      Physical(GenericDesktop.Pointer)
+      Application(GenericDesktop.Mouse)
+      Usage(8)
+        Button.0001
+        Button.0002
+        Button.0003
+        Button.0004
+        Button.0005
+        Button.0006
+        Button.0007
+        Button.0008
+      Logical Minimum(0)
+      Logical Maximum(1)
+      Report Size(1)
+      Report Count(8)
+      Report Offset(0)
+      Flags( Variable Absolute )
+    Field(1)
+      Physical(GenericDesktop.Pointer)
+      Application(GenericDesktop.Mouse)
+      Usage(2)
+        GenericDesktop.X
+        GenericDesktop.Y
+      Logical Minimum(-32767)
+      Logical Maximum(32767)
+      Report Size(16)
+      Report Count(2)
+      Report Offset(8)
+      Flags( Variable Relative )
+    Field(2)
+      Physical(GenericDesktop.Pointer)
+      Application(GenericDesktop.Mouse)
+      Usage(1)
+        GenericDesktop.Wheel
+      Logical Minimum(-127)
+      Logical Maximum(127)
+      Report Size(8)
+      Report Count(1)
+      Report Offset(40)
+      Flags( Variable Relative )
+
+Button.0001 ---> Key.LeftBtn
+Button.0002 ---> Key.RightBtn
+Button.0003 ---> Key.MiddleBtn
+Button.0004 ---> Key.SideBtn
+Button.0005 ---> Key.ExtraBtn
+Button.0006 ---> Key.ForwardBtn
+Button.0007 ---> Key.BackBtn
+Button.0008 ---> Key.TaskBtn
+GenericDesktop.X ---> Relative.X
+GenericDesktop.Y ---> Relative.Y
+GenericDesktop.Wheel ---> Relative.?
