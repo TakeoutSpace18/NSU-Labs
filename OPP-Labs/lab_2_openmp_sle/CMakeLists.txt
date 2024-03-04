@@ -7,6 +7,7 @@ project(lab_2_openmp_sle
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenMP REQUIRED)
+find_package(fmt REQUIRED)
 find_package(Boost 1.40.0 COMPONENTS filesystem system iostreams REQUIRED)
 
 file(GLOB_RECURSE SOURCES
@@ -21,4 +22,4 @@ target_compile_options(lab_2_openmp_sle PRIVATE -Wall -Wextra -Wpedantic -O2)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCEO_DIR}" FILES ${sources})
 
-target_link_libraries(lab_2_openmp_sle OpenMP::OpenMP_CXX ${Boost_LIBRARIES})
+target_link_libraries(lab_2_openmp_sle OpenMP::OpenMP_CXX fmt ${Boost_LIBRARIES})

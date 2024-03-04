@@ -4,6 +4,10 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <omp.h>
+#include <sched.h>
+#include <set>
+#include <fmt/ranges.h>
 
 void SLESolverEffective::Solve(const DataType* matA, const DataType* vecB, DataType* foundX, const std::size_t N, const DataType eps)
 {
@@ -14,8 +18,12 @@ void SLESolverEffective::Solve(const DataType* matA, const DataType* vecB, DataT
     // set initial X value
     std::fill_n(foundX, N, 0);
 
-    #pragma omp parallel
+    std::set<int> cpus;
+
+    #pragma omp parallel proc_bind(close)
     {
+        #pragma omp critical
+        cpus.insert(sched_getcpu());
 
         #pragma omp for reduction(+:vecBLength) SCHEDULE
         for (std::size_t i = 0; i < N; ++i)
@@ -25,13 +33,13 @@ void SLESolverEffective::Solve(const DataType* matA, const DataType* vecB, DataT
 
         while (true)
         {
-            #pragma omp barrier
             #pragma omp single
-            std::fill_n(vecAxMinusB.data(), N, 0);
+            std::fill_n(vecAxMinusB.begin(), N, 0);
 
             vecAxMinusBLength = 0;
+            #pragma omp barrier
 
-            #pragma omp for reduction(+:vecAxMinusBLength) SCHEDULE
+            #pragma omp for reduction(+: vecAxMinusBLength) SCHEDULE
             for (std::size_t i = 0; i < N; ++i) // row
             {
                 for (std::size_t j = 0; j < N; ++j) // col
@@ -56,6 +64,9 @@ void SLESolverEffective::Solve(const DataType* matA, const DataType* vecB, DataT
                 break;
             }
 
+            #pragma omp barrier
         }
     }
+
+    fmt::print("cpus used: {}\n", cpus);
 }

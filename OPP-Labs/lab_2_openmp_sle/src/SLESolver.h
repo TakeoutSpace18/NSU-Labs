@@ -2,10 +2,10 @@
 #define SLESOLVER_H
 
 // this helps to utilize intel P-cores while E-cores are still busy
-// #define SCHEDULE schedule(nonmonotonic:dynamic, 5)
+#define SCHEDULE schedule(dynamic, 1)
 
 // however, best perfomance can be achived using only P-cores and static scheduling
-#define SCHEDULE schedule(static)
+// #define SCHEDULE schedule(static)
 
 class SLESolver {
 public:

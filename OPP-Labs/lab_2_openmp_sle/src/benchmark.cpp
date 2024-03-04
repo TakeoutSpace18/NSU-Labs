@@ -5,13 +5,16 @@
 #include <omp.h>
 #include <filesystem>
 #include <vector>
+#include <fmt/core.h>
+#include <fmt/color.h>
 
 #include "SLESolver.h"
 #include "SLESolverNaive.h"
 #include "SLESolverEffective.h"
 
-constexpr SLESolver::DataType PRECISION = 5e-2;
-constexpr int MEASURE_REPEATS = 1;
+const std::string PLOT_DIR_NAME = "plot";
+constexpr SLESolver::DataType PRECISION = 3e-2;
+constexpr int MEASURE_REPEATS = 3;
 constexpr auto SOLVER = SLESolverEffective::Solve;
 
 template<class F, class... Args>
@@ -94,15 +97,16 @@ struct Graphs {
 
     void pipeToGnuplot()
     {
-        std::filesystem::create_directory("plot");
-        Gnuplot gp("tee plot/script.gp | gnuplot -persist");
+        std::filesystem::create_directory(PLOT_DIR_NAME);
+        Gnuplot gp("tee " + PLOT_DIR_NAME + "/script.gp | gnuplot -persist");
+        gp << "set term qt title " << std::quoted(PLOT_DIR_NAME) << "\n";
         gp << "set multiplot layout 2, 2\n";
         gp << "set label \"min time: " << minTime << "ms, threads: " << numThreadsWithMinTime << "\" at 25,8\n";
-        gp << "plot" << gp.file1d(threadsToTime, "plot/rawTimeGraph.dat") << "with lines title 'raw time'\n";
+        gp << "plot" << gp.file1d(threadsToTime, PLOT_DIR_NAME + "/rawTimeGraph.dat") << "with lines title 'raw time'\n";
         gp << "set size ratio -1\n";
-        gp << "plot" << gp.file1d(speedup, "plot/speedupGraph.dat") << "with lines title 'speedup'\n";
+        gp << "plot" << gp.file1d(speedup, PLOT_DIR_NAME + "/speedupGraph.dat") << "with lines title 'speedup'\n";
         gp << "set size noratio\n";
-        gp << "plot" << gp.file1d(parallelEfficiency, "plot/parallelEfficiencyGraph.dat") << "with lines title 'parallel efficiency'\n";
+        gp << "plot" << gp.file1d(parallelEfficiency, PLOT_DIR_NAME + "/parallelEfficiencyGraph.dat") << "with lines title 'parallel efficiency'\n";
     }
 };
 
@@ -120,8 +124,7 @@ int benchmark()
 
     for (int numThreads = 1; numThreads <= maxThreads; ++numThreads)
     {
-        std::cout << "Computing with " << numThreads << " thread(s)... ";
-        std::cout.flush();
+        fmt::print("Computing with {} thread(s)...\n", numThreads);
 
         omp_set_num_threads(numThreads);
 
@@ -129,7 +132,7 @@ int benchmark()
                                                              vecB.data(), foundVecX.data(), N, PRECISION);
 
         std::int64_t elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
-        std::cout << elapsedTimeMs << "ms\n";
+        fmt::print(fg(fmt::color::green), "{}ms\n", elapsedTimeMs);
 
         graphs.addMeasure(numThreads, elapsedTimeMs);
         saveData(foundVecX, "foundVecX.bin");

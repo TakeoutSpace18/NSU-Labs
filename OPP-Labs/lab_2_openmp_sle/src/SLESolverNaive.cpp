@@ -28,7 +28,7 @@ void SLESolverNaive::solve(const DataType* matA, const DataType* vecB, DataType*
         multiplyMatrixByVector(mMatA, foundX, vecAxMinusB.data(), N);
         vectorSubtract(vecAxMinusB.data(), mVecB, N);
 
-        if (!checkPrecision(vecAxMinusB.data(), eps, N))
+        if (checkPrecision(vecAxMinusB.data(), eps, N))
         {
             break;
         }
