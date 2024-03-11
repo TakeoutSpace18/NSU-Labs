@@ -105,7 +105,7 @@ int create_symlink(const char* path)
     return EXIT_SUCCESS;
 }
 
-int read_symlink(const char* path)
+int print_symlink(const char* path)
 {
     char buf[128];
     ssize_t read_bytes = readlink(path, buf, 128);
@@ -115,7 +115,85 @@ int read_symlink(const char* path)
         return EXIT_FAILURE;
     }
 
-    write()
+    write(STDOUT_FILENO, buf, read_bytes);
+    return EXIT_SUCCESS;
+}
+
+int create_hardlink(const char* path)
+{
+    char* hardlink_path = strdup(path);
+    strcat(hardlink_path, ".hardlink");
+
+    if (link(path, hardlink_path) == -1)
+    {
+        perror("link()");
+        free(hardlink_path);
+        return EXIT_FAILURE;
+    }
+
+    free(hardlink_path);
+    return EXIT_SUCCESS;
+}
+
+int print_permissions(const char* path)
+{
+    struct stat file_stat;
+    if (stat(path, &file_stat) == -1)
+    {
+        perror("stat()");
+        return EXIT_FAILURE;
+    }
+
+    printf("permissions: %o\n", file_stat.st_mode & 0777);
+    printf("link count: %lu\n", file_stat.st_nlink);
+    return EXIT_SUCCESS;
+}
+
+int parse_permissions_string(const char* str)
+{
+    int permissions = 0;
+
+    char* pattern = "rwxrwxrwx";
+    for (int i = 0; i < 9; ++i)
+    {
+        permissions <<= 1;
+        if (str[i] == pattern[i])
+        {
+            permissions |= 0x1;
+        }
+        else if (str[i] != '-')
+        {
+            return -1;
+        }
+    }
+
+    return permissions;
+}
+
+int change_permissions(const char* path, const char* permissions_str)
+{
+    int permissions = parse_permissions_string(permissions_str);
+    if (permissions == -1)
+    {
+        fprintf(stderr, "Failed to parse permissions string");
+        return EXIT_FAILURE;
+    }
+
+    struct stat file_stat;
+    if (stat(path, &file_stat) == -1)
+    {
+        perror("stat()");
+        return EXIT_FAILURE;
+    }
+
+    mode_t new_mode = (file_stat.st_mode & ~0777) | permissions;
+    if (chmod(path, new_mode) == -1)
+    {
+        perror("chmod()");
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char** argv)
@@ -157,7 +235,24 @@ int main(int argc, char** argv)
     }
     if (strcmp(bname, "print_symlink") == 0)
     {
-        return read_symlink(argv[1]);
+        return print_symlink(argv[1]);
+    }
+    if (strcmp(bname, "create_hardlink") == 0)
+    {
+        return create_hardlink(argv[1]);
+    }
+    if (strcmp(bname, "print_permissions") == 0)
+    {
+        return print_permissions(argv[1]);
+    }
+    if (strcmp(bname, "change_permissions") == 0)
+    {
+        if (argc < 3)
+        {
+            fprintf(stderr, "expected 2 arguments, provided less");
+            return EXIT_FAILURE;
+        }
+        return change_permissions(argv[1], argv[2]);
     }
 
     fprintf(stderr, "unrecognized executable name");

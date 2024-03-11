@@ -17,6 +17,9 @@ create_hardlinks: file_operations
 	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/remove_file
 	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/create_symlink
 	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/print_symlink
+	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/create_hardlink
+	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/print_permissions
+	ln -f $(BUILDDIR)/file_operations $(BUILDDIR)/change_permissions
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
