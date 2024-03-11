@@ -1,6 +1,6 @@
 package nsu.urdin.tetris.view;
 
-import nsu.urdin.tetris.model.GameFieldModel;
+import nsu.urdin.tetris.model.FieldModelImpl;
 
 import javax.swing.*;
 
@@ -12,7 +12,7 @@ public class MainFrame extends JFrame {
         super(WINDOW_NAME);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        GameFieldPanel field = new GameFieldPanel(new GameFieldModel());
+        FieldPanel field = new FieldPanel();
 
         getContentPane().add(field);
 

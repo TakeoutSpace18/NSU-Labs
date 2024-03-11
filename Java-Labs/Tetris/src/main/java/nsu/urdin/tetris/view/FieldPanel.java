@@ -1,26 +1,20 @@
 package nsu.urdin.tetris.view;
 
-import nsu.urdin.tetris.model.GameFieldModel;
+import nsu.urdin.tetris.model.FieldModelImpl;
+import nsu.urdin.tetris.utils.Vec2i;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameFieldPanel extends JPanel {
+public class FieldPanel extends JPanel implements FieldView {
 
-    private final GameFieldModel gameFieldModel;
-    private final List<BlockPanel> blockPanels;
+    private ArrayList<ArrayList<BlockPanel>> blockPanelsField;
     private boolean isRunning;
     private Thread gameLoop;
 
-    public GameFieldPanel(GameFieldModel gameFieldModel) {
-        this.gameFieldModel = gameFieldModel;
-
-        this.blockPanels = new ArrayList<>();
-        this.blockPanels.add(new BlockPanel(Color.RED));
-        this.blockPanels.forEach(this::add);
-
+    public FieldPanel() {
         this.isRunning = true;
         setupGameLoop();
         gameLoop.start();
@@ -50,6 +44,30 @@ public class GameFieldPanel extends JPanel {
     }
 
     private void update() {
-        blockPanels.forEach(BlockPanel::update);
+        // TODO: fix update on null object
+        blockPanelsField.forEach(col -> col.forEach(BlockPanel::update));
+    }
+
+    @Override
+    public void removeBlock(Vec2i position) {
+
+    }
+
+    @Override
+    public void setDimension(int width, int height) {
+        blockPanelsField = new ArrayList<>(width);
+        for (int i = 0; i < width; i++) {
+            blockPanelsField.add(new ArrayList<>(height));
+        }
+    }
+
+    @Override
+    public void addBlock(Vec2i position, Color color) {
+
+    }
+
+    @Override
+    public void moveBlock(Vec2i oldPosition, Vec2i newPosition) {
+
     }
 }

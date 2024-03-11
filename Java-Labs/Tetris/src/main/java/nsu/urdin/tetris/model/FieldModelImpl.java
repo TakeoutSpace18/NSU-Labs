@@ -1,18 +1,29 @@
 package nsu.urdin.tetris.model;
 
-public class GameFieldModel {
+public class FieldModelImpl implements FieldModel {
     public static final int WIDTH = 10;
     public static final int HEIGHT = 16;
 
     private int[][] landedBlocks;
     private Figure fallingFigure;
 
-    public GameFieldModel() {
+    public FieldModelImpl() {
         landedBlocks = new int[WIDTH][HEIGHT];
+    }
+
+    @Override
+    public void start() {
         spawnNewFigure();
     }
 
-    void moveFallingFigureByOneStep() {
+    @Override
+    public void clear() {
+        landedBlocks = new int[WIDTH][HEIGHT];
+        fallingFigure = null;
+    }
+
+    @Override
+    public void nextStep() {
         if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosX(), fallingFigure.getPosY() + 1)) {
             fallingFigure.setPosY(fallingFigure.getPosY() + 1);
         } else {

@@ -1,21 +1,21 @@
 package nsu.urdin.tetris.view;
 
+import nsu.urdin.tetris.utils.Vec2d;
+
 import javax.swing.*;
+import javax.swing.text.Position;
 import java.awt.*;
 
 public class BlockPanel extends JPanel {
     public static final int SIZE = 100;
     private final Color color;
-    private double velocityX;
-    private double velocityY;
-    private double posX;
-    private double posY;
+    private Vec2d velocity;
+    private Vec2d position;
 
     public BlockPanel(Color color) {
         this.color = color;
-        this.posX = 10;
-        this.posY = 10;
-        this.velocityY = 2;
+        this.position = Vec2d.of(10, 10);
+        this.velocity = Vec2d.of(10, 5);
     }
 
     @Override
@@ -34,8 +34,7 @@ public class BlockPanel extends JPanel {
     }
 
     public void update() {
-        posX += velocityX;
-        posY += velocityY;
-        setLocation((int) (posX), (int) (posY));
+        position = position.add(velocity);
+        setLocation((int) (position.x()), (int) (position.y()));
     }
 }
