@@ -1,5 +1,7 @@
 package nsu.urdin.tetris.model;
 
+import nsu.urdin.tetris.utils.Vec2i;
+
 public class FieldModelImpl implements FieldModel {
     public static final int WIDTH = 10;
     public static final int HEIGHT = 16;
@@ -24,8 +26,8 @@ public class FieldModelImpl implements FieldModel {
 
     @Override
     public void nextStep() {
-        if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosX(), fallingFigure.getPosY() + 1)) {
-            fallingFigure.setPosY(fallingFigure.getPosY() + 1);
+        if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosition().x(), fallingFigure.getPosition().y() + 1)) {
+            fallingFigure.setPosition(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
             spawnNewFigure();
@@ -42,7 +44,7 @@ public class FieldModelImpl implements FieldModel {
         for (int i = 0; i < blocks.length; ++i) {
             for (int j = 0; j < blocks[0].length; ++j) {
                 if (blocks[i][j] != 0) {
-                    landedBlocks[fallingFigure.getPosX() + i][fallingFigure.getPosY() + j] = blocks[i][j];
+                    landedBlocks[fallingFigure.getPosition().x() + i][fallingFigure.getPosition().y() + j] = blocks[i][j];
                 }
             }
         }

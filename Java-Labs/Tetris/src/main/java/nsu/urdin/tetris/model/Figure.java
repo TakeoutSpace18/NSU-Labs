@@ -2,6 +2,7 @@ package nsu.urdin.tetris.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import nsu.urdin.tetris.utils.Vec2i;
 
 public class Figure {
 
@@ -9,17 +10,14 @@ public class Figure {
     private int[][] blocks;
 
     @Getter @Setter
-    private int posX;
+    private Vec2i position;
 
-    @Getter @Setter
-    private int posY;
     public Figure() {
         blocks = new int[][]{
                 {0, 1, 0},
                 {1, 1, 1}
         };
 
-        posX = 4;
-        posY = 0;
+        position = Vec2i.of(4, 0);
     }
 }

@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FieldPanel extends JPanel implements FieldView {
 
@@ -44,8 +45,10 @@ public class FieldPanel extends JPanel implements FieldView {
     }
 
     private void update() {
-        // TODO: fix update on null object
-        blockPanelsField.forEach(col -> col.forEach(BlockPanel::update));
+        blockPanelsField.stream()
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .forEach(BlockPanel::update);
     }
 
     @Override

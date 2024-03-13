@@ -1,4 +1,4 @@
-package nsu.urdin;
+package nsu.urdin.tetris;
 
 import nsu.urdin.tetris.view.MainFrame;
 
