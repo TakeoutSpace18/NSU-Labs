@@ -1,44 +1,53 @@
 package nsu.urdin.tetris.model;
 
 import nsu.urdin.tetris.utils.Vec2i;
+import nsu.urdin.tetris.view.TetrisFieldListener;
 
-public class FieldModelImpl implements FieldModel {
-    public static final int WIDTH = 10;
-    public static final int HEIGHT = 16;
+import java.util.ArrayList;
+import java.util.List;
 
+public class TetrisFieldImpl implements TetrisField {
+    public static final Vec2i DIMENSIONS = Vec2i.of(10, 16);
+
+    private final List<TetrisFieldListener> listeners;
     private int[][] landedBlocks;
-    private Figure fallingFigure;
+    private TetrisFigure fallingFigure;
 
-    public FieldModelImpl() {
-        landedBlocks = new int[WIDTH][HEIGHT];
+    public TetrisFieldImpl() {
+        this.listeners = new ArrayList<>();
+        landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
     }
 
     @Override
     public void start() {
         spawnNewFigure();
+        listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
     @Override
     public void clear() {
-        landedBlocks = new int[WIDTH][HEIGHT];
+        landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
         fallingFigure = null;
     }
 
     @Override
-    public void nextStep() {
+    public synchronized void nextStep() {
         if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosition().x(), fallingFigure.getPosition().y() + 1)) {
-            fallingFigure.setPosition(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
+            fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
             spawnNewFigure();
         }
+
+        listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
-    private void spawnNewFigure() {
-        fallingFigure = new Figure();
+    private void spawnNewFigure()
+    {
+        fallingFigure = new TetrisFigure(listeners);
     }
 
-    private void addToLandedBlocks(Figure fallingFigure) {
+    private void addToLandedBlocks(TetrisFigure fallingFigure) {
         int[][] blocks = fallingFigure.getBlocks();
 
         for (int i = 0; i < blocks.length; ++i) {
@@ -64,10 +73,11 @@ public class FieldModelImpl implements FieldModel {
     }
 
     private boolean checkPositionWithinField(int posX, int posY) {
-        if (posX < 0 || posX >= WIDTH || posY < 0 || posY >= HEIGHT) {
-            return false;
-        }
+        return posX >= 0 && posX < DIMENSIONS.x() && posY >= 0 && posY < DIMENSIONS.y();
+    }
 
-        return true;
+    @Override
+    public void addListener(TetrisFieldListener listener) {
+        listeners.add(listener);
     }
 }
