@@ -32,7 +32,7 @@ public class TetrisFieldImpl implements TetrisField {
 
     @Override
     public synchronized void nextStep() {
-        if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosition().x(), fallingFigure.getPosition().y() + 1)) {
+        if (!checkCollision(fallingFigure.getBlocks(), fallingFigure.getPosition().add(0, 1))) {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
@@ -42,8 +42,7 @@ public class TetrisFieldImpl implements TetrisField {
         listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
-    private void spawnNewFigure()
-    {
+    private void spawnNewFigure() {
         fallingFigure = new TetrisFigure(listeners);
     }
 
@@ -59,11 +58,11 @@ public class TetrisFieldImpl implements TetrisField {
         }
     }
 
-    private boolean checkCollision(int[][] blocks, int newX, int newY) {
+    private boolean checkCollision(int[][] blocks, Vec2i newPos) {
         for (int i = 0; i < blocks.length; ++i) {
             for (int j = 0; j < blocks[0].length; ++j) {
                 if (blocks[i][j] != 0) {
-                    if (!checkPositionWithinField(newX + i, newY + j) || landedBlocks[newX + i][newY + j] != 0) {
+                    if (!checkPositionWithinField(newPos.add(i, j)) || landedBlocks[newPos.x() + i][newPos.y() + j] != 0) {
                         return true;
                     }
                 }
@@ -72,8 +71,8 @@ public class TetrisFieldImpl implements TetrisField {
         return false;
     }
 
-    private boolean checkPositionWithinField(int posX, int posY) {
-        return posX >= 0 && posX < DIMENSIONS.x() && posY >= 0 && posY < DIMENSIONS.y();
+    private boolean checkPositionWithinField(Vec2i pos) {
+        return pos.x() >= 0 && pos.x() < DIMENSIONS.x() && pos.y() >= 0 && pos.y() < DIMENSIONS.y();
     }
 
     @Override
