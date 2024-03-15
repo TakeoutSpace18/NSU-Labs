@@ -35,7 +35,7 @@ public class TetrisFieldImpl implements TetrisField {
 
     @Override
     public synchronized void nextStep() {
-        if (!checkCollision(fallingFigure, fallingFigure.getPosition().add(0, 1))) {
+        if (checkCanMove(fallingFigure, fallingFigure.getPosition().add(0, 1))) {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
@@ -62,13 +62,11 @@ public class TetrisFieldImpl implements TetrisField {
         }
     }
 
-    private boolean checkCollision(TetrisFigure figure, Vec2i newPos) {
-        int[][] blocks = figure.getBlocks();
-
+    private boolean checkCollision(int[][] blocks, Vec2i pos) {
         for (int i = 0; i < blocks.length; ++i) {
             for (int j = 0; j < blocks[0].length; ++j) {
                 if (blocks[i][j] != 0) {
-                    if (!checkPositionWithinField(newPos.add(i, j)) || landedBlocks[newPos.x() + i][newPos.y() + j] != 0) {
+                    if (!checkPositionWithinField(pos.add(i, j)) || landedBlocks[pos.x() + i][pos.y() + j] != 0) {
                         return true;
                     }
                 }
@@ -77,39 +75,48 @@ public class TetrisFieldImpl implements TetrisField {
         return false;
     }
 
+    private boolean checkCanMove(TetrisFigure figure, Vec2i newPos) {
+        return !checkCollision(figure.getBlocks(), newPos);
+    }
+
+    private boolean checkCanRotate(TetrisFigure figure) {
+        return !checkCollision(figure.getNextRotation(), figure.getPosition());
+    }
+
     private boolean checkPositionWithinField(Vec2i pos) {
         return pos.x() >= 0 && pos.x() < DIMENSIONS.x() && pos.y() >= 0 && pos.y() < DIMENSIONS.y();
     }
 
-    void tryMoveFallingFigure(Vec2i newPos) {
-        if (!checkCollision(fallingFigure, newPos)) {
+    @Override
+    public void moveLeft() {
+        Vec2i newPos = fallingFigure.getPosition().add(-1, 0);
+        if (checkCanMove(fallingFigure, newPos)) {
             fallingFigure.move(newPos);
             listeners.forEach(TetrisFieldListener::applyChanges);
         }
     }
 
     @Override
-    public void moveLeft() {
-        Vec2i newPos = fallingFigure.getPosition().add(-1, 0);
-        tryMoveFallingFigure(newPos);
-    }
-
-    @Override
     public void moveRight() {
         Vec2i newPos = fallingFigure.getPosition().add(1, 0);
-        tryMoveFallingFigure(newPos);
+        if (checkCanMove(fallingFigure, newPos)) {
+            fallingFigure.move(newPos);
+            listeners.forEach(TetrisFieldListener::applyChanges);
+        }
     }
 
     @Override
     public void rotate() {
-        fallingFigure.rotate();
-        listeners.forEach(TetrisFieldListener::applyChanges);
+        if (checkCanRotate(fallingFigure)) {
+            fallingFigure.rotate();
+            listeners.forEach(TetrisFieldListener::applyChanges);
+        }
     }
 
     @Override
     public void fastFall() {
         Vec2i newPos = fallingFigure.getPosition();
-        while (!checkCollision(fallingFigure, newPos.add(0, 1))) {
+        while (checkCanMove(fallingFigure, newPos.add(0, 1))) {
             newPos = newPos.add(0, 1);
         }
         fallingFigure.move(newPos);

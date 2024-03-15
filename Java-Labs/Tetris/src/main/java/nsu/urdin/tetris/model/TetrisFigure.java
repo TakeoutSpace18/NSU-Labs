@@ -7,9 +7,7 @@ import nsu.urdin.tetris.utils.Vec2i;
 import nsu.urdin.tetris.view.TetrisFieldListener;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class TetrisFigure {
     private final List<TetrisFieldListener> listeners;
@@ -19,7 +17,7 @@ public class TetrisFigure {
     private int curRotation;
     @Getter
     private Vec2i position;
-    private Color color;
+    private final Color color;
 
     @Builder
     public TetrisFigure(List<TetrisFieldListener> listeners, @Singular List<int[][]> rotations, Color color) {
@@ -93,5 +91,9 @@ public class TetrisFigure {
 
     public int[][] getBlocks() {
         return rotations.get(curRotation);
+    }
+
+    public int[][] getNextRotation() {
+        return rotations.get((curRotation + 1) % rotations.size());
     }
 }
