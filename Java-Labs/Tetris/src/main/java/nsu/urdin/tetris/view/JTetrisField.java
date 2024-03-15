@@ -90,6 +90,22 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
     }
 
     @Override
+    public void moveLineOfBlocks(int line, int offset) {
+        for (int x = 0; x < blocks.length; ++x) {
+            if (blocks[x][line] != null) {
+                moveBlock(Vec2i.of(x, line), Vec2i.of(x, line + offset));
+            }
+        }
+    }
+
+    @Override
+    public void removeLineOfBlocks(int line) {
+        for (int x = 0; x < blocks.length; ++x) {
+            removeBlock(Vec2i.of(x, line));
+        }
+    }
+
+    @Override
     public synchronized void applyChanges() {
         blocks = Arrays.stream(blocksStaging)
                 .map(JBlock[]::clone)

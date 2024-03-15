@@ -39,10 +39,42 @@ public class TetrisFieldImpl implements TetrisField {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
+            clearFilledLines();
             spawnNewFigure();
         }
 
         listeners.forEach(TetrisFieldListener::applyChanges);
+    }
+
+    private void clearFilledLines() {
+        int linesCleared = 0;
+        for (int line = DIMENSIONS.y() - 1; line >= 0; --line) {
+            if (checkLineFilled(landedBlocks, line)) {
+                linesCleared++;
+
+                for (TetrisFieldListener lis : listeners) {
+                    lis.removeLineOfBlocks(line);
+                }
+            }
+            else if (linesCleared != 0) {
+                for (TetrisFieldListener lis : listeners) {
+                    lis.moveLineOfBlocks(line, linesCleared);
+                }
+
+                for (int x = 0; x < landedBlocks.length; ++x) {
+                    landedBlocks[x][line + linesCleared] = landedBlocks[x][line];
+                }
+            }
+        }
+    }
+
+    private boolean checkLineFilled(int[][] blocks, int line) {
+        for (int x = 0; x < DIMENSIONS.x(); ++x) {
+            if (blocks[x][line] == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void spawnNewFigure() {
