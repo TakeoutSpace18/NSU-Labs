@@ -4,6 +4,7 @@ import nsu.urdin.tetris.utils.Vec2i;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -12,7 +13,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
     private JBlock[][] blocks;
     private JBlock[][] blocksStaging;
     private boolean isRunning;
-    private Thread gameLoop;
+    private Timer gameLoop;
 
     public JTetrisField(Vec2i matrixDimensions) {
         // disable layout in order to manually control positions of the blocks
@@ -35,15 +36,10 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
     }
 
     private void setupGameLoop() {
-        gameLoop = new Thread(() -> {
-            while (isRunning) {
-                this.update();
-                try {
-                    Thread.sleep(15);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        gameLoop = new Timer(15, (ActionEvent e) -> {
+             if (isRunning) {
+                 update();
+             }
         });
     }
 
@@ -59,6 +55,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
         if (blocks[pos.x()][pos.y()] == null) {
             throw new RuntimeException("Failed to move block: block doesn't exist on this position");
         }
+        remove(blocksStaging[pos.x()][pos.y()]);
         blocksStaging[pos.x()][pos.y()] = null;
     }
 
@@ -97,5 +94,6 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
         blocks = Arrays.stream(blocksStaging)
                 .map(JBlock[]::clone)
                 .toArray(JBlock[][]::new);
+        updateUI();
     }
 }

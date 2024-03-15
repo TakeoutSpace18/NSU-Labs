@@ -5,16 +5,19 @@ import nsu.urdin.tetris.view.TetrisFieldListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class TetrisFieldImpl implements TetrisField {
     public static final Vec2i DIMENSIONS = Vec2i.of(10, 16);
 
     private final List<TetrisFieldListener> listeners;
+    private final FigureFactory figureFactory;
     private int[][] landedBlocks;
     private TetrisFigure fallingFigure;
 
     public TetrisFieldImpl() {
         this.listeners = new ArrayList<>();
+        figureFactory = new FigureFactory(listeners);
         landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
     }
 
@@ -43,7 +46,8 @@ public class TetrisFieldImpl implements TetrisField {
     }
 
     private void spawnNewFigure() {
-        fallingFigure = new TetrisFigure(listeners);
+        fallingFigure = figureFactory.getRandom();
+        fallingFigure.spawn(Vec2i.of(4, 0), new Random().nextInt(4));
     }
 
     private void addToLandedBlocks(TetrisFigure fallingFigure) {
@@ -94,6 +98,12 @@ public class TetrisFieldImpl implements TetrisField {
     public void moveRight() {
         Vec2i newPos = fallingFigure.getPosition().add(1, 0);
         tryMoveFallingFigure(newPos);
+    }
+
+    @Override
+    public void rotate() {
+        fallingFigure.rotate();
+        listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
     @Override

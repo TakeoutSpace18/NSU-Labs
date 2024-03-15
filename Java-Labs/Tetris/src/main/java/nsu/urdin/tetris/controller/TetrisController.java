@@ -18,6 +18,7 @@ public class TetrisController {
 
     @Getter
     private final TetrisField field;
+    private Timer modelUpdateTimer;
 
     private TetrisController() {
         field = new TetrisFieldImpl();
@@ -29,13 +30,18 @@ public class TetrisController {
 
     public void scheduleModelUpdate() {
         field.start();
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(field::nextStep, 400, 400, TimeUnit.MILLISECONDS);
+
+        modelUpdateTimer = new Timer(400, (ActionEvent e) -> {
+            field.nextStep();
+        });
+
+        modelUpdateTimer.start();
     }
 
     public void setupKeyBindings(JTetrisField fieldView) {
         fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
         fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "up");
         fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
 
         fieldView.getActionMap().put("left", new AbstractAction() {
@@ -54,6 +60,12 @@ public class TetrisController {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 field.fastFall();
+            }
+        });
+        fieldView.getActionMap().put("up", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                field.rotate();
             }
         });
     }

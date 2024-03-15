@@ -10,6 +10,7 @@ public interface TetrisField {
     void clear();
     void moveLeft();
     void moveRight();
+    void rotate();
     void fastFall();
     void addListener(TetrisFieldListener listener);
 }
