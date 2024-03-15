@@ -8,5 +8,8 @@ public interface TetrisField {
     void start();
     void nextStep();
     void clear();
+    void moveLeft();
+    void moveRight();
+    void fastFall();
     void addListener(TetrisFieldListener listener);
 }

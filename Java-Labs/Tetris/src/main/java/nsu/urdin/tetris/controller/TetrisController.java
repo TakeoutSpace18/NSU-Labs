@@ -3,7 +3,11 @@ package nsu.urdin.tetris.controller;
 import lombok.Getter;
 import nsu.urdin.tetris.model.TetrisField;
 import nsu.urdin.tetris.model.TetrisFieldImpl;
+import nsu.urdin.tetris.view.JTetrisField;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,4 +33,28 @@ public class TetrisController {
         scheduler.scheduleAtFixedRate(field::nextStep, 400, 400, TimeUnit.MILLISECONDS);
     }
 
+    public void setupKeyBindings(JTetrisField fieldView) {
+        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
+        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
+
+        fieldView.getActionMap().put("left", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                field.moveLeft();
+            }
+        });
+        fieldView.getActionMap().put("right", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                field.moveRight();
+            }
+        });
+        fieldView.getActionMap().put("down", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                field.fastFall();
+            }
+        });
+    }
 }

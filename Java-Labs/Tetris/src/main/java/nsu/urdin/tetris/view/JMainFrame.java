@@ -16,6 +16,7 @@ public class JMainFrame extends JFrame {
         JTetrisField field = new JTetrisField(TetrisFieldImpl.DIMENSIONS);
         TetrisController.getInstance().getField().addListener(field);
         TetrisController.getInstance().scheduleModelUpdate();
+        TetrisController.getInstance().setupKeyBindings(field);
 
         getContentPane().add(field);
 

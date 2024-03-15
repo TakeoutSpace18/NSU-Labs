@@ -6,6 +6,7 @@ import nsu.urdin.tetris.view.TetrisFieldListener;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Random;
 
 public class TetrisFigure {
     private final List<TetrisFieldListener> listeners;
@@ -24,7 +25,14 @@ public class TetrisFigure {
                 {1, 1, 1}
         };
 
-        this.color = Color.RED;
+        // Generate a random color
+        Random random = new Random();
+        int red = random.nextInt(256);
+        int green = random.nextInt(256);
+        int blue = random.nextInt(256);
+
+        this.color = new Color(red, green, blue);
+
         position = Vec2i.of(4, 0);
 
         for (int i = 0; i < blocks.length; ++i) {
