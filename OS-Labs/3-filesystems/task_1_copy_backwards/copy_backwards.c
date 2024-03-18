@@ -8,11 +8,15 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#define BUFFER_SIZE 1024
+
 void copy_file_backwards_at(int src_dirfd, const char* src_path, int dst_dirfd, const char* dst_path);
 
 int copy_dir_backwards_at(int src_dirfd, const char* src_path, int dst_dirfd, const char* dst_path);
 
 char* get_reversed_path_basename(char* path);
+
+void reverse_buffer(char* begin, char* end);
 
 int main(int argc, char** argv)
 {
@@ -125,16 +129,34 @@ void copy_file_backwards_at(int src_dirfd, const char* src_path, int dst_dirfd, 
         goto finish;
     }
 
-    for (off_t i = 0; i < src_size; i++)
+    for (off_t i = 0; i < src_size; i += BUFFER_SIZE)
     {
-        off_t src_offset = src_size - 1 - i;
-        off_t dst_offset = i;
-        ssize_t status = copy_file_range(src_fd, &src_offset, dst_fd, &dst_offset, 1, 0);
-        if (status != 1)
+        char buffer[BUFFER_SIZE];
+
+        const size_t remaining_size = src_size - i;
+        off_t chunk_size = remaining_size < BUFFER_SIZE ? remaining_size : BUFFER_SIZE;
+        off_t src_offset = src_size - i - chunk_size;
+
+        if (lseek(src_fd, src_offset, SEEK_SET) == -1)
         {
-            perror("copy_file_range()");
+            perror("lseek()");
             goto finish;
         }
+
+        if (read(src_fd, buffer, chunk_size) != chunk_size)
+        {
+            perror("read()");
+            goto finish;
+        }
+
+        reverse_buffer(buffer, buffer + chunk_size - 1);
+
+        if (write(dst_fd, buffer, chunk_size) != chunk_size)
+        {
+            perror("write()");
+            goto finish;
+        }
+
     }
 
 finish:
@@ -142,7 +164,7 @@ finish:
     close(dst_fd);
 }
 
-void reverse_substring(char* begin, char* end)
+void reverse_buffer(char* begin, char* end)
 {
     while (begin < end)
     {
@@ -164,6 +186,6 @@ char* get_path_basename(char* path)
 char* get_reversed_path_basename(char* path)
 {
     char* bname = get_path_basename(path);
-    reverse_substring(bname, bname + strlen(bname) - 1);
+    reverse_buffer(bname, bname + strlen(bname) - 1);
     return bname;
 }
