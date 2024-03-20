@@ -9,7 +9,7 @@
 #include "common.hpp"
 
 constexpr float TAO = -0.01;
-constexpr float EPS = 1e-2;
+constexpr float EPS = 1e-1;
 
 std::vector<float> scatter_mat_a(std::vector<float>& matA, int N, int worldSize);
 
@@ -34,6 +34,9 @@ int main(int argc, char** argv)
         loadData(vecB.data(), "vecB.bin", N);
     }
 
+    std::vector matAChunk = scatter_mat_a(matA, N, worldSize);
+    int nLines = matAChunk.size() / N;
+
     MPI::COMM_WORLD.Bcast(vecB.data(), N, MPI_FLOAT, 0);
     float vecBNormSq = scalar_product(vecB.data(), vecB.data(), N);
 
@@ -44,9 +47,6 @@ int main(int argc, char** argv)
         iterCount++;
 
         MPI::COMM_WORLD.Bcast(curVecX.data(), N, MPI_FLOAT, 0);
-
-        std::vector matAChunk = scatter_mat_a(matA, N, worldSize);
-        int nLines = matAChunk.size() / N;
 
         float normChunk = 0;
         std::vector<float> intermChunk(nLines);
@@ -99,21 +99,32 @@ float scalar_product(const float* a, const float* b, int N)
 std::vector<float> scatter_mat_a(std::vector<float>& matA, int N, int worldSize)
 {
 
+    std::cout << "world size: " << worldSize << std::endl;
     int chunkSize = (N / worldSize) * N;
-    std::vector sizes(worldSize, chunkSize);
-    sizes[worldSize - 1] = N * N - chunkSize * worldSize;
+    std::vector<int> sizes(worldSize, chunkSize);
+
+    int remainingSize = N * N - chunkSize * worldSize;
+    std::cout << remainingSize << std::endl;
+
+    if (remainingSize) chunkSize += N;
+    for (int i = 0; i < remainingSize; ++i)
+    {
+        sizes[i] += N;
+    }
 
     std::vector<int> offsets;
     offsets.reserve(worldSize);
 
     std::vector<float> matAChunk(chunkSize);
 
-    for (int off = 0; off < N * N; off += chunkSize)
+    int curOffset = 0;
+    for (int i = 0; i < worldSize; i++)
     {
-        offsets.push_back(off);
+        offsets.push_back(curOffset);
+        curOffset += sizes[i];
     }
 
-    MPI::COMM_WORLD.Scatterv(
+    int status = MPI_Scatterv(
         matA.data(),
         sizes.data(),
         offsets.data(),
@@ -121,7 +132,9 @@ std::vector<float> scatter_mat_a(std::vector<float>& matA, int N, int worldSize)
         matAChunk.data(),
         chunkSize,
         MPI_FLOAT,
-        0);
+        0,
+        MPI_COMM_WORLD
+        );
 
     return matAChunk;
 }
@@ -130,14 +143,23 @@ void gather_found_x(std::vector<float>& xChunk, std::vector<float>& dest, int N,
 {
     int chunkSize = N / worldSize;
     std::vector sizes(worldSize, chunkSize);
-    sizes[worldSize - 1] = N - chunkSize * worldSize;
+
+    int remainingSize = N - chunkSize * worldSize;
+    std::cout << remainingSize << std::endl;
+    if (remainingSize) chunkSize++;
+    for (int i = 0; i < remainingSize; ++i)
+    {
+        sizes[i]++;
+    }
 
     std::vector<int> offsets;
     offsets.reserve(worldSize);
 
-    for (int off = 0; off < N; off += chunkSize)
+    int curOffset = 0;
+    for (int i = 0; i < worldSize; i++)
     {
-        offsets.push_back(off);
+        offsets.push_back(curOffset);
+        curOffset += sizes[i];
     }
 
     MPI::COMM_WORLD.Gatherv(
