@@ -1,26 +1,35 @@
 package nsu.urdin.tetris.view;
 
-import nsu.urdin.tetris.controller.TetrisController;
-import nsu.urdin.tetris.model.TetrisFieldImpl;
-
 import javax.swing.*;
+import java.awt.*;
 
 public class JMainFrame extends JFrame {
+    private JMainMenuPanel mainMenuPanel;
+    private JPanel contentPanel;
+    private JGamePanel gamePanel;
 
-    private static final String WINDOW_NAME = "Tetris";
 
-    public JMainFrame() {
-        super(WINDOW_NAME);
+    public JMainFrame() throws HeadlessException {
+        setContentPane(contentPanel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JTetrisField field = new JTetrisField(TetrisFieldImpl.DIMENSIONS);
-        TetrisController.getInstance().getField().addListener(field);
-        TetrisController.getInstance().scheduleModelUpdate();
-        TetrisController.getInstance().setupKeyBindings(field);
-
-        getContentPane().add(field);
-
         pack();
         setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("MainFrameTest");
+        frame.setContentPane(new JMainFrame().contentPanel);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    public void showGamePanel() {
+        CardLayout layout = (CardLayout) contentPanel.getLayout();
+        layout.show(getContentPane(), "GameCard");
+    }
+
+    public TetrisFieldListener getTetrisFieldListener() {
+        return gamePanel.getTetrisFieldPanel();
     }
 }

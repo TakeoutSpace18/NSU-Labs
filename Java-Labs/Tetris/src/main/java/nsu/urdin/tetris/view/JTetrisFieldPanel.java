@@ -1,5 +1,6 @@
 package nsu.urdin.tetris.view;
 
+import nsu.urdin.tetris.model.TetrisFieldImpl;
 import nsu.urdin.tetris.utils.Vec2i;
 
 import javax.swing.*;
@@ -8,14 +9,18 @@ import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class JTetrisField extends JPanel implements TetrisFieldListener {
+public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
 
-    private JBlock[][] blocks;
-    private JBlock[][] blocksStaging;
+    private JBlockPanel[][] blocks;
+    private JBlockPanel[][] blocksStaging;
     private boolean isRunning;
     private Timer gameLoop;
 
-    public JTetrisField(Vec2i matrixDimensions) {
+    public JTetrisFieldPanel() {
+        this(TetrisFieldImpl.DIMENSIONS);
+    }
+
+    public JTetrisFieldPanel(Vec2i matrixDimensions) {
         // disable layout in order to manually control positions of the blocks
         setLayout(null);
 
@@ -32,7 +37,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(blocks.length * JBlock.SIZE, blocks[0].length * JBlock.SIZE);
+        return new Dimension(blocks.length * JBlockPanel.SIZE, blocks[0].length * JBlockPanel.SIZE);
     }
 
     private void setupGameLoop() {
@@ -47,7 +52,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
         Arrays.stream(blocks)
                 .flatMap(Arrays::stream)
                 .filter(Objects::nonNull)
-                .forEach(JBlock::update);
+                .forEach(JBlockPanel::update);
     }
 
     @Override
@@ -60,8 +65,8 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
     }
 
     public void setupMatrix(Vec2i dimensions) {
-        blocks = new JBlock[dimensions.x()][dimensions.y()];
-        blocksStaging = new JBlock[dimensions.x()][dimensions.y()];
+        blocks = new JBlockPanel[dimensions.x()][dimensions.y()];
+        blocksStaging = new JBlockPanel[dimensions.x()][dimensions.y()];
     }
 
     @Override
@@ -69,7 +74,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
         if (blocksStaging[pos.x()][pos.y()] != null) {
             throw new RuntimeException("Failed to add block: position already occupied");
         }
-        JBlock newBlock = new JBlock(pos, color);
+        JBlockPanel newBlock = new JBlockPanel(pos, color);
         blocksStaging[pos.x()][pos.y()] = newBlock;
         add(newBlock);
     }
@@ -80,7 +85,7 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
             throw new RuntimeException("Failed to move block: block doesn't exist on this position");
         }
 
-        JBlock block = blocks[oldPos.x()][oldPos.y()];
+        JBlockPanel block = blocks[oldPos.x()][oldPos.y()];
         block.setTargetPosition(newPos);
 
         blocksStaging[newPos.x()][newPos.y()] = block;
@@ -108,8 +113,8 @@ public class JTetrisField extends JPanel implements TetrisFieldListener {
     @Override
     public synchronized void applyChanges() {
         blocks = Arrays.stream(blocksStaging)
-                .map(JBlock[]::clone)
-                .toArray(JBlock[][]::new);
+                .map(JBlockPanel[]::clone)
+                .toArray(JBlockPanel[][]::new);
         updateUI();
     }
 }

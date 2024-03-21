@@ -22,13 +22,13 @@ public class TetrisFieldImpl implements TetrisField {
     }
 
     @Override
-    public void start() {
+    public void restart() {
+        clear();
         spawnNewFigure();
         listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
-    @Override
-    public void clear() {
+    private void clear() {
         landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
         fallingFigure = null;
     }

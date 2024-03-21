@@ -1,27 +1,29 @@
 package nsu.urdin.tetris.controller;
 
-import lombok.Getter;
+import nsu.urdin.tetris.view.JMainFrame;
 import nsu.urdin.tetris.model.TetrisField;
 import nsu.urdin.tetris.model.TetrisFieldImpl;
-import nsu.urdin.tetris.view.JTetrisField;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class TetrisController {
-
     private static final TetrisController INSTANCE = new TetrisController();
 
-    @Getter
     private final TetrisField field;
+    private JMainFrame mainFrame;
     private Timer modelUpdateTimer;
 
     private TetrisController() {
         field = new TetrisFieldImpl();
+    }
+
+    public void launch() {
+        mainFrame = new JMainFrame();
+
+        field.addListener(mainFrame.getTetrisFieldListener());
+        setupKeyBindings(mainFrame.getRootPane());
     }
 
     public static TetrisController getInstance() {
@@ -29,8 +31,6 @@ public class TetrisController {
     }
 
     public void scheduleModelUpdate() {
-        field.start();
-
         modelUpdateTimer = new Timer(400, (ActionEvent e) -> {
             field.nextStep();
         });
@@ -38,35 +38,42 @@ public class TetrisController {
         modelUpdateTimer.start();
     }
 
-    public void setupKeyBindings(JTetrisField fieldView) {
-        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
-        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
-        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "up");
-        fieldView.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
+    public void setupKeyBindings(JComponent component) {
+        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
+        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "up");
+        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
 
-        fieldView.getActionMap().put("left", new AbstractAction() {
+        component.getActionMap().put("left", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 field.moveLeft();
             }
         });
-        fieldView.getActionMap().put("right", new AbstractAction() {
+        component.getActionMap().put("right", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 field.moveRight();
             }
         });
-        fieldView.getActionMap().put("down", new AbstractAction() {
+        component.getActionMap().put("down", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 field.fastFall();
             }
         });
-        fieldView.getActionMap().put("up", new AbstractAction() {
+        component.getActionMap().put("up", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 field.rotate();
             }
         });
+    }
+
+    public void newGame() {
+        field.restart();
+        scheduleModelUpdate();
+
+        mainFrame.showGamePanel();
     }
 }

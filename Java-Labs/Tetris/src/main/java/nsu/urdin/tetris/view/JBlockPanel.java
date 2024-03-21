@@ -6,14 +6,14 @@ import nsu.urdin.tetris.utils.Vec2i;
 import javax.swing.*;
 import java.awt.*;
 
-public class JBlock extends JPanel {
-    public static final int SIZE = 75;
+public class JBlockPanel extends JPanel {
+    public static final int SIZE = 50;
     private final Color color;
     private Vec2d velocity;
     private Vec2d position;
     private Vec2d targetPosition;
 
-    public JBlock(Vec2i matrixPos, Color color) {
+    public JBlockPanel(Vec2i matrixPos, Color color) {
         this.color = color;
         this.position = convertToPixelPosition(matrixPos);
         this.targetPosition = position;
