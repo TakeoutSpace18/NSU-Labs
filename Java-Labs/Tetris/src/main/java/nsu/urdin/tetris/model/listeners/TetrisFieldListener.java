@@ -10,5 +10,6 @@ public interface TetrisFieldListener {
     void removeLineOfBlocks(int line);
     void moveBlock(Vec2i oldPosition, Vec2i newPosition);
     void moveLineOfBlocks(int line, int offset);
+    void clear();
     void applyChanges();
 }

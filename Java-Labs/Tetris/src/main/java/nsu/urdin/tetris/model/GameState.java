@@ -12,9 +12,9 @@ public class GameState {
 
     public GameState() {
         listeners = new ArrayList<>();
-        restart();
+        reset();
     }
-    public void restart() {
+    public void reset() {
         curLevel = 0;
         curScore = 0;
         listeners.forEach(listener -> listener.scoreChanged(curScore));
@@ -66,5 +66,9 @@ public class GameState {
 
     public void addListener(GameStateListener listener) {
         listeners.add(listener);
+    }
+
+    public void notifyGameOver() {
+        listeners.forEach(listener -> listener.onGameOver());
     }
 }

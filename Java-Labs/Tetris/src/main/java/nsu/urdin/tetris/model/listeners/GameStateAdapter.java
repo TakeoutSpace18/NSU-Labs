@@ -17,7 +17,7 @@ public class GameStateAdapter implements GameStateListener {
     }
 
     @Override
-    public void gameOver() {
+    public void onGameOver() {
 
     }
 }

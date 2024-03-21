@@ -31,6 +31,11 @@ public class TetrisController {
             public void speedChanged(int delayBetweenSteps) {
                 scheduleModelUpdate(delayBetweenSteps);
             }
+
+            @Override
+            public void onGameOver() {
+                gameOver();
+            }
         });
 
         setupKeyBindings(mainFrame.getRootPane());
@@ -82,10 +87,16 @@ public class TetrisController {
 
     public void newGame() {
         gameModel.restart();
-        mainFrame.showGamePanel();
+        mainFrame.showCard("GameCard");
     }
 
     public void gameOver() {
-
+        modelUpdateTimer.stop();
+        mainFrame.showCard("GameOverCard");
+        Timer returnToMenu = new Timer(3000, (ActionEvent e) -> {
+            mainFrame.showCard("MainMenuCard");
+        });
+        returnToMenu.setRepeats(false);
+        returnToMenu.start();
     }
 }

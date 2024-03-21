@@ -92,7 +92,9 @@ public class TetrisFigure {
     public int[][] getBlocks() {
         return rotations.get(curRotation);
     }
-
+    public int[][] getRotation(int rotation) {
+        return rotations.get(rotation % rotations.size());
+    }
     public int[][] getNextRotation() {
         return rotations.get((curRotation + 1) % rotations.size());
     }

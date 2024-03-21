@@ -9,6 +9,7 @@ public class JMainFrame extends JFrame {
     private JMainMenuPanel mainMenuPanel;
     private JPanel contentPanel;
     private JGamePanel gamePanel;
+    private JGameOverPanel JGameOverPanel;
 
 
     public JMainFrame() throws HeadlessException {
@@ -26,12 +27,13 @@ public class JMainFrame extends JFrame {
         frame.setVisible(true);
     }
 
-    public void showGamePanel() {
+    public void showCard(String name) {
         CardLayout layout = (CardLayout) contentPanel.getLayout();
-        layout.show(getContentPane(), "GameCard");
+        layout.show(getContentPane(), name);
     }
 
     public TetrisFieldListener getTetrisFieldListener() {
         return gamePanel.getTetrisFieldPanel();
     }
+
 }

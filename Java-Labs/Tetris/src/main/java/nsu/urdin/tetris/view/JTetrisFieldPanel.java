@@ -59,7 +59,7 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
     @Override
     public void removeBlock(Vec2i pos) {
         if (blocks[pos.x()][pos.y()] == null) {
-            throw new RuntimeException("Failed to move block: block doesn't exist on this position");
+            throw new RuntimeException("Failed to remove block: block doesn't exist on this position");
         }
         remove(blocksStaging[pos.x()][pos.y()]);
         blocksStaging[pos.x()][pos.y()] = null;
@@ -100,6 +100,17 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
         for (int x = 0; x < blocks.length; ++x) {
             if (blocks[x][line] != null) {
                 moveBlock(Vec2i.of(x, line), Vec2i.of(x, line + offset));
+            }
+        }
+    }
+
+    @Override
+    public void clear() {
+        for (int x = 0; x < blocks.length; ++x) {
+            for (int y = 0; y < blocks[0].length; ++y) {
+                if (blocks[x][y] != null) {
+                    removeBlock(Vec2i.of(x, y));
+                }
             }
         }
     }

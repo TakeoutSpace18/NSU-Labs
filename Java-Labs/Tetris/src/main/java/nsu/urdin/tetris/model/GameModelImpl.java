@@ -26,13 +26,14 @@ public class GameModelImpl implements GameModel {
 
     @Override
     public void restart() {
-        gameState.restart();
+        gameState.reset();
         clear();
         spawnNewFigure();
         listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
     private void clear() {
+        listeners.forEach(TetrisFieldListener::clear);
         landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
         fallingFigure = null;
     }
@@ -45,7 +46,10 @@ public class GameModelImpl implements GameModel {
             addToLandedBlocks(fallingFigure);
             int linesCleared = clearFilledLines();
             gameState.addScore(linesCleared);
-            spawnNewFigure();
+            boolean spawned = spawnNewFigure();
+            if (!spawned) {
+                gameState.notifyGameOver();
+            }
         }
 
         listeners.forEach(TetrisFieldListener::applyChanges);
@@ -84,10 +88,14 @@ public class GameModelImpl implements GameModel {
         return true;
     }
 
-    private void spawnNewFigure() {
-        // TODO: check for game over
+    private boolean spawnNewFigure() {
         fallingFigure = figureFactory.getRandom();
-        fallingFigure.spawn(Vec2i.of(4, 0), new Random().nextInt(4));
+        int rotation = new Random().nextInt(4);
+        if (!checkCollision(fallingFigure.getRotation(rotation), Vec2i.of(4, 0))) {
+            fallingFigure.spawn(Vec2i.of(4, 0), rotation);
+            return true;
+        }
+        return false;
     }
 
     private void addToLandedBlocks(TetrisFigure fallingFigure) {
