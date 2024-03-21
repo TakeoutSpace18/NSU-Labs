@@ -1,28 +1,32 @@
 package nsu.urdin.tetris.model;
 
+import nsu.urdin.tetris.model.listeners.GameStateListener;
 import nsu.urdin.tetris.utils.Vec2i;
-import nsu.urdin.tetris.view.TetrisFieldListener;
+import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class TetrisFieldImpl implements TetrisField {
-    public static final Vec2i DIMENSIONS = Vec2i.of(10, 16);
+public class GameModelImpl implements GameModel {
+    public static final Vec2i DIMENSIONS = Vec2i.of(10, 20);
 
     private final List<TetrisFieldListener> listeners;
     private final FigureFactory figureFactory;
+    private final GameState gameState;
     private int[][] landedBlocks;
     private TetrisFigure fallingFigure;
 
-    public TetrisFieldImpl() {
+    public GameModelImpl() {
         this.listeners = new ArrayList<>();
         figureFactory = new FigureFactory(listeners);
+        gameState = new GameState();
         landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
     }
 
     @Override
     public void restart() {
+        gameState.restart();
         clear();
         spawnNewFigure();
         listeners.forEach(TetrisFieldListener::applyChanges);
@@ -39,14 +43,15 @@ public class TetrisFieldImpl implements TetrisField {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
             addToLandedBlocks(fallingFigure);
-            clearFilledLines();
+            int linesCleared = clearFilledLines();
+            gameState.addScore(linesCleared);
             spawnNewFigure();
         }
 
         listeners.forEach(TetrisFieldListener::applyChanges);
     }
 
-    private void clearFilledLines() {
+    private int clearFilledLines() {
         int linesCleared = 0;
         for (int line = DIMENSIONS.y() - 1; line >= 0; --line) {
             if (checkLineFilled(landedBlocks, line)) {
@@ -66,6 +71,8 @@ public class TetrisFieldImpl implements TetrisField {
                 }
             }
         }
+
+        return linesCleared;
     }
 
     private boolean checkLineFilled(int[][] blocks, int line) {
@@ -78,6 +85,7 @@ public class TetrisFieldImpl implements TetrisField {
     }
 
     private void spawnNewFigure() {
+        // TODO: check for game over
         fallingFigure = figureFactory.getRandom();
         fallingFigure.spawn(Vec2i.of(4, 0), new Random().nextInt(4));
     }
@@ -156,7 +164,12 @@ public class TetrisFieldImpl implements TetrisField {
     }
 
     @Override
-    public void addListener(TetrisFieldListener listener) {
+    public void addFieldListener(TetrisFieldListener listener) {
         listeners.add(listener);
+    }
+
+    @Override
+    public void addGameStateListener(GameStateListener listener) {
+        gameState.addListener(listener);
     }
 }

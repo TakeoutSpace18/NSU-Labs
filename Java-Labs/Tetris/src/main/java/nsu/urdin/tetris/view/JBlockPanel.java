@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class JBlockPanel extends JPanel {
-    public static final int SIZE = 50;
+    public static final int SIZE = 40;
     private final Color color;
     private Vec2d velocity;
     private Vec2d position;

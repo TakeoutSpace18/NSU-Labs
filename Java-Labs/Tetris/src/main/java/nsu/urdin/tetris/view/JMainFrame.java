@@ -1,5 +1,7 @@
 package nsu.urdin.tetris.view;
 
+import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
+
 import javax.swing.*;
 import java.awt.*;
 

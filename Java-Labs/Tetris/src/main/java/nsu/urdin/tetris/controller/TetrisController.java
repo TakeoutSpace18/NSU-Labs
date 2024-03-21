@@ -1,8 +1,10 @@
 package nsu.urdin.tetris.controller;
 
+import lombok.Getter;
+import nsu.urdin.tetris.model.listeners.GameStateAdapter;
 import nsu.urdin.tetris.view.JMainFrame;
-import nsu.urdin.tetris.model.TetrisField;
-import nsu.urdin.tetris.model.TetrisFieldImpl;
+import nsu.urdin.tetris.model.GameModel;
+import nsu.urdin.tetris.model.GameModelImpl;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -11,18 +13,26 @@ import java.awt.event.KeyEvent;
 public class TetrisController {
     private static final TetrisController INSTANCE = new TetrisController();
 
-    private final TetrisField field;
+    @Getter
+    private final GameModel gameModel;
     private JMainFrame mainFrame;
     private Timer modelUpdateTimer;
 
     private TetrisController() {
-        field = new TetrisFieldImpl();
+        gameModel = new GameModelImpl();
     }
 
     public void launch() {
         mainFrame = new JMainFrame();
 
-        field.addListener(mainFrame.getTetrisFieldListener());
+        gameModel.addFieldListener(mainFrame.getTetrisFieldListener());
+        gameModel.addGameStateListener(new GameStateAdapter() {
+            @Override
+            public void speedChanged(int delayBetweenSteps) {
+                scheduleModelUpdate(delayBetweenSteps);
+            }
+        });
+
         setupKeyBindings(mainFrame.getRootPane());
     }
 
@@ -30,9 +40,9 @@ public class TetrisController {
         return INSTANCE;
     }
 
-    public void scheduleModelUpdate() {
-        modelUpdateTimer = new Timer(400, (ActionEvent e) -> {
-            field.nextStep();
+    public void scheduleModelUpdate(int delay) {
+        modelUpdateTimer = new Timer(delay, (ActionEvent e) -> {
+            gameModel.nextStep();
         });
 
         modelUpdateTimer.start();
@@ -47,33 +57,35 @@ public class TetrisController {
         component.getActionMap().put("left", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                field.moveLeft();
+                gameModel.moveLeft();
             }
         });
         component.getActionMap().put("right", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                field.moveRight();
+                gameModel.moveRight();
             }
         });
         component.getActionMap().put("down", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                field.fastFall();
+                gameModel.fastFall();
             }
         });
         component.getActionMap().put("up", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                field.rotate();
+                gameModel.rotate();
             }
         });
     }
 
     public void newGame() {
-        field.restart();
-        scheduleModelUpdate();
-
+        gameModel.restart();
         mainFrame.showGamePanel();
+    }
+
+    public void gameOver() {
+
     }
 }

@@ -1,7 +1,8 @@
 package nsu.urdin.tetris.view;
 
-import nsu.urdin.tetris.model.TetrisFieldImpl;
+import nsu.urdin.tetris.model.GameModelImpl;
 import nsu.urdin.tetris.utils.Vec2i;
+import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +18,7 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
     private Timer gameLoop;
 
     public JTetrisFieldPanel() {
-        this(TetrisFieldImpl.DIMENSIONS);
+        this(GameModelImpl.DIMENSIONS);
     }
 
     public JTetrisFieldPanel(Vec2i matrixDimensions) {

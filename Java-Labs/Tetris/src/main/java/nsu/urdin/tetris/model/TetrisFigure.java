@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import nsu.urdin.tetris.utils.Vec2i;
-import nsu.urdin.tetris.view.TetrisFieldListener;
+import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
 
 import java.awt.*;
 import java.util.List;

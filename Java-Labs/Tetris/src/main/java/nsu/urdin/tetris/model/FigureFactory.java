@@ -1,6 +1,6 @@
 package nsu.urdin.tetris.model;
 
-import nsu.urdin.tetris.view.TetrisFieldListener;
+import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
 
 import java.awt.*;
 import java.util.ArrayList;
