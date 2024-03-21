@@ -69,6 +69,6 @@ public class GameState {
     }
 
     public void notifyGameOver() {
-        listeners.forEach(listener -> listener.onGameOver());
+        listeners.forEach(listener -> listener.onGameOver(curScore));
     }
 }

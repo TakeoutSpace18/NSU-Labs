@@ -19,12 +19,12 @@ public class JGamePanel {
         TetrisController.getInstance().getGameModel().addGameStateListener(new GameStateAdapter() {
             @Override
             public void levelChanged(int level) {
-                levelLabel.setText("Level: " + Integer.toString(level));
+                levelLabel.setText("Level: " + level);
             }
 
             @Override
             public void scoreChanged(int score) {
-                scoreLabel.setText("Score: " + Integer.toString(score));
+                scoreLabel.setText("Score: " + score);
             }
         });
     }

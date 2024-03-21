@@ -1,7 +1,9 @@
 package nsu.urdin.tetris.controller;
 
 import lombok.Getter;
+import nsu.urdin.tetris.model.Scoreboard;
 import nsu.urdin.tetris.model.listeners.GameStateAdapter;
+import nsu.urdin.tetris.view.JAboutDialog;
 import nsu.urdin.tetris.view.JMainFrame;
 import nsu.urdin.tetris.model.GameModel;
 import nsu.urdin.tetris.model.GameModelImpl;
@@ -15,11 +17,13 @@ public class TetrisController {
 
     @Getter
     private final GameModel gameModel;
+    private final Scoreboard scoreboard;
     private JMainFrame mainFrame;
     private Timer modelUpdateTimer;
 
     private TetrisController() {
         gameModel = new GameModelImpl();
+        scoreboard = new Scoreboard();
     }
 
     public void launch() {
@@ -33,8 +37,8 @@ public class TetrisController {
             }
 
             @Override
-            public void onGameOver() {
-                gameOver();
+            public void onGameOver(int finalScore) {
+                gameOver(finalScore);
             }
         });
 
@@ -90,7 +94,7 @@ public class TetrisController {
         mainFrame.showCard("GameCard");
     }
 
-    public void gameOver() {
+    public void gameOver(int finalScore) {
         modelUpdateTimer.stop();
         mainFrame.showCard("GameOverCard");
         Timer returnToMenu = new Timer(3000, (ActionEvent e) -> {
@@ -98,5 +102,23 @@ public class TetrisController {
         });
         returnToMenu.setRepeats(false);
         returnToMenu.start();
+    }
+
+    public void exit() {
+        System.exit(0);
+    }
+
+    public void about() {
+        JAboutDialog dialog = new JAboutDialog();
+        dialog.pack();
+        dialog.setVisible(true);
+    }
+
+    public void highScores() {
+        mainFrame.showCard("HighScoresCard");
+    }
+
+    public void mainMenu() {
+        mainFrame.showCard("MainMenuCard");
     }
 }

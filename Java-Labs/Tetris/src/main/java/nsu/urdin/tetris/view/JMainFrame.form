@@ -17,9 +17,14 @@
           <card name="GameCard"/>
         </constraints>
       </nested-form>
-      <nested-form id="fc608" form-file="nsu/urdin/tetris/view/GameOverPanel.form" binding="JGameOverPanel">
+      <nested-form id="fc608" form-file="nsu/urdin/tetris/view/GameOverPanel.form" binding="gameOverPanel">
         <constraints>
           <card name="GameOverCard"/>
+        </constraints>
+      </nested-form>
+      <nested-form id="24ee5" form-file="nsu/urdin/tetris/view/HighScoresPanel.form" binding="highScoresPanel">
+        <constraints>
+          <card name="HighScoresCard"/>
         </constraints>
       </nested-form>
     </children>

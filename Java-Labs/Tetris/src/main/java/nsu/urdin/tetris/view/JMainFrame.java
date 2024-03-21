@@ -9,7 +9,8 @@ public class JMainFrame extends JFrame {
     private JMainMenuPanel mainMenuPanel;
     private JPanel contentPanel;
     private JGamePanel gamePanel;
-    private JGameOverPanel JGameOverPanel;
+    private JGameOverPanel gameOverPanel;
+    private JHighScoresPanel highScoresPanel;
 
 
     public JMainFrame() throws HeadlessException {

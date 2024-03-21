@@ -23,6 +23,27 @@ public class JMainMenuPanel extends JPanel {
                 TetrisController.getInstance().newGame();
             }
         });
+
+        highScoresButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                TetrisController.getInstance().highScores();
+            }
+        });
+        aboutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                TetrisController.getInstance().about();
+            }
+        });
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                TetrisController.getInstance().exit();
+            }
+        });
+
+
     }
 
 }

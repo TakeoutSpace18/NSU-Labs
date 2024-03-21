@@ -4,5 +4,5 @@ public interface GameStateListener {
     void levelChanged(int level);
     void speedChanged(int delayBetweenSteps);
     void scoreChanged(int score);
-    void onGameOver();
+    void onGameOver(int finalScore);
 }

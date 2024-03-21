@@ -27,6 +27,9 @@ public class JBlockPanel extends JPanel {
         super.paintComponent(g);
         g.setColor(color);
         g.fillRect(0, 0, SIZE, SIZE);
+        g.setColor(color.darker());
+        int offset = (int) (SIZE * 0.13);
+        g.fillRect(offset, offset, SIZE - 2 * offset, SIZE - 2 * offset);
 
         // this fixes animation freezes on linux
         Toolkit.getDefaultToolkit().sync();
