@@ -39,7 +39,11 @@ public class GameModelImpl implements GameModel {
     }
 
     @Override
-    public synchronized void nextStep() {
+    public void nextStep() {
+        if (gameState.isGameOver()) {
+            return;
+        }
+
         if (checkCanMove(fallingFigure, fallingFigure.getPosition().add(0, 1))) {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
@@ -48,7 +52,7 @@ public class GameModelImpl implements GameModel {
             gameState.addScore(linesCleared);
             boolean spawned = spawnNewFigure();
             if (!spawned) {
-                gameState.notifyGameOver();
+                gameState.setGameOver();
             }
         }
 

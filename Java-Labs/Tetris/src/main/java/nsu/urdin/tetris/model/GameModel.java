@@ -4,7 +4,6 @@ import nsu.urdin.tetris.model.listeners.GameStateListener;
 import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
 
 public interface GameModel {
-
     void restart();
     void nextStep();
     void moveLeft();
