@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class JBlockPanel extends JPanel {
-    public static final int SIZE = 40;
+    public static final int SIZE = 35;
     private final Color color;
     private Vec2d velocity;
     private Vec2d position;
@@ -42,11 +42,12 @@ public class JBlockPanel extends JPanel {
 
     public void update() {
         position = position.add(velocity);
-        setBounds((int) (position.x()), (int) (position.y()), SIZE, SIZE);
 
-        if (position.equalsEps(targetPosition, 0.05)) {
+        if (position.equalsEps(targetPosition, 0.01)) {
+            position = targetPosition;
             velocity = Vec2d.of(0, 0);
         }
+        setBounds((int) (position.x()), (int) (position.y()), SIZE, SIZE);
     }
 
     public void setTargetPosition(Vec2i matrixTargetPos) {
