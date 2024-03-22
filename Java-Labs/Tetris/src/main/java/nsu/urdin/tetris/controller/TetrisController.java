@@ -2,36 +2,59 @@ package nsu.urdin.tetris.controller;
 
 import lombok.Getter;
 import nsu.urdin.tetris.model.Scoreboard;
-import nsu.urdin.tetris.model.listeners.GameStateAdapter;
+import nsu.urdin.tetris.model.exceptions.CantReadScoreboardFileException;
+import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateAdapter;
 import nsu.urdin.tetris.view.JAboutDialog;
 import nsu.urdin.tetris.view.JMainFrame;
-import nsu.urdin.tetris.model.GameModel;
-import nsu.urdin.tetris.model.GameModelImpl;
+import nsu.urdin.tetris.model.gameplay.GameplayModel;
+import nsu.urdin.tetris.model.gameplay.GameplayModelImpl;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class TetrisController {
     private static final TetrisController INSTANCE = new TetrisController();
 
     @Getter
-    private final GameModel gameModel;
+    private GameplayModel gameplayModel;
     @Getter
-    private final Scoreboard scoreboard;
+    private Scoreboard scoreboard;
     private JMainFrame mainFrame;
     private Timer modelUpdateTimer;
 
-    private TetrisController() {
-        gameModel = new GameModelImpl();
-        scoreboard = new Scoreboard();
+    public TetrisController() {
+        createGameModel();
+        createScoreboardModel();
     }
 
-    public void launch() {
+    public void createAndShowUI() {
         mainFrame = new JMainFrame();
+        mainFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                exit();
+            }
+        });
 
-        gameModel.addFieldListener(mainFrame.getTetrisFieldListener());
-        gameModel.addGameStateListener(new GameStateAdapter() {
+        gameplayModel.addFieldListener(mainFrame.getTetrisFieldListener());
+        setupKeyBindings(mainFrame.getRootPane());
+    }
+
+    private void createScoreboardModel() {
+        try {
+            scoreboard = Scoreboard.readFromFile();
+        } catch (CantReadScoreboardFileException e) {
+            System.err.println("Failed to load scoreboard file");
+            scoreboard = new Scoreboard();
+        }
+    }
+
+    private void createGameModel() {
+        gameplayModel = new GameplayModelImpl();
+        gameplayModel.addGameStateListener(new GameplayStateAdapter() {
             @Override
             public void speedChanged(int delayBetweenSteps) {
                 scheduleModelUpdate(delayBetweenSteps);
@@ -42,8 +65,6 @@ public class TetrisController {
                 gameOver(finalScore);
             }
         });
-
-        setupKeyBindings(mainFrame.getRootPane());
     }
 
     public static TetrisController getInstance() {
@@ -52,7 +73,7 @@ public class TetrisController {
 
     public void scheduleModelUpdate(int delay) {
         modelUpdateTimer = new Timer(delay, (ActionEvent e) -> {
-            gameModel.nextStep();
+            gameplayModel.nextStep();
         });
 
         modelUpdateTimer.start();
@@ -67,31 +88,31 @@ public class TetrisController {
         component.getActionMap().put("left", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                gameModel.moveLeft();
+                gameplayModel.moveLeft();
             }
         });
         component.getActionMap().put("right", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                gameModel.moveRight();
+                gameplayModel.moveRight();
             }
         });
         component.getActionMap().put("down", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                gameModel.fastFall();
+                gameplayModel.fastFall();
             }
         });
         component.getActionMap().put("up", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                gameModel.rotate();
+                gameplayModel.rotate();
             }
         });
     }
 
     public void newGame() {
-        gameModel.restart();
+        gameplayModel.restart();
         mainFrame.showCard("GameCard");
     }
 
@@ -107,6 +128,7 @@ public class TetrisController {
     }
 
     public void exit() {
+        scoreboard.saveToFile();
         System.exit(0);
     }
 

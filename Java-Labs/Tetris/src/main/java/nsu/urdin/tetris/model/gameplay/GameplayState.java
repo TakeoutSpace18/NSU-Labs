@@ -1,17 +1,17 @@
-package nsu.urdin.tetris.model;
+package nsu.urdin.tetris.model.gameplay;
 
-import nsu.urdin.tetris.model.listeners.GameStateListener;
+import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameState {
+public class GameplayState {
     private int curLevel;
     private int curScore;
     private boolean isGameOver;
-    private List<GameStateListener> listeners;
+    private List<GameplayStateListener> listeners;
 
-    public GameState() {
+    public GameplayState() {
         listeners = new ArrayList<>();
         reset();
     }
@@ -66,7 +66,7 @@ public class GameState {
     }
 
 
-    public void addListener(GameStateListener listener) {
+    public void addListener(GameplayStateListener listener) {
         listeners.add(listener);
     }
 

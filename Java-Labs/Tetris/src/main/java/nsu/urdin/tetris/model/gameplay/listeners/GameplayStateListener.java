@@ -1,6 +1,6 @@
-package nsu.urdin.tetris.model.listeners;
+package nsu.urdin.tetris.model.gameplay.listeners;
 
-public interface GameStateListener {
+public interface GameplayStateListener {
     void levelChanged(int level);
     void speedChanged(int delayBetweenSteps);
     void scoreChanged(int score);

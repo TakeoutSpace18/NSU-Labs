@@ -2,7 +2,7 @@ package nsu.urdin.tetris.view;
 
 import lombok.Getter;
 import nsu.urdin.tetris.controller.TetrisController;
-import nsu.urdin.tetris.model.listeners.GameStateAdapter;
+import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateAdapter;
 
 import javax.swing.*;
 
@@ -16,7 +16,7 @@ public class JGamePanel {
     private void createUIComponents() {
         tetrisFieldPanel = new JTetrisFieldPanel();
 
-        TetrisController.getInstance().getGameModel().addGameStateListener(new GameStateAdapter() {
+        TetrisController.getInstance().getGameplayModel().addGameStateListener(new GameplayStateAdapter() {
             @Override
             public void levelChanged(int level) {
                 levelLabel.setText("Level: " + level);

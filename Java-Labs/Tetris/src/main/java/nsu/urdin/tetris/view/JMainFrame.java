@@ -1,6 +1,6 @@
 package nsu.urdin.tetris.view;
 
-import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
+import nsu.urdin.tetris.model.gameplay.listeners.TetrisFieldListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +23,7 @@ public class JMainFrame extends JFrame {
     public static void main(String[] args) {
         JFrame frame = new JFrame("MainFrameTest");
         frame.setContentPane(new JMainFrame().contentPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
     }

@@ -1,10 +1,10 @@
-package nsu.urdin.tetris.model;
+package nsu.urdin.tetris.model.gameplay;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import nsu.urdin.tetris.utils.Vec2i;
-import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
+import nsu.urdin.tetris.model.gameplay.listeners.TetrisFieldListener;
 
 import java.awt.*;
 import java.util.List;

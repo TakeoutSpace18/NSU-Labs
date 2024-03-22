@@ -1,6 +1,6 @@
-package nsu.urdin.tetris.model.listeners;
+package nsu.urdin.tetris.model.gameplay.listeners;
 
-public class GameStateAdapter implements GameStateListener {
+public class GameplayStateAdapter implements GameplayStateListener {
     @Override
     public void levelChanged(int level) {    }
     @Override

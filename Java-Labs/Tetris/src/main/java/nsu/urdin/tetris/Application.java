@@ -8,6 +8,6 @@ public class Application {
 
     public static void main(String[] args) {
         System.setProperty("sun.java2d.uiScale", "2.0");
-        SwingUtilities.invokeLater(TetrisController.getInstance()::launch);
+        SwingUtilities.invokeLater(TetrisController.getInstance()::createAndShowUI);
     }
 }

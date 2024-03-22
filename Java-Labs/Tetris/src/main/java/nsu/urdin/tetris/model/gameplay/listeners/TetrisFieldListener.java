@@ -1,4 +1,4 @@
-package nsu.urdin.tetris.model.listeners;
+package nsu.urdin.tetris.model.gameplay.listeners;
 
 import nsu.urdin.tetris.utils.Vec2i;
 
