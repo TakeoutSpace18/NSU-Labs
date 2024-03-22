@@ -1,26 +1,26 @@
-package nsu.urdin.tetris.model;
+package nsu.urdin.tetris.model.gameplay;
 
-import nsu.urdin.tetris.model.listeners.GameStateListener;
+import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateListener;
 import nsu.urdin.tetris.utils.Vec2i;
-import nsu.urdin.tetris.model.listeners.TetrisFieldListener;
+import nsu.urdin.tetris.model.gameplay.listeners.TetrisFieldListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class GameModelImpl implements GameModel {
+public class GameplayModelImpl implements GameplayModel {
     public static final Vec2i DIMENSIONS = Vec2i.of(10, 20);
 
     private final List<TetrisFieldListener> listeners;
     private final FigureFactory figureFactory;
-    private final GameState gameState;
+    private final GameplayState gameState;
     private int[][] landedBlocks;
     private TetrisFigure fallingFigure;
 
-    public GameModelImpl() {
+    public GameplayModelImpl() {
         this.listeners = new ArrayList<>();
         figureFactory = new FigureFactory(listeners);
-        gameState = new GameState();
+        gameState = new GameplayState();
         landedBlocks = new int[DIMENSIONS.x()][DIMENSIONS.y()];
     }
 
@@ -181,7 +181,7 @@ public class GameModelImpl implements GameModel {
     }
 
     @Override
-    public void addGameStateListener(GameStateListener listener) {
+    public void addGameStateListener(GameplayStateListener listener) {
         gameState.addListener(listener);
     }
 }
