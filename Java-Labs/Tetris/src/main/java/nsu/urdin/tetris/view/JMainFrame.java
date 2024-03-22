@@ -12,10 +12,13 @@ public class JMainFrame extends JFrame {
     private JGameOverPanel gameOverPanel;
     private JHighScoresPanel highScoresPanel;
 
-
     public JMainFrame() throws HeadlessException {
         setContentPane(contentPanel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        ImageIcon icon = new ImageIcon(getClass().getResource("/tetris-icon.png"));
+        setIconImage(icon.getImage());
+
         pack();
         setVisible(true);
     }
