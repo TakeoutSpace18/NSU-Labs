@@ -17,6 +17,7 @@ public class TetrisController {
 
     @Getter
     private final GameModel gameModel;
+    @Getter
     private final Scoreboard scoreboard;
     private JMainFrame mainFrame;
     private Timer modelUpdateTimer;
@@ -95,6 +96,7 @@ public class TetrisController {
     }
 
     public void gameOver(int finalScore) {
+        scoreboard.addEntry(finalScore);
         modelUpdateTimer.stop();
         mainFrame.showCard("GameOverCard");
         Timer returnToMenu = new Timer(3000, (ActionEvent e) -> {
