@@ -16,15 +16,7 @@
           <text value="&amp;Back"/>
         </properties>
       </component>
-      <component id="6a7a8" class="javax.swing.JTable" binding="highScoresTable">
-        <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="50"/>
-          </grid>
-        </constraints>
-        <properties/>
-      </component>
-      <component id="deadd" class="javax.swing.JLabel" binding="highScoreLabel">
+      <component id="deadd" class="javax.swing.JLabel" binding="scoreLabel">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
@@ -33,6 +25,33 @@
           <text value="High Score: ..."/>
         </properties>
       </component>
+      <scrollpane id="bfdd6">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="false"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="6a7a8" class="javax.swing.JTable" binding="scoresTable">
+            <constraints/>
+            <properties>
+              <autoResizeMode value="4"/>
+              <background color="-6029422"/>
+              <enabled value="false"/>
+              <fillsViewportHeight value="false"/>
+              <font size="22" style="2"/>
+              <foreground color="-16777216"/>
+              <gridColor color="-16757760"/>
+              <intercellSpacing width="2" height="2"/>
+              <opaque value="true"/>
+              <rowHeight value="40"/>
+              <rowSelectionAllowed value="false"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
     </children>
   </grid>
 </form>
