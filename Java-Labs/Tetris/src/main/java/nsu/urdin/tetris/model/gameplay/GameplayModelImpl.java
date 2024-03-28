@@ -27,6 +27,7 @@ public class GameplayModelImpl implements GameplayModel {
     @Override
     public void restart() {
         gameState.reset();
+        gameState.setRunning();
         clear();
         spawnNewFigure();
         listeners.forEach(TetrisFieldListener::applyChanges);

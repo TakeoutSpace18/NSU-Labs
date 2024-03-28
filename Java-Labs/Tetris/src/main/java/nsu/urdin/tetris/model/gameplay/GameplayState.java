@@ -16,12 +16,16 @@ public class GameplayState {
         reset();
     }
     public void reset() {
-        isGameRunning = true;
+        isGameRunning = false;
         curLevel = 0;
         curScore = 0;
         listeners.forEach(listener -> listener.scoreChanged(curScore));
         listeners.forEach(listener -> listener.levelChanged(curLevel));
         setLevelSpeed();
+    }
+
+    public void setRunning() {
+        isGameRunning = true;
     }
 
     public void addScore(int linesCleared) {
