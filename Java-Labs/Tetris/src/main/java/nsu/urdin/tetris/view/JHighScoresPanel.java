@@ -18,6 +18,7 @@ public class JHighScoresPanel {
     private JLabel scoreLabel;
 
     public JHighScoresPanel() {
+        contentPanel.setBackground(JMainFrame.BACKGROUND_COLOR);
         scoresTable.getTableHeader().setReorderingAllowed(false);
 
         backButton.addActionListener(new ActionListener() {

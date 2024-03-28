@@ -15,9 +15,13 @@ public class JGamePanel {
     private JLabel scoreLabel;
     private JLabel levelLabel;
     private JButton pauseButton;
+    private JPanel fieldHolderPanel;
+    private JPanel sidePanel;
 
     public JGamePanel() {
-
+        fieldHolderPanel.setBorder(BorderFactory.createLineBorder(JMainFrame.BORDER_COLOR, 4, false));
+        sidePanel.setBorder(BorderFactory.createLineBorder(JMainFrame.BORDER_COLOR, 4, false));
+        sidePanel.setBackground(JMainFrame.BACKGROUND_COLOR);
         Action pauseAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {

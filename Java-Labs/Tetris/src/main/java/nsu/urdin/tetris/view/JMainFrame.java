@@ -6,6 +6,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class JMainFrame extends JFrame {
+    public static final Color BACKGROUND_COLOR = new Color(214, 255, 241);
+    public static final Color BORDER_COLOR = new Color(24, 104, 0);
+    public static final Color INACTIVE_COLOR = new Color(150, 150, 150);
+
     private JMainMenuPanel mainMenuPanel;
     private JPanel contentPanel;
     private JGamePanel gamePanel;

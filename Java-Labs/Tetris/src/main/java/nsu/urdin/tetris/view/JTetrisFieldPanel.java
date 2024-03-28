@@ -18,6 +18,7 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
 
     public JTetrisFieldPanel() {
         this(GameplayModelImpl.DIMENSIONS);
+        setBackground(new Color(214, 255, 241));
     }
 
     public JTetrisFieldPanel(Vec2i matrixDimensions) {
