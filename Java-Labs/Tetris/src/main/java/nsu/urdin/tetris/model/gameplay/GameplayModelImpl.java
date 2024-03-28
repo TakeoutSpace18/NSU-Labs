@@ -40,7 +40,7 @@ public class GameplayModelImpl implements GameplayModel {
 
     @Override
     public void nextStep() {
-        if (gameState.isGameOver()) {
+        if (!gameState.isGameRunning()) {
             return;
         }
 
@@ -194,5 +194,10 @@ public class GameplayModelImpl implements GameplayModel {
     @Override
     public int getCurrentScore() {
         return gameState.getScore();
+    }
+
+    @Override
+    public boolean isGameRunning() {
+        return gameState.isGameRunning();
     }
 }

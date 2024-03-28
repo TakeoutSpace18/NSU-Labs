@@ -13,4 +13,5 @@ public interface GameplayModel {
     void addFieldListener(TetrisFieldListener listener);
     void addGameStateListener(GameplayStateListener listener);
     int getCurrentScore();
+    boolean isGameRunning();
 }

@@ -8,7 +8,7 @@ import java.util.List;
 public class GameplayState {
     private int curLevel;
     private int curScore;
-    private boolean isGameOver;
+    private boolean isGameRunning;
     private List<GameplayStateListener> listeners;
 
     public GameplayState() {
@@ -16,7 +16,7 @@ public class GameplayState {
         reset();
     }
     public void reset() {
-        isGameOver = false;
+        isGameRunning = true;
         curLevel = 0;
         curScore = 0;
         listeners.forEach(listener -> listener.scoreChanged(curScore));
@@ -71,15 +71,15 @@ public class GameplayState {
     }
 
     public void setGameOver() {
-        if (isGameOver()) {
+        if (!isGameRunning()) {
             throw new RuntimeException("Already in gameover state");
         }
         listeners.forEach(listener -> listener.onGameOver(curScore));
-        isGameOver = true;
+        isGameRunning = false;
     }
 
-    public boolean isGameOver() {
-        return isGameOver;
+    public boolean isGameRunning() {
+        return isGameRunning;
     }
 
     public int getScore() {

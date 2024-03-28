@@ -132,6 +132,9 @@ public class TetrisController {
     }
 
     public void exit() {
+        if (gameplayModel.isGameRunning()) {
+            scoreboard.addEntry(gameplayModel.getCurrentScore());
+        }
         scoreboard.saveToFile();
         System.exit(0);
     }

@@ -37,7 +37,9 @@ public class Scoreboard implements Serializable {
     public void addListener(ScoreboardListener listener) {
         listeners.add(listener);
         listeners.forEach(lis -> lis.scoreTableChanged(entries));
-        listeners.forEach(lis -> lis.highScoreChanged(bestEntry));
+        if (bestEntry != null) {
+            listeners.forEach(lis -> lis.highScoreChanged(bestEntry));
+        }
     }
 
     public static Scoreboard readFromFile() throws CantReadScoreboardFileException {
