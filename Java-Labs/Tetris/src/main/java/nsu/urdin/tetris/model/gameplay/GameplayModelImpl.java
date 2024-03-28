@@ -1,8 +1,8 @@
 package nsu.urdin.tetris.model.gameplay;
 
 import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateListener;
-import nsu.urdin.tetris.utils.Vec2i;
 import nsu.urdin.tetris.model.gameplay.listeners.TetrisFieldListener;
+import nsu.urdin.tetris.utils.Vec2i;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,13 +47,7 @@ public class GameplayModelImpl implements GameplayModel {
         if (checkCanMove(fallingFigure, fallingFigure.getPosition().add(0, 1))) {
             fallingFigure.move(fallingFigure.getPosition().add(Vec2i.of(0, 1)));
         } else {
-            addToLandedBlocks(fallingFigure);
-            int linesCleared = clearFilledLines();
-            gameState.addScore(linesCleared);
-            boolean spawned = spawnNewFigure();
-            if (!spawned) {
-                gameState.setGameOver();
-            }
+            handleFigureLanding();
         }
 
         listeners.forEach(TetrisFieldListener::applyChanges);
@@ -68,8 +62,7 @@ public class GameplayModelImpl implements GameplayModel {
                 for (TetrisFieldListener lis : listeners) {
                     lis.removeLineOfBlocks(line);
                 }
-            }
-            else if (linesCleared != 0) {
+            } else if (linesCleared != 0) {
                 for (TetrisFieldListener lis : listeners) {
                     lis.moveLineOfBlocks(line, linesCleared);
                 }
@@ -173,6 +166,19 @@ public class GameplayModelImpl implements GameplayModel {
         }
         fallingFigure.move(newPos);
         listeners.forEach(TetrisFieldListener::applyChanges);
+
+        handleFigureLanding();
+        listeners.forEach(TetrisFieldListener::applyChanges);
+    }
+
+    private void handleFigureLanding() {
+        addToLandedBlocks(fallingFigure);
+        int linesCleared = clearFilledLines();
+        gameState.addScore(linesCleared);
+        boolean spawned = spawnNewFigure();
+        if (!spawned) {
+            gameState.setGameOver();
+        }
     }
 
     @Override

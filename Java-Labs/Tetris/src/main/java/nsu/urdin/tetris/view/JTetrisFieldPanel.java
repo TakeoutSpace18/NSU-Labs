@@ -1,8 +1,8 @@
 package nsu.urdin.tetris.view;
 
 import nsu.urdin.tetris.model.gameplay.GameplayModelImpl;
-import nsu.urdin.tetris.utils.Vec2i;
 import nsu.urdin.tetris.model.gameplay.listeners.TetrisFieldListener;
+import nsu.urdin.tetris.utils.Vec2i;
 
 import javax.swing.*;
 import java.awt.*;
@@ -86,7 +86,7 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
         block.setTargetPosition(newPos);
 
         blocksStaging[newPos.x()][newPos.y()] = block;
-        if (blocksStaging[oldPos.x()][oldPos.y()] == block) {
+        if (blocksStaging[oldPos.x()][oldPos.y()] == block && !oldPos.equals(newPos)) {
             blocksStaging[oldPos.x()][oldPos.y()] = null;
         }
     }

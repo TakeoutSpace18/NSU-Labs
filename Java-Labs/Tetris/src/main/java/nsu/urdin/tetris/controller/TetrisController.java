@@ -3,11 +3,11 @@ package nsu.urdin.tetris.controller;
 import lombok.Getter;
 import nsu.urdin.tetris.model.Scoreboard;
 import nsu.urdin.tetris.model.exceptions.CantReadScoreboardFileException;
+import nsu.urdin.tetris.model.gameplay.GameplayModel;
+import nsu.urdin.tetris.model.gameplay.GameplayModelImpl;
 import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateAdapter;
 import nsu.urdin.tetris.view.JAboutDialog;
 import nsu.urdin.tetris.view.JMainFrame;
-import nsu.urdin.tetris.model.gameplay.GameplayModel;
-import nsu.urdin.tetris.model.gameplay.GameplayModelImpl;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -71,6 +71,10 @@ public class TetrisController {
     }
 
     public void scheduleModelUpdate(int delay) {
+        if (modelUpdateTimer != null) {
+            modelUpdateTimer.stop();
+        }
+
         modelUpdateTimer = new Timer(delay, (ActionEvent e) -> {
             gameplayModel.nextStep();
         });
@@ -109,14 +113,6 @@ public class TetrisController {
                 gameplayModel.rotate();
             }
         });
-
-        component.getActionMap().put("escape", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                pause();
-            }
-        });
-
     }
 
     public void newGame() {

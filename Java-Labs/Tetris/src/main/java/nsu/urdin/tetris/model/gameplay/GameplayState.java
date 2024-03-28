@@ -29,16 +29,16 @@ public class GameplayState {
             case 0:
                 break;
             case 1:
-                curScore += 40 * (curLevel + 1);
+                curScore += 40;
                 break;
             case 2:
-                curScore += 100 * (curLevel + 1);
+                curScore += 100;
                 break;
             case 3:
-                curScore += 300 * (curLevel + 1);
+                curScore += 300;
                 break;
             case 4:
-                curScore += 1200 * (curLevel + 1);
+                curScore += 1200;
                 break;
             default:
                 throw new RuntimeException("Unexpected situation: more than 4 lines can't be cleared at once!");
@@ -61,7 +61,7 @@ public class GameplayState {
     }
 
     private void setLevelSpeed() {
-        int delayBetweenSteps = (int) (500 * Math.pow(0.9, curLevel));
+        int delayBetweenSteps = (int) (600 * Math.pow(0.85, curLevel));
         listeners.forEach(lis -> lis.speedChanged(delayBetweenSteps));
     }
 
