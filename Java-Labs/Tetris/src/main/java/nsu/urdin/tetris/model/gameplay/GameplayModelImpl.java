@@ -184,4 +184,9 @@ public class GameplayModelImpl implements GameplayModel {
     public void addGameStateListener(GameplayStateListener listener) {
         gameState.addListener(listener);
     }
+
+    @Override
+    public int getCurrentScore() {
+        return gameState.getScore();
+    }
 }

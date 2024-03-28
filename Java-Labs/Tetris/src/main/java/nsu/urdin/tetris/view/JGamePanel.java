@@ -5,13 +5,33 @@ import nsu.urdin.tetris.controller.TetrisController;
 import nsu.urdin.tetris.model.gameplay.listeners.GameplayStateAdapter;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 public class JGamePanel {
-@Getter
+    @Getter
     private JTetrisFieldPanel tetrisFieldPanel;
     private JPanel contentPanel;
     private JLabel scoreLabel;
     private JLabel levelLabel;
+    private JButton pauseButton;
+
+    public JGamePanel() {
+
+        Action pauseAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                TetrisController.getInstance().pause();
+            }
+        };
+
+        InputMap inputMap = pauseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
+        pauseButton.addActionListener(pauseAction);
+        pauseButton.getActionMap().put("escape", pauseAction);
+
+        TetrisController.getInstance().setupArrowKeyBindings(tetrisFieldPanel);
+    }
 
     private void createUIComponents() {
         tetrisFieldPanel = new JTetrisFieldPanel();

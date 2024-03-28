@@ -40,7 +40,6 @@ public class TetrisController {
         });
 
         gameplayModel.addFieldListener(mainFrame.getTetrisFieldListener());
-        setupKeyBindings(mainFrame.getRootPane());
     }
 
     private void createScoreboardModel() {
@@ -79,11 +78,12 @@ public class TetrisController {
         modelUpdateTimer.start();
     }
 
-    public void setupKeyBindings(JComponent component) {
-        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
-        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
-        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "up");
-        component.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
+    public void setupArrowKeyBindings(JComponent component) {
+        InputMap inputMap = component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "left");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "right");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "up");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "down");
 
         component.getActionMap().put("left", new AbstractAction() {
             @Override
@@ -109,6 +109,14 @@ public class TetrisController {
                 gameplayModel.rotate();
             }
         });
+
+        component.getActionMap().put("escape", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                pause();
+            }
+        });
+
     }
 
     public void newGame() {
@@ -138,11 +146,28 @@ public class TetrisController {
         dialog.setVisible(true);
     }
 
-    public void highScores() {
+    public void showHighScores() {
         mainFrame.showCard("HighScoresCard");
     }
 
-    public void mainMenu() {
+    public void showMainMenu() {
         mainFrame.showCard("MainMenuCard");
+    }
+
+    public void stopGameAndReturnToMainMenu() {
+        mainFrame.hidePauseMenu();
+        modelUpdateTimer.stop();
+        scoreboard.addEntry(gameplayModel.getCurrentScore());
+        mainFrame.showCard("MainMenuCard");
+    }
+
+    public void pause() {
+        modelUpdateTimer.stop();
+        mainFrame.showPauseMenu();
+    }
+
+    public void resume() {
+        modelUpdateTimer.start();
+        mainFrame.hidePauseMenu();
     }
 }

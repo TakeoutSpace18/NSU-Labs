@@ -14,7 +14,6 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
 
     private JBlockPanel[][] blocks;
     private JBlockPanel[][] blocksStaging;
-    private boolean isRunning;
     private Timer gameLoop;
 
     public JTetrisFieldPanel() {
@@ -25,7 +24,6 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
         // disable layout in order to manually control positions of the blocks
         setLayout(null);
 
-        this.isRunning = true;
         setupMatrix(matrixDimensions);
         setupGameLoop();
         gameLoop.start();
@@ -43,9 +41,7 @@ public class JTetrisFieldPanel extends JPanel implements TetrisFieldListener {
 
     private void setupGameLoop() {
         gameLoop = new Timer(15, (ActionEvent e) -> {
-             if (isRunning) {
-                 update();
-             }
+            update();
         });
     }
 

@@ -4,9 +4,8 @@ import nsu.urdin.tetris.controller.TetrisController;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
-public class JMainMenuPanel extends JPanel {
+public class JMainMenuPanel {
     private JPanel contentPanel;
     private JLabel titleLabel;
     private JButton newGameButton;
@@ -15,35 +14,10 @@ public class JMainMenuPanel extends JPanel {
     private JButton exitButton;
 
     public JMainMenuPanel() throws HeadlessException {
-        add(contentPanel);
-        setVisible(true);
-        newGameButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                TetrisController.getInstance().newGame();
-            }
-        });
-
-        highScoresButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                TetrisController.getInstance().highScores();
-            }
-        });
-        aboutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                TetrisController.getInstance().about();
-            }
-        });
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                TetrisController.getInstance().exit();
-            }
-        });
-
-
+        newGameButton.addActionListener(actionEvent -> TetrisController.getInstance().newGame());
+        highScoresButton.addActionListener(actionEvent -> TetrisController.getInstance().showHighScores());
+        aboutButton.addActionListener(actionEvent -> TetrisController.getInstance().about());
+        exitButton.addActionListener(actionEvent -> TetrisController.getInstance().exit());
     }
 
 }

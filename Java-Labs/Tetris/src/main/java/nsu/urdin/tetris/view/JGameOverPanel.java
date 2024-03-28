@@ -5,4 +5,5 @@ import javax.swing.*;
 public class JGameOverPanel {
     private JPanel contentPanel;
     private JLabel gameOverLabel;
+
 }

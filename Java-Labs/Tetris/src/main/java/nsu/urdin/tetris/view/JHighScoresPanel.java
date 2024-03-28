@@ -5,7 +5,6 @@ import nsu.urdin.tetris.model.Scoreboard;
 import nsu.urdin.tetris.model.listeners.ScoreboardListener;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,7 +23,7 @@ public class JHighScoresPanel {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                TetrisController.getInstance().mainMenu();
+                TetrisController.getInstance().showMainMenu();
             }
         });
 
@@ -51,4 +50,5 @@ public class JHighScoresPanel {
         });
 
     }
+
 }

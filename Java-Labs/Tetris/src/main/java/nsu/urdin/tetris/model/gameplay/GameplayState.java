@@ -71,11 +71,18 @@ public class GameplayState {
     }
 
     public void setGameOver() {
+        if (isGameOver()) {
+            throw new RuntimeException("Already in gameover state");
+        }
         listeners.forEach(listener -> listener.onGameOver(curScore));
         isGameOver = true;
     }
 
     public boolean isGameOver() {
         return isGameOver;
+    }
+
+    public int getScore() {
+        return curScore;
     }
 }

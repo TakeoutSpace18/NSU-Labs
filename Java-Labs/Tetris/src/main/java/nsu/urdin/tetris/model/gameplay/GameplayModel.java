@@ -12,4 +12,5 @@ public interface GameplayModel {
     void fastFall();
     void addFieldListener(TetrisFieldListener listener);
     void addGameStateListener(GameplayStateListener listener);
+    int getCurrentScore();
 }

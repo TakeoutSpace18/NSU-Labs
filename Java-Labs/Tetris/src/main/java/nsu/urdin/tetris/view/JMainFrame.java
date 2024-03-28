@@ -11,10 +11,15 @@ public class JMainFrame extends JFrame {
     private JGamePanel gamePanel;
     private JGameOverPanel gameOverPanel;
     private JHighScoresPanel highScoresPanel;
+    private JPausePanel pausePanel;
 
     public JMainFrame() throws HeadlessException {
         setContentPane(contentPanel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        pausePanel = new JPausePanel();
+        setGlassPane(pausePanel.getContentPanel());
+        getGlassPane().setVisible(false);
 
         ImageIcon icon = new ImageIcon(getClass().getResource("/tetris-icon.png"));
         setIconImage(icon.getImage());
@@ -34,6 +39,15 @@ public class JMainFrame extends JFrame {
     public void showCard(String name) {
         CardLayout layout = (CardLayout) contentPanel.getLayout();
         layout.show(getContentPane(), name);
+    }
+
+    public void showPauseMenu() {
+        ViewUtils.SetEnabledRecursively(contentPanel, false);
+        getGlassPane().setVisible(true);
+    }
+    public void hidePauseMenu() {
+        ViewUtils.SetEnabledRecursively(contentPanel, true);
+        getGlassPane().setVisible(false);
     }
 
     public TetrisFieldListener getTetrisFieldListener() {
