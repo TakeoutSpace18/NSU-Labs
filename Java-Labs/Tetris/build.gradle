@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'nsu.urdin'
@@ -16,10 +17,20 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
+    implementation 'com.intellij:forms_rt:7.0.3'
+
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 }
 
 test {
     useJUnitPlatform()
+}
+
+def mainClassName = "nsu.urdin.tetris.Application"
+
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
 }
