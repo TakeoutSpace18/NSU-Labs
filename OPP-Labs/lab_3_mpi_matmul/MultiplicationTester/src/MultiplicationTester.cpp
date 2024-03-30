@@ -22,14 +22,14 @@ int MultiplicationTester::Run(int argc, char** argv)
     if (std::strcmp(argv[1], "generate") == 0 && argc == 5)
     {
         GenerateRandomMatrix(argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
-        fmt::print(fg(fmt::color::green), "Generated random matrix written to {}", argv[2]);
+        fmt::print(fg(fmt::color::green), "Generated random matrix written to {}\n", argv[2]);
         return EXIT_SUCCESS;
     }
 
     if (std::strcmp(argv[1], "generateIdentity") == 0 && argc == 4)
     {
         GenerateIdentityMatrix(argv[2], std::atoi(argv[3]));
-        fmt::print(fg(fmt::color::green), "Generated identity matrix written to {}", argv[2]);
+        fmt::print(fg(fmt::color::green), "Generated identity matrix written to {}\n", argv[2]);
         return EXIT_SUCCESS;
     }
 
@@ -46,10 +46,10 @@ int MultiplicationTester::Run(int argc, char** argv)
 
         if (correct)
         {
-            fmt::print(fg(fmt::color::green), "Correct!");
+            fmt::print(fg(fmt::color::green), "Correct!\n");
         } else
         {
-            fmt::print(fg(fmt::color::red), "Error!");
+            fmt::print(fg(fmt::color::red), "Error!\n");
         }
         return EXIT_SUCCESS;
     }
@@ -113,9 +113,6 @@ bool MultiplicationTester::VerifyMultiplicationCorrectness(const std::string& ma
     Mat matResultEigen = Eigen::Map<const Mat>(matResult.data(), n1, n3);
 
     Mat trustedResult = matAEigen * matBEigen;
-
-    std::ofstream out("eigenResult.bin");
-    out.write(reinterpret_cast<char*>(trustedResult.data()), sizeof(ValueType) * n1 * n3);
 
     return matResultEigen.isApprox(trustedResult);
 }
