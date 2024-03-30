@@ -16,7 +16,7 @@ std::vector<T> LoadVectorFromFile(const std::string& filename, size_t valuesCoun
     input.read(reinterpret_cast<char *>(loaded.data()), fileSize);
     if (!input.good())
     {
-        throw std::runtime_error("Failed to read " + std::to_string(fileSize) + "bytes from " + filename);
+        throw std::runtime_error("Failed to read " + std::to_string(fileSize) + " bytes from " + filename);
     }
     return loaded;
 }

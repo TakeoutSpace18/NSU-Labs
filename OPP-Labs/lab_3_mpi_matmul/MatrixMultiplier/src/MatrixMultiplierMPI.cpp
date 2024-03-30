@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <mpi.h>
 
@@ -14,7 +15,7 @@ MatrixMultiplierMPI::MatrixMultiplierMPI()
     mProcRank = MPI::COMM_WORLD.Get_rank();
 
     int procNameLen;
-    char procName[MPI::MAX_PROCESSOR_NAME];
+    char procName[256];
     MPI::Get_processor_name(procName, procNameLen);
     std::cout << "Hello from " << procName << "\n";
 }
@@ -52,5 +53,16 @@ void MatrixMultiplierMPI::Multiply(
     std::vector<ValueType>& matOutput,
     int n1, int n2, int n3)
 {
+    if (mProcRank == 0)
+    {
+        std::ranges::fill(matOutput, 0);
 
+        for (int i = 0; i < n1; i++) {
+            for (int j = 0; j < n3; j++) {
+                for (int k = 0; k < n2; k++) {
+                    matOutput[i * n3 + j] += matA[i * n2 + k] * matB[k * n3 + j];
+                }
+            }
+        }
+    }
 }

@@ -11,6 +11,8 @@ public:
     int Run(int argc, char** argv);
 
     void GenerateRandomMatrix(const std::string& filename, int n1, int n2);
+    void GenerateIdentityMatrix(const std::string& filename, int n1);
+    void PrintMatrix(const std::string& filename, int n1, int n2);
 
     bool VerifyMultiplicationCorrectness(
       const std::string& matAFilename,
