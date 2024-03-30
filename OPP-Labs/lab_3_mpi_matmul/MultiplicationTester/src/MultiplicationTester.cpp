@@ -17,33 +17,31 @@ int MultiplicationTester::Run(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    if (std::strcmp(argv[1], "generate") == 0 && argc == 6)
+    if (std::strcmp(argv[1], "generate") == 0 && argc == 5)
     {
         GenerateRandomMatrix(argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
-        fmt::print(fg(fmt::color::green), "Generated matrix written to file {}", argv[2]);
+        fmt::print(fg(fmt::color::green), "Generated matrix written to {}", argv[2]);
         return EXIT_SUCCESS;
     }
-    else if (std::strcmp(argv[1], "verify") == 0 && argc == 8)
+
+    if (std::strcmp(argv[1], "verify") == 0 && argc == 8)
     {
         bool correct = VerifyMultiplicationCorrectness(argv[2], argv[3], argv[4],
-            std::atoi(argv[5]), std::atoi(argv[6]), std::atoi(argv[7]));
+                                                       std::atoi(argv[5]), std::atoi(argv[6]), std::atoi(argv[7]));
 
         if (correct)
         {
             fmt::print(fg(fmt::color::green), "Correct!");
-        }
-        else
+        } else
         {
             fmt::print(fg(fmt::color::red), "Error!");
         }
         return EXIT_SUCCESS;
     }
-    else
-    {
-        fmt::print(fg(fmt::color::red), "incorrect usage\n");
-        PrintUsageInfo();
-        return EXIT_FAILURE;
-    }
+
+    fmt::print(fg(fmt::color::red), "incorrect usage\n");
+    PrintUsageInfo();
+    return EXIT_FAILURE;
 }
 
 void MultiplicationTester::GenerateRandomMatrix(const std::string& filename, int n1, int n2)
@@ -62,7 +60,9 @@ void MultiplicationTester::GenerateRandomMatrix(const std::string& filename, int
 }
 
 bool MultiplicationTester::VerifyMultiplicationCorrectness(const std::string& matAFilename,
-    const std::string& matBFilename, const std::string& matResultFilename, int n1, int n2, int n3)
+                                                           const std::string& matBFilename,
+                                                           const std::string& matResultFilename,
+                                                           int n1, int n2, int n3)
 {
     std::vector<ValueType> matA = LoadVectorFromFile<ValueType>(matAFilename, n1 * n2);
     std::vector<ValueType> matB = LoadVectorFromFile<ValueType>(matBFilename, n2 * n3);
@@ -84,5 +84,4 @@ void MultiplicationTester::PrintUsageInfo()
     fmt::print("usage:\n");
     fmt::print("\tgenerate <filename> <n1> <n2>\n");
     fmt::print("\tverify <matA> <matB> <matResult> <n1> <n2> <n3>\n");
-
 }
