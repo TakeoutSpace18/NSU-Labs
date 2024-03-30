@@ -12,7 +12,7 @@ public:
 
     void GenerateRandomMatrix(const std::string& filename, int n1, int n2);
 
-    void VerifyMultiplicationCorrectness(
+    bool VerifyMultiplicationCorrectness(
       const std::string& matAFilename,
       const std::string& matBFilename,
       const std::string& matResultFilename,
@@ -20,11 +20,7 @@ public:
 
 private:
 
-    void TrustedMultiply(
-        const std::vector<ValueType>& matA,
-        const std::vector<ValueType>& matB,
-        std::vector<ValueType>& matOutput,
-        int n1, int n2, int n3);
+    void PrintUsageInfo();
 };
 
 

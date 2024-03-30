@@ -1,6 +1,8 @@
 #ifndef VECTORSERIALIZATION_HPP
 #define VECTORSERIALIZATION_HPP
 
+#include <fstream>
+
 template <typename T>
 std::vector<T> LoadVectorFromFile(const std::string& filename, size_t valuesCount)
 {
