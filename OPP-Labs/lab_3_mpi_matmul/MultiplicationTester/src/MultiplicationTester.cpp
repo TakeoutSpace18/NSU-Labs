@@ -33,6 +33,13 @@ int MultiplicationTester::Run(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
+    if (std::strcmp(argv[1], "generateSerial") == 0 && argc == 6)
+    {
+        GenerateSerialMatrix(argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]));
+        fmt::print(fg(fmt::color::green), "Generated serial matrix written to {}\n", argv[2]);
+        return EXIT_SUCCESS;
+    }
+
     if (std::strcmp(argv[1], "print") == 0 && argc == 5)
     {
         PrintMatrix(argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
@@ -84,6 +91,14 @@ void MultiplicationTester::GenerateIdentityMatrix(const std::string& filename, i
     SaveVectorToFile(matrix, filename);
 }
 
+void MultiplicationTester::GenerateSerialMatrix(const std::string &filename, int n1, int n2, int startNum) {
+    std::vector<ValueType> matrix(n1 * n2);
+    std::ranges::generate(matrix, [&]() {
+        return startNum++;
+    });
+    SaveVectorToFile(matrix, filename);
+}
+
 void MultiplicationTester::PrintMatrix(const std::string &filename, int n1, int n2) {
     std::vector<ValueType> matrix = LoadVectorFromFile<ValueType>(filename, n1 * n2);
 
@@ -121,7 +136,8 @@ void MultiplicationTester::PrintUsageInfo()
 {
     fmt::print("usage:\n");
     fmt::print("\tgenerate <filename> <n1> <n2>\n");
-    fmt::print("\t <filename> <n1>\n");
+    fmt::print("\tgenerateIdentity <filename> <n1>\n");
+    fmt::print("\tgenerateSerial <filename> <n1> <n2> <startNum>\n");
     fmt::print("\tverify <matA> <matB> <matResult> <n1> <n2> <n3>\n");
     fmt::print("\tprint <mat> <n1> <n2>\n");
 }

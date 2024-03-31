@@ -12,6 +12,7 @@ public:
 
     void GenerateRandomMatrix(const std::string& filename, int n1, int n2);
     void GenerateIdentityMatrix(const std::string& filename, int n1);
+    void GenerateSerialMatrix(const std::string& filename, int n1, int n2, int startNum);
     void PrintMatrix(const std::string& filename, int n1, int n2);
 
     bool VerifyMultiplicationCorrectness(

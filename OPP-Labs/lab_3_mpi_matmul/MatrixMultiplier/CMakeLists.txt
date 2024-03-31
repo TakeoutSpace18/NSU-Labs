@@ -4,10 +4,12 @@ if (MPI_FOUND)
     message("MPI_INCLUDE_PATH :${MPI_INCLUDE_PATH}")
 endif (MPI_FOUND)
 
+find_package(fmt)
+
 add_executable(MatrixMultiplier src/main.cpp src/MatrixMultiplierMPI.cpp)
 
 target_include_directories(MatrixMultiplier PRIVATE ../Utility)
 target_include_directories(MatrixMultiplier PRIVATE src)
 target_compile_options(MatrixMultiplier PRIVATE -Wall -Wextra -Wpedantic)
 
-target_link_libraries(MatrixMultiplier MPI::MPI_CXX)
+target_link_libraries(MatrixMultiplier MPI::MPI_CXX fmt::fmt)
