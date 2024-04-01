@@ -5,10 +5,7 @@
 #include <fstream>
 #include <mpi.h>
 #include <numeric>
-#include <ranges>
 #include <algorithm>
-
-#include <fmt/ranges.h>
 
 #include "VectorSerialization.hpp"
 
@@ -43,12 +40,14 @@ void MatrixMultiplierMPI::MultiplyFromFiles(
         matA = LoadVectorFromFile<ValueType>(matAFilename, n1 * n2);
         matB = LoadVectorFromFile<ValueType>(matBFilename, n2 * n3);
         matOutput.resize(n1 * n3);
+        std::printf("Loaded %s(%ix%i) and %s(%ix%i) matrices\n", matAFilename.c_str(), n1, n2, matBFilename.c_str(), n2, n3);
     }
     Multiply(matA, matB, matOutput, n1, n2, n3, gridSize);
 
     if (mProcRank == 0)
     {
         SaveVectorToFile(matOutput, outputFilename);
+        std::printf("Result saved to %s(%ix%i)\n", outputFilename.c_str(), n1, n3);
     }
 }
 
@@ -199,7 +198,7 @@ void MatrixMultiplierMPI::GatherOutputMatrix(const std::vector<ValueType> &block
     std::vector<int> offsets(gridSize[0] * gridSize[1]);
 
     std::iota(offsets.begin(), offsets.end(), 0);
-    std::ranges::transform(offsets, offsets.begin(), [&](int num) {
+    std::transform(offsets.begin(), offsets.end(), offsets.begin(), [&](int num) {
         int blockRow = num / gridSize[1];
         int blockCol = num % gridSize[1];
         return blockRow * n3 * mChunkSize[0] + blockCol * mChunkSize[1];
