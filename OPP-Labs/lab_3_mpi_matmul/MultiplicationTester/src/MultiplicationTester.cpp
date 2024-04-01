@@ -68,13 +68,15 @@ int MultiplicationTester::Run(int argc, char** argv)
 
 void MultiplicationTester::GenerateRandomMatrix(const std::string& filename, int n1, int n2)
 {
-    std::vector<ValueType> matrix(n1 * n2);
+    std::vector<ValueType> matrix;
 
     std::random_device rd;
     std::mt19937 generator(rd());
     std::uniform_real_distribution<> distr(0, 100.0);
 
-    std::ranges::generate(matrix, [&]() {
+    std::generate_n(std::back_inserter(matrix),
+        n1 * n2,
+        [&]() {
         return distr(generator);
     });
 

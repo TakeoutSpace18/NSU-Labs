@@ -30,16 +30,30 @@ public:
         std::array<int, 2> gridSize);
 
 private:
+    void CreateTopology(int n1, int n2, int n3, std::array<int, 2> gridSize);
+
     void ValidateGridSize(int n1, int n2, int n3, std::array<int, 2> gridSize);
 
-    void MultiplySingleProcess(const std::vector<ValueType> &matA,
+    std::vector<ValueType> RegularMatMultiply(const std::vector<ValueType> &matA,
                        const std::vector<ValueType> &matB,
-                       std::vector<ValueType> &matOutput,
                        int n1, int n2, int n3);
+
+    std::vector<ValueType> DistributeMatARows(const std::vector<ValueType>& matA, int n1, int n2, int n3);
+
+    std::vector<ValueType> DistributeMatBCols(const std::vector<ValueType>& matB, int n1, int n2, int n3);
+
+    void GatherOutputMatrix(const std::vector<ValueType>& blockLocal,
+        std::vector<ValueType>& matOutput,
+        std::array<int, 2> gridSize,
+        int n1, int n2, int n3);
 
 private:
     int mProcRank;
     int mWorldSize;
+    std::array<int, 2> mProcCoords;
+    MPI::Cartcomm mRowComm;
+    MPI::Cartcomm mColComm;
+    std::array<int, 2> mChunkSize;
 };
 
 
