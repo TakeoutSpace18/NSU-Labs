@@ -14,20 +14,14 @@ constexpr float EPS = 1e-2;
 constexpr int N = 50 * 50;
 constexpr int MEASURE_REPEATS = 2;
 
-SLESolverMPI::SLESolverMPI()
+SLESolverMPI::SLESolverMPI(const MPI::Comm& comm) : mWorldComm(comm)
 {
-    MPI::Init();
-    mWorldSize = MPI::COMM_WORLD.Get_size();
-    mRank = MPI::COMM_WORLD.Get_rank();
+    mWorldSize = mWorldComm.Get_size();
+    mRank = mWorldComm.Get_rank();
     char procName[MPI::MAX_PROCESSOR_NAME];
     int procNameLen;
     MPI::Get_processor_name(procName, procNameLen);
     std::cout << "Hello from "<<  procName << "\n";
-}
-
-SLESolverMPI::~SLESolverMPI()
-{
-    MPI::Finalize();
 }
 
 int SLESolverMPI::measureTimeWithRepeats(int argc, char** argv) const
@@ -82,7 +76,7 @@ double SLESolverMPI::compute(int argc, char** argv) const
 
         allGatherVecX(intermVec, curVecX, splitInfo);
         float normSq = 0;
-        MPI::COMM_WORLD.Allreduce(&normSqChunk, &normSq, 1, MPI::FLOAT, MPI::SUM);
+        mWorldComm.Allreduce(&normSqChunk, &normSq, 1, MPI::FLOAT, MPI::SUM);
 
         if (normSq < EPS * EPS * vecBNormSq)
         {
@@ -99,7 +93,7 @@ double SLESolverMPI::compute(int argc, char** argv) const
     double timeElapsed = endTime - beginTime;
     double minTimeElapsed;
 
-    MPI::COMM_WORLD.Reduce(&timeElapsed, &minTimeElapsed, 1, MPI::DOUBLE, MPI::MAX, 0);
+    mWorldComm.Reduce(&timeElapsed, &minTimeElapsed, 1, MPI::DOUBLE, MPI::MAX, 0);
 
     if (mRank == 0)
     {
@@ -161,7 +155,7 @@ std::vector<float> SLESolverMPI::scatterMatA(const std::vector<float>& matA, con
 
     std::vector<float> matAChunk(sizes[mRank]);
 
-    MPI::COMM_WORLD.Scatterv(
+    mWorldComm.Scatterv(
         matA.data(),
         sizes.data(),
         offsets.data(),
@@ -177,7 +171,7 @@ std::vector<float> SLESolverMPI::scatterMatA(const std::vector<float>& matA, con
 void SLESolverMPI::allGatherVecX(std::vector<float>& vecXChunk, std::vector<float>& vecXResult,
                                  const DataSplitInfo& linesSplitInfo) const
 {
-    MPI::COMM_WORLD.Allgatherv(
+    mWorldComm.Allgatherv(
         vecXChunk.data(),
         linesSplitInfo.sizes[mRank],
         MPI_FLOAT,

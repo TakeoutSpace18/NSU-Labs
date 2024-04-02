@@ -1,13 +1,13 @@
 #ifndef SLESOLVERMPI_H
 #define SLESOLVERMPI_H
 #include <vector>
+#include <mpi.h>
 
 
 class SLESolverMPI {
 public:
 
-    SLESolverMPI();
-    ~SLESolverMPI();
+    SLESolverMPI(const MPI::Comm& comm);
 
     int measureTimeWithRepeats(int argc, char** argv) const;
     double compute(int argc, char** argv) const;
@@ -28,6 +28,7 @@ private:
     static float scalarProduct(const float* a, const float* b, int N);
 
 private:
+    const MPI::Comm& mWorldComm;
     int mRank;
     int mWorldSize;
 };
