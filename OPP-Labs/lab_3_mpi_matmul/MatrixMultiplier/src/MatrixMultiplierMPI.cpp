@@ -9,21 +9,15 @@
 
 #include "VectorSerialization.hpp"
 
-MatrixMultiplierMPI::MatrixMultiplierMPI()
+MatrixMultiplierMPI::MatrixMultiplierMPI(const MPI::Comm& comm) : mCommWorld(comm)
 {
-    MPI::Init();
-    mWorldSize = MPI::COMM_WORLD.Get_size();
-    mProcRank = MPI::COMM_WORLD.Get_rank();
+    mWorldSize = mCommWorld.Get_size();
+    mProcRank = mCommWorld.Get_rank();
 
     int procNameLen;
     char procName[256];
     MPI::Get_processor_name(procName, procNameLen);
     std::cout << "Hello from " << procName << "\n";
-}
-
-MatrixMultiplierMPI::~MatrixMultiplierMPI()
-{
-    MPI::Finalize();
 }
 
 void MatrixMultiplierMPI::MultiplyFromFiles(

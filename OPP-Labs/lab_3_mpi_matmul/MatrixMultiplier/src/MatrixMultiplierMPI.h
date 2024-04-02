@@ -11,9 +11,7 @@ public:
     using ValueType = float;
     MPI::Datatype MPIValueType = MPI::FLOAT;
 
-    MatrixMultiplierMPI();
-
-    ~MatrixMultiplierMPI();
+    explicit MatrixMultiplierMPI(const MPI::Comm& comm);
 
     void MultiplyFromFiles(
         const std::string &matAFilename,
@@ -48,6 +46,7 @@ private:
         int n1, int n2, int n3);
 
 private:
+    const MPI::Comm& mCommWorld;
     int mProcRank;
     int mWorldSize;
     std::array<int, 2> mProcCoords;
