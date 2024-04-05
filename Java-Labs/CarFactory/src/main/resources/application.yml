@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: CarFactory
+
+logging:
+  level:
+    nsu.urdin.CarFactory: debug
+
+CarFactory:
+  EngineStorageCapacity: 10
+  EngineFabricationTime: 200
+
+  BodyStorageCapacity: 15
+  BodyFabricationTime: 100
+
+  AccessoriesStorageCapacity: 30
+  AccessoriesFabricationTime: 75
+
+  FinishedCarsStorageCapacity: 10
