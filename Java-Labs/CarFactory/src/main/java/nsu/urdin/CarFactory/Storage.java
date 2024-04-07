@@ -24,9 +24,13 @@ public class Storage<T> {
         return items.size();
     }
 
-    public synchronized void putItem(T item) throws InterruptedException {
+    public synchronized void putItem(T item) {
         while (items.size() >= capacity) {
-            wait();
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                log.error("Wait interrupted while putting item to \"{}\" storage", name);
+            }
         }
         items.add(item);
         notify();
@@ -34,9 +38,13 @@ public class Storage<T> {
         log.debug("Put {} to {}, current load: {}/{} items", item, name, getItemCount(), getCapacity());
     }
 
-    public synchronized T getItem() throws InterruptedException {
+    public synchronized T getItem() {
         while (items.isEmpty()) {
-            wait();
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                log.error("Wait interrupted while getting item from \"{}\" storage", name);
+            }
         }
         T result = items.remove(items.size() - 1);
         notify();

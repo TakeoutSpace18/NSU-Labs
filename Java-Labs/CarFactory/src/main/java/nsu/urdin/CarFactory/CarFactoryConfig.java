@@ -1,57 +1,24 @@
 package nsu.urdin.CarFactory;
 
-import nsu.urdin.CarFactory.components.Accessories;
-import nsu.urdin.CarFactory.components.Body;
-import nsu.urdin.CarFactory.components.Engine;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.env.Environment;
+import lombok.Getter;
 
-@Configuration
+@Getter
 public class CarFactoryConfig {
+    private int engineStorageCapacity = 10;
+    private int engineFabricationTime = 2000;
 
-    @Autowired
-    private Environment env;
+    private int bodyStorageCapacity = 15;
+    private int bodyFabricationTime = 100;
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private int accessoryStorageCapacity = 30;
+    private int accessoryFabricationTime = 75;
+    private int accessorySuppliersNumber = 3;
 
-    @Bean("engineStorage")
-    @Scope("singleton")
-    Storage<Engine> getEngineStorage() {
-        int capacity = Integer.parseInt(env.getProperty("CarFactory.EngineStorageCapacity"));
-        return new Storage<>("engineStorage", capacity);
-    }
+    private int finishedCarsStorageCapacity = 10;
 
-    @Bean("bodyStorage")
-    @Scope("singleton")
-    Storage<Body> getBodyStorage() {
-        int capacity = Integer.parseInt(env.getProperty("CarFactory.BodyStorageCapacity"));
-        return new Storage<>("bodyStorage", capacity);
-    }
-    @Bean("accessoriesStorage")
-    @Scope("singleton")
-    Storage<Accessories> getAccessoriesStorage() {
-        int capacity = Integer.parseInt(env.getProperty("CarFactory.AccessoriesStorageCapacity"));
-        return new Storage<>("accessoriesStorage", capacity);
-    }
+    private int workersNumber = 5;
 
-    @Bean
-    @Scope("singleton")
-    FinishedCarsStorage getFinishedCarsStorage() {
-        int capacity = Integer.parseInt(env.getProperty("CarFactory.FinishedCarsStorageCapacity"));
-        return new FinishedCarsStorage(capacity);
-    }
+    private int dealersNumber = 3;
+    private int dealerCarRequestDelay = 800;
 
-    @Bean
-    @Scope("singleton")
-    CarComponentSupplier<Engine> getEngineSupplier() {
-        int fabricationTime = Integer.parseInt(env.getProperty("CarFactory.EngineFabricationTime"));
-        return new CarComponentSupplier<>((Storage<Engine>)applicationContext.getBean("engineStorage"), fabricationTime, Engine.class);
-    }
 }
