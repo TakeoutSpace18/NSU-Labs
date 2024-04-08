@@ -127,7 +127,7 @@ void copy_file_backwards_at(int src_dirfd, const char *src_path, int dst_dirfd, 
         ssize_t bytes_read = 0;
         while (bytes_read < chunk_size) {
             ssize_t rlen;
-            if ((rlen = read(src_fd, buffer, chunk_size)) < 0) {
+            if ((rlen = read(src_fd, buffer + bytes_read, chunk_size - bytes_read)) < 0) {
                 perror("read()");
                 goto finish;
             }
@@ -139,7 +139,7 @@ void copy_file_backwards_at(int src_dirfd, const char *src_path, int dst_dirfd, 
         ssize_t bytes_written = 0;
         while (bytes_written < chunk_size) {
             ssize_t wlen;
-            if ((wlen = write(dst_fd, buffer, chunk_size)) < 0) {
+            if ((wlen = write(dst_fd, buffer + bytes_written, chunk_size - bytes_written)) < 0) {
                 perror("write()");
                 goto finish;
             }
