@@ -12,37 +12,19 @@
 constexpr float TAO = -0.01;
 constexpr float EPS = 1e-2;
 constexpr int N = 50 * 50;
-constexpr int MEASURE_REPEATS = 2;
 
 SLESolverMPI::SLESolverMPI(const MPI::Comm& comm) : mWorldComm(comm)
 {
     mWorldSize = mWorldComm.Get_size();
     mRank = mWorldComm.Get_rank();
-    char procName[MPI::MAX_PROCESSOR_NAME];
+    char procName[256];
     int procNameLen;
     MPI::Get_processor_name(procName, procNameLen);
     std::cout << "Hello from "<<  procName << "\n";
 }
 
-int SLESolverMPI::measureTimeWithRepeats(int argc, char** argv) const
+int SLESolverMPI::compute() const
 {
-    double minTime = std::numeric_limits<double>::max();
-    for (int i = 0; i < MEASURE_REPEATS; ++i)
-    {
-        minTime = std::min(minTime, compute(argc, argv));
-    }
-    if (mRank == 0)
-    {
-        std::ofstream out("timeElapsed.txt");
-        out << minTime;
-    }
-    return EXIT_SUCCESS;
-}
-
-double SLESolverMPI::compute(int argc, char** argv) const
-{
-    double beginTime = MPI::Wtime();
-
     DataSplitInfo splitInfo = generateLinesSplitInfo(N);
 
     // load and scatter matrix A
@@ -89,21 +71,14 @@ double SLESolverMPI::compute(int argc, char** argv) const
         }
     }
 
-    double endTime = MPI::Wtime();
-    double timeElapsed = endTime - beginTime;
-    double minTimeElapsed;
-
-    mWorldComm.Reduce(&timeElapsed, &minTimeElapsed, 1, MPI::DOUBLE, MPI::MAX, 0);
-
     if (mRank == 0)
     {
         saveData(curVecX, "foundVecX.bin");
         std::cout << "Finished!\n";
         std::cout << "Total iterations: " << iterCount << std::endl;
-        std::cout << "Time elapsed: " << minTimeElapsed << " seconds\n";
     }
 
-    return minTimeElapsed;
+    return EXIT_SUCCESS;
 }
 
 SLESolverMPI::DataSplitInfo SLESolverMPI::generateLinesSplitInfo(const int N) const

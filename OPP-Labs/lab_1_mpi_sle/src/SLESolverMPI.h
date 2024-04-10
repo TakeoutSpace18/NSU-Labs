@@ -10,7 +10,7 @@ public:
     SLESolverMPI(const MPI::Comm& comm);
 
     int measureTimeWithRepeats(int argc, char** argv) const;
-    double compute(int argc, char** argv) const;
+    int compute() const;
 
 private:
     struct DataSplitInfo {
