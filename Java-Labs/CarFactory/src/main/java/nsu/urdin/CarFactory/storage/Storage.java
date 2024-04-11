@@ -1,4 +1,4 @@
-package nsu.urdin.CarFactory;
+package nsu.urdin.CarFactory.storage;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -9,19 +9,36 @@ import java.util.List;
 @Slf4j
 public class Storage<T> {
     private String name;
-    private List<T> items;
+    private ArrayList<T> items;
     @Getter
-    private final int capacity;
+    private int capacity;
+
+    private List<StorageListener> listeners;
+
     public Storage(String name, int capacity) {
         this.name = name;
         this.capacity = capacity;
         items = new ArrayList<>(capacity);
+        listeners = new ArrayList<>();
 
         log.debug("Created \"{}\" storage, capacity = {}", name, capacity);
     }
 
-    public int getItemCount() {
+    public void setCapacity(int newCapacity) {
+        if (newCapacity < capacity) {
+            items.subList(newCapacity, items.size()).clear();
+        }
+        items.ensureCapacity(newCapacity);
+        this.capacity = newCapacity;
+        listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
+    }
+
+    public int getItemsCount() {
         return items.size();
+    }
+
+    public void addListener(StorageListener listener) {
+        listeners.add(listener);
     }
 
     public synchronized void putItem(T item) {
@@ -33,9 +50,10 @@ public class Storage<T> {
             }
         }
         items.add(item);
-        notify();
+        listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
+        log.debug("Put {} to {}, current load: {}/{} items", item, name, getItemsCount(), getCapacity());
 
-        log.debug("Put {} to {}, current load: {}/{} items", item, name, getItemCount(), getCapacity());
+        notify();
     }
 
     public synchronized T getItem() {
@@ -47,9 +65,10 @@ public class Storage<T> {
             }
         }
         T result = items.remove(items.size() - 1);
-        notify();
+        listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
+        log.debug("Got {} from {}, current load: {}/{} items", result, name, getItemsCount(), getCapacity());
 
-        log.debug("Got {} from {}, current load: {}/{} items", result, name, getItemCount(), getCapacity());
+        notify();
         return result;
     }
 }

@@ -1,6 +1,6 @@
-package nsu.urdin.CarFactory.components;
+package nsu.urdin.CarFactory.entity.components;
 
-import lombok.Getter;
+import nsu.urdin.CarFactory.entity.CarComponent;
 
 public class Engine extends CarComponent {
     @Override

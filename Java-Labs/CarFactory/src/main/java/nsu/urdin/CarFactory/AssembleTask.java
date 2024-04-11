@@ -1,6 +1,8 @@
 package nsu.urdin.CarFactory;
 
 import lombok.extern.slf4j.Slf4j;
+import nsu.urdin.CarFactory.entity.Car;
+import nsu.urdin.CarFactory.storage.Storages;
 
 @Slf4j
 public class AssembleTask implements Runnable {

@@ -1,10 +1,10 @@
-package nsu.urdin.CarFactory;
+package nsu.urdin.CarFactory.entity;
 
 import lombok.Builder;
 import lombok.Getter;
-import nsu.urdin.CarFactory.components.Accessories;
-import nsu.urdin.CarFactory.components.Body;
-import nsu.urdin.CarFactory.components.Engine;
+import nsu.urdin.CarFactory.entity.components.Accessories;
+import nsu.urdin.CarFactory.entity.components.Body;
+import nsu.urdin.CarFactory.entity.components.Engine;
 
 import java.util.UUID;
 

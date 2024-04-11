@@ -1,9 +1,10 @@
-package nsu.urdin.CarFactory;
+package nsu.urdin.CarFactory.storage;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import nsu.urdin.CarFactory.FactoryService;
+import nsu.urdin.CarFactory.events.CarSellEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Controller;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Controller;
 public class CarStorageController {
 
     @Autowired
-    Factory factory;
+    FactoryService factoryService;
 
 
     @EventListener
@@ -22,9 +23,9 @@ public class CarStorageController {
 
     @PostConstruct
     void requestStorageFillup() {
-        var finishedCarsStorage = factory.getStorages().getFinishedCars();
-        int carsToRequest = finishedCarsStorage.getCapacity() - finishedCarsStorage.getItemCount();
-        factory.requestCarAssembly(carsToRequest);
+        var finishedCarsStorage = factoryService.getStorages().getFinishedCars();
+        int carsToRequest = finishedCarsStorage.getCapacity() - finishedCarsStorage.getItemsCount();
+        factoryService.requestCarAssembly(carsToRequest);
         log.debug("Requesting assembly of {} cars", carsToRequest);
     }
 

@@ -1,4 +1,4 @@
-package nsu.urdin.CarFactory.components;
+package nsu.urdin.CarFactory.entity;
 
 import lombok.Getter;
 

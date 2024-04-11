@@ -1,9 +1,10 @@
-package nsu.urdin.CarFactory;
+package nsu.urdin.CarFactory.storage;
 
 import lombok.Getter;
-import nsu.urdin.CarFactory.components.Accessories;
-import nsu.urdin.CarFactory.components.Body;
-import nsu.urdin.CarFactory.components.Engine;
+import nsu.urdin.CarFactory.CarFactoryConfig;
+import nsu.urdin.CarFactory.entity.components.Accessories;
+import nsu.urdin.CarFactory.entity.components.Body;
+import nsu.urdin.CarFactory.entity.components.Engine;
 
 @Getter
 public class Storages {
@@ -13,6 +14,7 @@ public class Storages {
     private Storage<Body> bodies;
     private Storage<Accessories> accessories;
     private CarStorage finishedCars;
+
     public Storages() {
         // TODO: replace by bean
         config = new CarFactoryConfig();
