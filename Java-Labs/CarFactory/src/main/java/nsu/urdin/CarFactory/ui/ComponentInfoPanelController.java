@@ -19,6 +19,9 @@ public abstract class ComponentInfoPanelController implements StorageListener {
     private Text panelTitle;
 
     @FXML
+    private Text producedCountText;
+
+    @FXML
     private TextField storageCapacityInput;
 
     @FXML
@@ -71,29 +74,31 @@ public abstract class ComponentInfoPanelController implements StorageListener {
 
     @FXML
     protected void initialize() {
-        panelTitle.setText(getPanelTitle());
         fabricationTimeInput.setText(String.valueOf(getComponentFabricationTime()));
         storageCapacityInput.setText(String.valueOf(getStorageCapacity()));
         storageStatusText.setText("(" + getStorageItemsCount() + "/" + getStorageCapacity() + ")");
-        suppliersCountInput.setText(String.valueOf(getSuppliersCount()));
+        if (suppliersCountInput != null) {
+            suppliersCountInput.setText(String.valueOf(getSuppliersCount()));
+        }
         loadPercentageProgressBar.setProgress((double) getStorageItemsCount() / getStorageCapacity());
-
+        producedCountText.setText(String.valueOf(getTotalProducedComponents()));
     }
 
     @Override
-    public void onStorageStateChange(int itemsCount, int capacity) {
+    public synchronized void onStorageStateChange(int itemsCount, int capacity) {
         storageStatusText.setText("(" + itemsCount + "/" + capacity + ")");
         loadPercentageProgressBar.setProgress((double) itemsCount / capacity);
         storageCapacityInput.setText(String.valueOf(capacity));
+        producedCountText.setText(String.valueOf(getTotalProducedComponents()));
     }
 
     protected abstract void setComponentFabricationTime(int fabricationTime);
     protected abstract void setStorageCapacity(int capacity);
     protected abstract void setSuppliersCount(int suppliersCount);
 
-    protected abstract String getPanelTitle();
     protected abstract int getStorageCapacity();
     protected abstract int getStorageItemsCount();
     protected abstract int getComponentFabricationTime();
     protected abstract int getSuppliersCount();
+    protected abstract int getTotalProducedComponents();
 }

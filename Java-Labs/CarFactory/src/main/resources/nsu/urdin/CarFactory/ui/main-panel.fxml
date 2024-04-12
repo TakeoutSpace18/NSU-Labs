@@ -6,9 +6,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="723.0" prefWidth="404.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.CarFactory.ui.MainPanelController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="970.0" prefWidth="404.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.CarFactory.ui.MainPanelController">
    <children>
-      <VBox prefHeight="643.0" prefWidth="405.0">
+      <VBox prefHeight="1016.0" prefWidth="405.0">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Car Factory" textAlignment="CENTER" wrappingWidth="392.4282760620117">
                <font>
@@ -18,6 +18,7 @@
             <fx:include fx:id="enginePanel" source="engine-info-panel.fxml" />
             <fx:include fx:id="bodyPanel" source="body-info-panel.fxml" />
             <fx:include fx:id="accessoriesPanel" source="accessories-info-panel.fxml" />
+            <fx:include fx:id="sellingPanel" source="selling-info-panel.fxml" />
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

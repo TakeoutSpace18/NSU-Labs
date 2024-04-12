@@ -8,8 +8,8 @@ import nsu.urdin.CarFactory.storage.Storage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@AllArgsConstructor
 @Slf4j
 public class Supplier<T extends CarComponent> implements Runnable {
     private Storage<T> targetStorage;
@@ -17,14 +17,31 @@ public class Supplier<T extends CarComponent> implements Runnable {
     private int fabricationTime;
     Class<T> componentClass;
     private final String name;
+    @Getter
+    private int totalComponentsProduced;
+    private AtomicBoolean isRunning;
+
+    public Supplier(Storage<T> targetStorage, int fabricationTime, Class<T> componentClass, String name) {
+        this.name = name;
+        this.componentClass = componentClass;
+        this.fabricationTime = fabricationTime;
+        this.targetStorage = targetStorage;
+        this.totalComponentsProduced = 0;
+        this.isRunning = new AtomicBoolean(false);
+
+        log.debug("Created \"{}\" supplier, fabricationTime = {}", name, fabricationTime);
+    }
 
     @Override
     public void run() {
+        isRunning = new AtomicBoolean(true);
+
         try {
             // initial delay to randomize among other suppliers
             Thread.sleep(new Random().nextInt(fabricationTime));
-            while (true) {
+            while (isRunning.get()) {
                 Thread.sleep(fabricationTime);
+                totalComponentsProduced++;
                 targetStorage.putItem(componentClass.getDeclaredConstructor().newInstance());
             }
         } catch (InterruptedException e) {
@@ -36,7 +53,12 @@ public class Supplier<T extends CarComponent> implements Runnable {
     }
 
     public void setFabricationTime(int fabricationTime) {
-        log.info("Setting {} fabrication time to {}", name, fabricationTime);
+        log.debug("Setting {} fabrication time to {}", name, fabricationTime);
         this.fabricationTime = fabricationTime;
+    }
+
+    public void stop() {
+
+        isRunning.set(false);
     }
 }

@@ -14,4 +14,6 @@ public class MainPanelController {
     BodyInfoPanelController bodyPanelController;
     @FXML
     AccessoriesInfoPanelController accessoriesPanelController;
+    @FXML
+    SellingInfoPanelController sellingPanelController;
 }

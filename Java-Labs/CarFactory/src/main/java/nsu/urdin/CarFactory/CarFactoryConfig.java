@@ -10,9 +10,9 @@ public class CarFactoryConfig {
     private int bodyStorageCapacity = 15;
     private int bodyFabricationTime = 100;
 
-    private int accessoryStorageCapacity = 30;
+    private int accessoryStorageCapacity = 300;
     private int accessoryFabricationTime = 75;
-    private int accessorySuppliersNumber = 3;
+    private int accessorySuppliersNumber = 1;
 
     private int finishedCarsStorageCapacity = 10;
 

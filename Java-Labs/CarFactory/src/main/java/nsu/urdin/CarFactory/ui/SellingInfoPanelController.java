@@ -4,59 +4,59 @@ import net.rgielen.fxweaver.core.FxmlView;
 import nsu.urdin.CarFactory.FactoryService;
 import org.springframework.stereotype.Component;
 
-@FxmlView("accessories-info-panel.fxml")
+@FxmlView("selling-info-panel.fxml")
 @Component
-public class AccessoriesInfoPanelController extends ComponentInfoPanelController {
+public class SellingInfoPanelController extends ComponentInfoPanelController {
 
     final FactoryService factoryService;
 
-    public AccessoriesInfoPanelController(FactoryService factoryService) {
+    public SellingInfoPanelController(FactoryService factoryService) {
         this.factoryService = factoryService;
     }
 
     @Override
     protected void initialize() {
         super.initialize();
-        factoryService.getStorages().getAccessories().addListener(this);
+        factoryService.getStorages().getEngines().addListener(this);
     }
 
     @Override
     protected void setComponentFabricationTime(int fabricationTime) {
-        factoryService.getSuppliers().setAccessoriesFabricationTime(fabricationTime);
+        factoryService.getDealers().setCarRequestDelay(fabricationTime);
     }
 
     @Override
     protected void setStorageCapacity(int capacity) {
-        factoryService.getStorages().getAccessories().setCapacity(capacity);
+        factoryService.getStorages().getFinishedCars().setCapacity(capacity);
     }
 
     @Override
     protected void setSuppliersCount(int suppliersCount) {
-        factoryService.getSuppliers().setAccessoriesSuppliersCount(suppliersCount);
+        factoryService.getDealers().setDealersCount(suppliersCount);
     }
 
     @Override
     protected int getStorageCapacity() {
-        return factoryService.getStorages().getAccessories().getCapacity();
+        return factoryService.getStorages().getFinishedCars().getCapacity();
     }
 
     @Override
     protected int getStorageItemsCount() {
-        return factoryService.getStorages().getAccessories().getItemsCount();
+        return factoryService.getStorages().getFinishedCars().getItemsCount();
     }
 
     @Override
     protected int getComponentFabricationTime() {
-        return factoryService.getSuppliers().getAccessoriesFabricationTime();
+        return factoryService.getDealers().getCarRequestDelay();
     }
 
     @Override
     protected int getSuppliersCount() {
-        return factoryService.getSuppliers().getAccessoriesSuppliersCount();
+        return factoryService.getDealers().getDealersCount();
     }
 
     @Override
     protected int getTotalProducedComponents() {
-        return factoryService.getStorages().getAccessories().getItemsCount();
+        return factoryService.getDealers().getTotalCarsSold();
     }
 }

@@ -56,7 +56,7 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected String getPanelTitle() {
-        return "Engine";
+    protected int getTotalProducedComponents() {
+        return factoryService.getStorages().getEngines().getItemsCount();
     }
 }

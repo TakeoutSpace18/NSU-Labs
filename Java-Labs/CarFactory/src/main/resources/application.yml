@@ -15,5 +15,6 @@ CarFactory:
 
   AccessoriesStorageCapacity: 30
   AccessoriesFabricationTime: 75
+  AccessoriesSuppliersCount: 3
 
   FinishedCarsStorageCapacity: 10

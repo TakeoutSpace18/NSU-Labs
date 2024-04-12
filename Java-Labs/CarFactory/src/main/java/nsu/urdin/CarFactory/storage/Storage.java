@@ -39,6 +39,7 @@ public class Storage<T> {
 
     public void addListener(StorageListener listener) {
         listeners.add(listener);
+        listener.onStorageStateChange(getItemsCount(), getCapacity());
     }
 
     public synchronized void putItem(T item) {

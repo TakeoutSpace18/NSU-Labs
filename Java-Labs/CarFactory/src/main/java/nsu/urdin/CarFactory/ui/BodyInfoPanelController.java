@@ -56,7 +56,7 @@ public class BodyInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected String getPanelTitle() {
-        return "Body";
+    protected int getTotalProducedComponents() {
+        return factoryService.getSuppliers().getBodyFabricationTime();
     }
 }
