@@ -17,46 +17,46 @@ public class SellingInfoPanelController extends ComponentInfoPanelController {
     @Override
     protected void initialize() {
         super.initialize();
-        factoryService.getStorages().getEngines().addListener(this);
+        factoryService.getStoragesController().getFinishedCars().addListener(this);
     }
 
     @Override
     protected void setComponentFabricationTime(int fabricationTime) {
-        factoryService.getDealers().setCarRequestDelay(fabricationTime);
+        factoryService.getDealersController().setCarRequestDelay(fabricationTime);
     }
 
     @Override
     protected void setStorageCapacity(int capacity) {
-        factoryService.getStorages().getFinishedCars().setCapacity(capacity);
+        factoryService.getStoragesController().getFinishedCars().setCapacity(capacity);
     }
 
     @Override
     protected void setSuppliersCount(int suppliersCount) {
-        factoryService.getDealers().setDealersCount(suppliersCount);
+        factoryService.getDealersController().setDealersCount(suppliersCount);
     }
 
     @Override
     protected int getStorageCapacity() {
-        return factoryService.getStorages().getFinishedCars().getCapacity();
+        return factoryService.getStoragesController().getFinishedCars().getCapacity();
     }
 
     @Override
     protected int getStorageItemsCount() {
-        return factoryService.getStorages().getFinishedCars().getItemsCount();
+        return factoryService.getStoragesController().getFinishedCars().getItemsCount();
     }
 
     @Override
     protected int getComponentFabricationTime() {
-        return factoryService.getDealers().getCarRequestDelay();
+        return factoryService.getDealersController().getCarRequestDelay();
     }
 
     @Override
     protected int getSuppliersCount() {
-        return factoryService.getDealers().getDealersCount();
+        return factoryService.getDealersController().getDealersCount();
     }
 
     @Override
     protected int getTotalProducedComponents() {
-        return factoryService.getDealers().getTotalCarsSold();
+        return factoryService.getDealersController().getTotalCarsSold();
     }
 }

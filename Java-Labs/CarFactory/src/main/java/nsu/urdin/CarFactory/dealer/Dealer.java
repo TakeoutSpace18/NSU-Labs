@@ -4,22 +4,22 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.CarFactory.entity.Car;
-import nsu.urdin.CarFactory.storage.CarStorage;
+import nsu.urdin.CarFactory.storage.Storage;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class Dealer implements Runnable {
-    private final CarStorage carStorage;
+    private final Storage<Car> carStorage;
     @Setter
     private int carRequestDelay;
     private final String name;
-    private AtomicBoolean isRunning;
+    private final AtomicBoolean isRunning;
     @Getter
     private int totalCarsSold;
 
-    public Dealer(String name, CarStorage storage, int carRequestDelay) {
+    public Dealer(String name, Storage<Car> storage, int carRequestDelay) {
         this.carStorage = storage;
         this.carRequestDelay = carRequestDelay;
         this.name = name;

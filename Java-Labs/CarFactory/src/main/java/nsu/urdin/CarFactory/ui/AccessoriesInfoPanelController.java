@@ -17,46 +17,46 @@ public class AccessoriesInfoPanelController extends ComponentInfoPanelController
     @Override
     protected void initialize() {
         super.initialize();
-        factoryService.getStorages().getAccessories().addListener(this);
+        factoryService.getStoragesController().getAccessories().addListener(this);
     }
 
     @Override
     protected void setComponentFabricationTime(int fabricationTime) {
-        factoryService.getSuppliers().setAccessoriesFabricationTime(fabricationTime);
+        factoryService.getSuppliersController().setAccessoriesFabricationTime(fabricationTime);
     }
 
     @Override
     protected void setStorageCapacity(int capacity) {
-        factoryService.getStorages().getAccessories().setCapacity(capacity);
+        factoryService.getStoragesController().getAccessories().setCapacity(capacity);
     }
 
     @Override
     protected void setSuppliersCount(int suppliersCount) {
-        factoryService.getSuppliers().setAccessoriesSuppliersCount(suppliersCount);
+        factoryService.getSuppliersController().setAccessoriesSuppliersCount(suppliersCount);
     }
 
     @Override
     protected int getStorageCapacity() {
-        return factoryService.getStorages().getAccessories().getCapacity();
+        return factoryService.getStoragesController().getAccessories().getCapacity();
     }
 
     @Override
     protected int getStorageItemsCount() {
-        return factoryService.getStorages().getAccessories().getItemsCount();
+        return factoryService.getStoragesController().getAccessories().getItemsCount();
     }
 
     @Override
     protected int getComponentFabricationTime() {
-        return factoryService.getSuppliers().getAccessoriesFabricationTime();
+        return factoryService.getSuppliersController().getAccessoriesFabricationTime();
     }
 
     @Override
     protected int getSuppliersCount() {
-        return factoryService.getSuppliers().getAccessoriesSuppliersCount();
+        return factoryService.getSuppliersController().getAccessoriesSuppliersCount();
     }
 
     @Override
     protected int getTotalProducedComponents() {
-        return factoryService.getStorages().getAccessories().getItemsCount();
+        return factoryService.getSuppliersController().getTotalAccessoriesProduced();
     }
 }

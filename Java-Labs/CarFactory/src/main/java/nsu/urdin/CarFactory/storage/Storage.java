@@ -8,12 +8,12 @@ import java.util.List;
 
 @Slf4j
 public class Storage<T> {
-    private String name;
-    private ArrayList<T> items;
+    private final String name;
+    private final ArrayList<T> items;
     @Getter
     private int capacity;
 
-    private List<StorageListener> listeners;
+    private final List<StorageListener> listeners;
 
     public Storage(String name, int capacity) {
         this.name = name;
@@ -24,13 +24,14 @@ public class Storage<T> {
         log.debug("Created \"{}\" storage, capacity = {}", name, capacity);
     }
 
-    public void setCapacity(int newCapacity) {
-        if (newCapacity < capacity) {
+    public synchronized void setCapacity(int newCapacity) {
+        if (newCapacity < items.size()) {
             items.subList(newCapacity, items.size()).clear();
         }
         items.ensureCapacity(newCapacity);
         this.capacity = newCapacity;
         listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
+        notify();
     }
 
     public int getItemsCount() {

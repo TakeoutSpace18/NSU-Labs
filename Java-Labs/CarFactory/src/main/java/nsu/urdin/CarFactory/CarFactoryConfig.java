@@ -1,24 +1,25 @@
 package nsu.urdin.CarFactory;
 
-import lombok.Getter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
-@Getter
-public class CarFactoryConfig {
-    private int engineStorageCapacity = 10;
-    private int engineFabricationTime = 2000;
+@Validated
+@ConfigurationProperties(prefix = "carfactory")
+public record CarFactoryConfig (
+    int engineStorageCapacity,
+    int engineFabricationTime,
 
-    private int bodyStorageCapacity = 15;
-    private int bodyFabricationTime = 100;
+    int bodyStorageCapacity,
+    int bodyFabricationTime,
 
-    private int accessoryStorageCapacity = 300;
-    private int accessoryFabricationTime = 75;
-    private int accessorySuppliersNumber = 1;
+    int accessoriesStorageCapacity,
+    int accessoriesFabricationTime,
+    int accessoriesSuppliersCount,
 
-    private int finishedCarsStorageCapacity = 10;
+    int finishedCarsStorageCapacity,
 
-    private int workersNumber = 5;
+    int workersCount,
 
-    private int dealersNumber = 3;
-    private int dealerCarRequestDelay = 800;
-
-}
+    int dealersCount,
+    int dealerCarRequestDelay
+) {}

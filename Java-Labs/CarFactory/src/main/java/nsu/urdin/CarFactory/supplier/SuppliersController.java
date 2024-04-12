@@ -2,19 +2,18 @@ package nsu.urdin.CarFactory.supplier;
 
 import lombok.Getter;
 import nsu.urdin.CarFactory.CarFactoryConfig;
-import nsu.urdin.CarFactory.FactoryService;
 import nsu.urdin.CarFactory.entity.components.Accessories;
 import nsu.urdin.CarFactory.entity.components.Body;
 import nsu.urdin.CarFactory.entity.components.Engine;
-import nsu.urdin.CarFactory.storage.Storages;
+import nsu.urdin.CarFactory.storage.StoragesController;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Suppliers {
-    Storages storages;
+public class SuppliersController {
+    StoragesController storagesController;
     CarFactoryConfig config;
 
     Supplier<Engine> engineSupplier;
@@ -26,19 +25,19 @@ public class Suppliers {
 
     ExecutorService workers;
 
-    public Suppliers(Storages storages, CarFactoryConfig config) {
-        this.storages = storages;
+    public SuppliersController(StoragesController storagesController, CarFactoryConfig config) {
+        this.storagesController = storagesController;
         this.config = config;
 
-        engineSupplier = new Supplier<>(storages.getEngines(), config.getEngineFabricationTime(), Engine.class, "engineSupplier");
-        bodySupplier = new Supplier<>(storages.getBodies(), config.getBodyFabricationTime(), Body.class, "bodySupplier");
+        engineSupplier = new Supplier<>(storagesController.getEngines(), config.engineFabricationTime(), Engine.class, "engineSupplier");
+        bodySupplier = new Supplier<>(storagesController.getBodies(), config.bodyFabricationTime(), Body.class, "bodySupplier");
 
         accessoriesSuppliers = new ArrayList<>();
-        accessoriesFabricationTime = config.getAccessoryFabricationTime();
+        accessoriesFabricationTime = config.accessoriesFabricationTime();
 
-        for (int i = 0; i < config.getAccessorySuppliersNumber(); ++i) {
+        for (int i = 0; i < config.accessoriesSuppliersCount(); ++i) {
             String name = "AccessorySupplier_" + i;
-            accessoriesSuppliers.add(new Supplier<>(storages.getAccessories(), accessoriesFabricationTime, Accessories.class, name));
+            accessoriesSuppliers.add(new Supplier<>(storagesController.getAccessories(), accessoriesFabricationTime, Accessories.class, name));
         }
     }
 
@@ -83,7 +82,7 @@ public class Suppliers {
         else {
             for (int i = accessoriesSuppliers.size(); i < suppliersCount; ++i) {
                 String name = "AccessorySupplier_" + i;
-                accessoriesSuppliers.add(new Supplier<>(storages.getAccessories(), accessoriesFabricationTime, Accessories.class, name));
+                accessoriesSuppliers.add(new Supplier<>(storagesController.getAccessories(), accessoriesFabricationTime, Accessories.class, name));
                 workers.execute(accessoriesSuppliers.get(i));
             }
         }
@@ -93,7 +92,7 @@ public class Suppliers {
         return engineSupplier.getTotalComponentsProduced();
     }
 
-    public int getTotalBodyProduced() {
+    public int getTotalBodiesProduced() {
         return bodySupplier.getTotalComponentsProduced();
     }
 

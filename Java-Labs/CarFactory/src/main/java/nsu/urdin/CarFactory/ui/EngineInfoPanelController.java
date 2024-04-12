@@ -17,17 +17,17 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
     @Override
     protected void initialize() {
         super.initialize();
-        factoryService.getStorages().getEngines().addListener(this);
+        factoryService.getStoragesController().getEngines().addListener(this);
     }
 
     @Override
     protected void setComponentFabricationTime(int fabricationTime) {
-        factoryService.getSuppliers().setEngineFabricationTime(fabricationTime);
+        factoryService.getSuppliersController().setEngineFabricationTime(fabricationTime);
     }
 
     @Override
     protected void setStorageCapacity(int capacity) {
-        factoryService.getStorages().getEngines().setCapacity(capacity);
+        factoryService.getStoragesController().getEngines().setCapacity(capacity);
     }
 
     @Override
@@ -37,17 +37,17 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
 
     @Override
     protected int getStorageCapacity() {
-        return factoryService.getStorages().getEngines().getCapacity();
+        return factoryService.getStoragesController().getEngines().getCapacity();
     }
 
     @Override
     protected int getStorageItemsCount() {
-        return factoryService.getStorages().getEngines().getItemsCount();
+        return factoryService.getStoragesController().getEngines().getItemsCount();
     }
 
     @Override
     protected int getComponentFabricationTime() {
-        return factoryService.getSuppliers().getEngineFabricationTime();
+        return factoryService.getSuppliersController().getEngineFabricationTime();
     }
 
     @Override
@@ -57,6 +57,6 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
 
     @Override
     protected int getTotalProducedComponents() {
-        return factoryService.getStorages().getEngines().getItemsCount();
+        return factoryService.getSuppliersController().getTotalEnginesProduced();
     }
 }

@@ -17,17 +17,17 @@ public class BodyInfoPanelController extends ComponentInfoPanelController {
     @Override
     protected void initialize() {
         super.initialize();
-        factoryService.getStorages().getBodies().addListener(this);
+        factoryService.getStoragesController().getBodies().addListener(this);
     }
 
     @Override
     protected void setComponentFabricationTime(int fabricationTime) {
-        factoryService.getSuppliers().setBodyFabricationTime(fabricationTime);
+        factoryService.getSuppliersController().setBodyFabricationTime(fabricationTime);
     }
 
     @Override
     protected void setStorageCapacity(int capacity) {
-        factoryService.getStorages().getBodies().setCapacity(capacity);
+        factoryService.getStoragesController().getBodies().setCapacity(capacity);
     }
 
     @Override
@@ -37,17 +37,17 @@ public class BodyInfoPanelController extends ComponentInfoPanelController {
 
     @Override
     protected int getStorageCapacity() {
-        return factoryService.getStorages().getBodies().getCapacity();
+        return factoryService.getStoragesController().getBodies().getCapacity();
     }
 
     @Override
     protected int getStorageItemsCount() {
-        return factoryService.getStorages().getBodies().getItemsCount();
+        return factoryService.getStoragesController().getBodies().getItemsCount();
     }
 
     @Override
     protected int getComponentFabricationTime() {
-        return factoryService.getSuppliers().getBodyFabricationTime();
+        return factoryService.getSuppliersController().getBodyFabricationTime();
     }
 
     @Override
@@ -57,6 +57,6 @@ public class BodyInfoPanelController extends ComponentInfoPanelController {
 
     @Override
     protected int getTotalProducedComponents() {
-        return factoryService.getSuppliers().getBodyFabricationTime();
+        return factoryService.getSuppliersController().getTotalBodiesProduced();
     }
 }

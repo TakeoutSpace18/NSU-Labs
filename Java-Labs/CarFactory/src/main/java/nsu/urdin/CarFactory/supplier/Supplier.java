@@ -1,9 +1,8 @@
 package nsu.urdin.CarFactory.supplier;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import nsu.urdin.CarFactory.entity.CarComponent;
+import nsu.urdin.CarFactory.entity.components.CarComponent;
 import nsu.urdin.CarFactory.storage.Storage;
 
 import java.lang.reflect.InvocationTargetException;

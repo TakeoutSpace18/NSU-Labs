@@ -1,33 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.text.Text?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER_LEFT" prefHeight="227.0" prefWidth="330.0" spacing="7.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.CarFactory.ui.SellingInfoPanelController">
+<VBox alignment="CENTER_LEFT" prefHeight="221.0" prefWidth="432.0" spacing="7.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.CarFactory.ui.SellingInfoPanelController">
    <children>
-      <Text fx:id="panelTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Finished cars storage" underline="true" wrappingWidth="308.31029510498047">
+      <Text fx:id="panelTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Selling" underline="true" wrappingWidth="308.31029510498047">
          <font>
             <Font name="System Bold Italic" size="20.0" />
          </font>
       </Text>
       <HBox alignment="CENTER_LEFT" prefHeight="31.0" prefWidth="319.0" spacing="5.0">
          <children>
-            <ProgressBar id="engineProgressBar" fx:id="loadPercentageProgressBar" prefHeight="24.0" prefWidth="265.0" progress="0.0" />
-            <Text id="engineStorageStatusText" fx:id="storageStatusText" strokeType="OUTSIDE" strokeWidth="0.0" text="(0/100)" textAlignment="CENTER" wrappingWidth="48.380019426345825" />
+            <ProgressBar id="ProgressBar" fx:id="loadPercentageProgressBar" prefHeight="24.0" prefWidth="316.0" progress="0.0" />
+            <Text id="StorageStatusText" fx:id="storageStatusText" strokeType="OUTSIDE" strokeWidth="0.0" text="(0/100)" textAlignment="CENTER" wrappingWidth="100.04671329259872" />
          </children>
       </HBox>
-      <GridPane prefHeight="132.0" prefWidth="319.0">
+      <GridPane prefHeight="136.0" prefWidth="421.0">
          <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="154.0" minWidth="10.0" prefWidth="113.33333333333333" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="246.3333485921224" minWidth="10.0" prefWidth="206.0" />
          </columnConstraints>
          <rowConstraints>
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -38,16 +32,19 @@
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Capacity:" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Car request delay:" GridPane.rowIndex="1" />
-            <TextField id="engineCapacityInput" fx:id="storageCapacityInput" onAction="#onCapacityInputAction" GridPane.columnIndex="1" />
-            <TextField id="engineFabricationTimeInput" fx:id="fabricationTimeInput" onAction="#onFabricationTimeInputAction" prefWidth="159.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Dealers count:" wrappingWidth="133.7096176147461" GridPane.rowIndex="2" />
-            <TextField fx:id="suppliersCountInput" onAction="#onSuppliersCountInputAction" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Total cars produced:" GridPane.rowIndex="3">
+            <TextField id="CapacityInput" fx:id="storageCapacityInput" onAction="#onCapacityInputAction" GridPane.columnIndex="1" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Total cars sold:" GridPane.rowIndex="3">
                <font>
                   <Font name="System Bold" size="13.0" />
                </font>
             </Text>
-            <Text fx:id="producedCountText" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;N&gt;" textAlignment="CENTER" wrappingWidth="148.7519989013672" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Text fx:id="producedCountText" strokeType="OUTSIDE" strokeWidth="0.0" text="&lt;N&gt;" textAlignment="CENTER" wrappingWidth="243.7519989013672" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font></Text>
+            <Slider fx:id="timeInput" majorTickUnit="1000.0" max="5000.0" showTickLabels="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Suppliers count:" GridPane.rowIndex="2" />
+            <TextField fx:id="countInput" onAction="#onCountInputAction" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
    </children>

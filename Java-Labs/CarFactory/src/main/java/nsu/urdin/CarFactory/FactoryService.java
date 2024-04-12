@@ -1,41 +1,48 @@
 package nsu.urdin.CarFactory;
 
 import lombok.Getter;
-import nsu.urdin.CarFactory.dealer.Dealer;
-import nsu.urdin.CarFactory.dealer.Dealers;
-import nsu.urdin.CarFactory.storage.Storages;
-import nsu.urdin.CarFactory.supplier.Suppliers;
+import nsu.urdin.CarFactory.dealer.DealersController;
+import nsu.urdin.CarFactory.storage.StoragesController;
+import nsu.urdin.CarFactory.supplier.SuppliersController;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @Service
 public class FactoryService {
-    CarFactoryConfig config;
-    @Getter
-    Storages storages;
-    @Getter
-    Suppliers suppliers;
-    @Getter
-    Dealers dealers;
+    private final CarFactoryConfig config;
 
-    ExecutorService workersPool;
+    @Getter
+    private final StoragesController storagesController;
+    @Getter
+    private final SuppliersController suppliersController;
+    @Getter
+    private final DealersController dealersController;
 
-    public FactoryService() {
-        config = new CarFactoryConfig();
-        storages = new Storages();
-        suppliers = new Suppliers(storages, config);
-        dealers = new Dealers(storages, config);
-        workersPool = Executors.newFixedThreadPool(config.getWorkersNumber());
+    ThreadPoolExecutor workersPool;
 
-        suppliers.start();
+    @Autowired
+    public FactoryService(CarFactoryConfig config) {
+        this.config = config;
+        storagesController = new StoragesController(config);
+        suppliersController = new SuppliersController(storagesController, config);
+        dealersController = new DealersController(storagesController, config);
+        workersPool = new ThreadPoolExecutor(config.workersCount(),
+                config.workersCount(), 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+        dealersController.start();
+        suppliersController.start();
     }
 
     public void requestCarAssembly(int carsCount) {
         for (int i = 0; i < carsCount; ++i) {
-            workersPool.submit(new AssembleTask(storages));
+            workersPool.submit(new AssembleTask(storagesController));
         }
+    }
+
+    public int getPendingAssemblyTasksCount() {
+        return workersPool.getQueue().size();
     }
 
 }

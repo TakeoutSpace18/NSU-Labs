@@ -16,4 +16,5 @@ public class MainPanelController {
     AccessoriesInfoPanelController accessoriesPanelController;
     @FXML
     SellingInfoPanelController sellingPanelController;
+
 }
