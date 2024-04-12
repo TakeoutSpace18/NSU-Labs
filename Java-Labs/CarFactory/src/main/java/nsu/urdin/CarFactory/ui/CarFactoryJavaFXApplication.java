@@ -2,17 +2,18 @@ package nsu.urdin.CarFactory.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import net.rgielen.fxweaver.core.FxWeaver;
 import nsu.urdin.CarFactory.CarFactorySpringBootApplication;
+import nsu.urdin.CarFactory.FactoryService;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 public class CarFactoryJavaFXApplication extends Application {
     private ConfigurableApplicationContext applicationContext;
+
 
     @Override
     public void init() {
@@ -25,6 +26,8 @@ public class CarFactoryJavaFXApplication extends Application {
 
     @Override
     public void stop() throws Exception {
+        FactoryService factoryService = applicationContext.getBean(FactoryService.class);
+        factoryService.shutdown();
         this.applicationContext.close();
         Platform.exit();
     }
@@ -35,6 +38,7 @@ public class CarFactoryJavaFXApplication extends Application {
         Parent root = fxWeaver.loadView(MainPanelController.class);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
+
         primaryStage.show();
     }
 }

@@ -1,6 +1,7 @@
 package nsu.urdin.CarFactory;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.CarFactory.dealer.DealersController;
 import nsu.urdin.CarFactory.storage.StoragesController;
 import nsu.urdin.CarFactory.supplier.SuppliersController;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.*;
 
+@Slf4j
 @Service
 public class FactoryService {
     private final CarFactoryConfig config;
@@ -45,4 +47,10 @@ public class FactoryService {
         return workersPool.getQueue().size();
     }
 
+    public void shutdown() throws InterruptedException {
+        log.info("Shutting down the factory...");
+        workersPool.shutdownNow();
+        suppliersController.shutdown();
+        dealersController.shutdown();
+    }
 }

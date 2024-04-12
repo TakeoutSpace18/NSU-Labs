@@ -38,14 +38,21 @@ public class Dealer implements Runnable {
             Thread.sleep(new Random().nextInt(carRequestDelay));
             while (true) {
                 Car car = carStorage.getItem();
+                if (car == null) {
+                    // null car means that the thread was interrupted during wait
+                    return;
+                }
+
                 totalCarsSold++;
                 log.info("Dealer \"{}\": Auto {} \n\tBody: {},\n\tEngine: {}\n\tAccessory: {})",
                         name, car.getId(), car.getBody().getId(),
                         car.getEngine().getId(), car.getAccessories().getId());
+
                 Thread.sleep(carRequestDelay);
             }
         } catch (InterruptedException e) {
             log.info("Dealer \"{}\" was interrupted", name);
+            Thread.currentThread().interrupt();
         }
     }
 

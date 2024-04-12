@@ -67,4 +67,8 @@ public class DealersController {
     public int getTotalCarsSold() {
         return carsSoldByDeletedDealers + dealers.stream().mapToInt(Dealer::getTotalCarsSold).sum();
     }
+
+    public void shutdown() throws InterruptedException {
+        workers.shutdownNow();
+    }
 }

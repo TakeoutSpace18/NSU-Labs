@@ -48,7 +48,8 @@ public class Storage<T> {
             try {
                 wait();
             } catch (InterruptedException e) {
-                log.error("Wait interrupted while putting item to \"{}\" storage", name);
+                log.info("Wait interrupted while putting item to \"{}\" storage", name);
+                Thread.currentThread().interrupt();
             }
         }
         items.add(item);
@@ -59,13 +60,16 @@ public class Storage<T> {
     }
 
     public synchronized T getItem() {
-        while (items.isEmpty()) {
-            try {
+        try {
+            while (items.isEmpty() && Thread.currentThread().isAlive()) {
                 wait();
-            } catch (InterruptedException e) {
-                log.error("Wait interrupted while getting item from \"{}\" storage", name);
             }
+        } catch (InterruptedException e) {
+            log.info("Wait interrupted while getting item from \"{}\" storage", name);
+            Thread.currentThread().interrupt();
+            return null;
         }
+
         T result = items.remove(items.size() - 1);
         listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
         log.debug("Got {} from {}, current load: {}/{} items", result, name, getItemsCount(), getCapacity());

@@ -99,4 +99,8 @@ public class SuppliersController {
     public int getTotalAccessoriesProduced() {
         return accessoriesSuppliers.stream().mapToInt(Supplier::getTotalComponentsProduced).sum();
     }
+
+    public void shutdown() throws InterruptedException {
+        workers.shutdownNow();
+    }
 }

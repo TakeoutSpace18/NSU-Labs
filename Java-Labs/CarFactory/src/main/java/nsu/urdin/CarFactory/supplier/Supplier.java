@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class Supplier<T extends CarComponent> implements Runnable {
-    private Storage<T> targetStorage;
+    private final Storage<T> targetStorage;
     @Getter
     private int fabricationTime;
     Class<T> componentClass;
@@ -45,6 +45,7 @@ public class Supplier<T extends CarComponent> implements Runnable {
             }
         } catch (InterruptedException e) {
             log.info("Supplier \"{}\" was interrupted", name);
+            Thread.currentThread().interrupt();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
             Thread.currentThread().interrupt();
