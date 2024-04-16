@@ -5,7 +5,7 @@
 
 #include "DESolverMPI.h"
 
-constexpr double EPS = 1e-2;
+constexpr double EPS = 1e-4;
 
 int main(int argc, char **argv)
 {
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
     DESolverMPI::NextIterationCallback func = [](
             const std::array<double, 3> &stepSize,
             int i, int j, int k,
-            const std::vector<double> &data,
-            std::array<int, 3> gridSize) -> double
+            const DESolverMPI::ValueType* data,
+            std::array<int, 3>& gridSize) -> double
     {
         double hx_2 = std::pow(stepSize[0], 2);
         double hy_2 = std::pow(stepSize[1], 2);
@@ -38,28 +38,26 @@ int main(int argc, char **argv)
         .gridSize = {100, 100, 100}
     };
 
-    std::vector initialData = solver.CreateInitialData(properties.gridSize, 3, 0);
-
     double beginTime = MPI::Wtime();
-    std::vector result = solver.Solve(func, initialData, properties, EPS);
+    std::vector result = solver.Solve(func, 3, 0, properties, EPS);
     double endTime = MPI::Wtime();
 
     double timeElapsed = endTime - beginTime;
     double maxTimeElapsed;
     MPI::COMM_WORLD.Reduce(&timeElapsed, &maxTimeElapsed, 1, MPI::DOUBLE, MPI::MAX, 0);
 
-    double precision = solver.ExaminePrecision([](int x, int y, int z) {
-        return x * x + y * y + z * z;
-    }, result, properties);
+    // double precision = solver.ExaminePrecision([](int x, int y, int z) {
+    //     return x * x + y * y + z * z;
+    // }, result, properties);
 
     if (rank == 0) {
         std::cout << "Computation took " << maxTimeElapsed << " seconds\n";
-        std::cout << "Presicion: " << precision << "\n";
+        // std::cout << "Presicion: " << precision << "\n";
 
         std::ofstream out("timeElapsed.txt");
         out << maxTimeElapsed;
     }
 
     MPI::Finalize();
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
