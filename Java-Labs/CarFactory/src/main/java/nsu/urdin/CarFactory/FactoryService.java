@@ -31,7 +31,7 @@ public class FactoryService {
         suppliersController = new SuppliersController(storagesController, config);
         dealersController = new DealersController(storagesController, config);
         workersPool = new ThreadPoolExecutor(config.workersCount(),
-                config.workersCount(), 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+                Integer.MAX_VALUE, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
         dealersController.start();
         suppliersController.start();
@@ -52,5 +52,17 @@ public class FactoryService {
         workersPool.shutdownNow();
         suppliersController.shutdown();
         dealersController.shutdown();
+    }
+
+    public int getWorkersCount() {
+        return workersPool.getCorePoolSize();
+    }
+
+    public void setWorkersCount(int workersCount) {
+        workersPool.setCorePoolSize(workersCount);
+    }
+
+    public int getBusyWorkersCount() {
+        return workersPool.getActiveCount();
     }
 }

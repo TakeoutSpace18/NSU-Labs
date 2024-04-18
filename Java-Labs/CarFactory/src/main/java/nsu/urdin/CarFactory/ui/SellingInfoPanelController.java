@@ -31,7 +31,7 @@ public class SellingInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected void setSuppliersCount(int suppliersCount) {
+    protected void setEntityCount(int suppliersCount) {
         factoryService.getDealersController().setDealersCount(suppliersCount);
     }
 
@@ -51,7 +51,7 @@ public class SellingInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected int getSuppliersCount() {
+    protected int getEntityCount() {
         return factoryService.getDealersController().getDealersCount();
     }
 

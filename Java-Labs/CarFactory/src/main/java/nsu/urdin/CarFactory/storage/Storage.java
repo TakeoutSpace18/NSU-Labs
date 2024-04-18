@@ -44,13 +44,14 @@ public class Storage<T> {
     }
 
     public synchronized void putItem(T item) {
-        while (items.size() >= capacity) {
-            try {
+        try {
+            while (items.size() >= capacity) {
                 wait();
-            } catch (InterruptedException e) {
-                log.info("Wait interrupted while putting item to \"{}\" storage", name);
-                Thread.currentThread().interrupt();
             }
+        } catch (InterruptedException e) {
+            log.debug("Wait interrupted while putting item to \"{}\" storage", name);
+            Thread.currentThread().interrupt();
+            return;
         }
         items.add(item);
         listeners.forEach(listener -> listener.onStorageStateChange(getItemsCount(), getCapacity()));
@@ -65,7 +66,7 @@ public class Storage<T> {
                 wait();
             }
         } catch (InterruptedException e) {
-            log.info("Wait interrupted while getting item from \"{}\" storage", name);
+            log.debug("Wait interrupted while getting item from \"{}\" storage", name);
             Thread.currentThread().interrupt();
             return null;
         }

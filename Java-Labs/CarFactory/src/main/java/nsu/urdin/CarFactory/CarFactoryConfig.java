@@ -1,25 +1,26 @@
 package nsu.urdin.CarFactory;
 
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "carfactory")
 public record CarFactoryConfig (
-    int engineStorageCapacity,
-    int engineFabricationTime,
+    @PositiveOrZero int engineStorageCapacity,
+    @PositiveOrZero int engineFabricationTime,
 
-    int bodyStorageCapacity,
-    int bodyFabricationTime,
+    @PositiveOrZero int bodyStorageCapacity,
+    @PositiveOrZero int bodyFabricationTime,
 
-    int accessoriesStorageCapacity,
-    int accessoriesFabricationTime,
-    int accessoriesSuppliersCount,
+    @PositiveOrZero int accessoriesStorageCapacity,
+    @PositiveOrZero int accessoriesFabricationTime,
+    @PositiveOrZero int accessoriesSuppliersCount,
 
-    int finishedCarsStorageCapacity,
+    @PositiveOrZero int finishedCarsStorageCapacity,
 
-    int workersCount,
+    @PositiveOrZero int workersCount,
 
-    int dealersCount,
-    int dealerCarRequestDelay
+    @PositiveOrZero int dealersCount,
+    @PositiveOrZero int dealerCarRequestDelay
 ) {}

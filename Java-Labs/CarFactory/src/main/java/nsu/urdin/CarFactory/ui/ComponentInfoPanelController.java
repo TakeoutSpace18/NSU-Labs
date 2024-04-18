@@ -7,6 +7,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
+import nsu.urdin.CarFactory.Utils;
 import nsu.urdin.CarFactory.storage.StorageListener;
 
 public abstract class ComponentInfoPanelController implements StorageListener {
@@ -41,7 +42,7 @@ public abstract class ComponentInfoPanelController implements StorageListener {
     @FXML
     void onCapacityInputAction(ActionEvent event) {
         try {
-            int capacity = parseNonNegativeInteger(storageCapacityInput.getText());
+            int capacity = Utils.ParseNonNegativeInteger(storageCapacityInput.getText());
             setStorageCapacity(capacity);
         } catch (NumberFormatException e) {
             storageCapacityInput.setText(String.valueOf(getStorageCapacity()));
@@ -51,22 +52,13 @@ public abstract class ComponentInfoPanelController implements StorageListener {
     @FXML
     void onCountInputAction(ActionEvent event) {
         try {
-            int suppliersCount = parseNonNegativeInteger(countInput.getText());
-            setSuppliersCount(suppliersCount);
+            int count = Utils.ParseNonNegativeInteger(countInput.getText());
+            setEntityCount(count);
         } catch (NumberFormatException e) {
-            countInput.setText(String.valueOf(getSuppliersCount()));
+            countInput.setText(String.valueOf(getEntityCount()));
         }
     }
 
-
-    protected int parseNonNegativeInteger(String str) {
-        int val = Integer.parseInt(str);
-        if (val < 0) {
-            throw new NumberFormatException("Value must be a positive integer");
-        }
-
-        return val;
-    }
 
     @FXML
     protected void initialize() {
@@ -75,7 +67,7 @@ public abstract class ComponentInfoPanelController implements StorageListener {
         storageCapacityInput.setText(String.valueOf(getStorageCapacity()));
         storageStatusText.setText("(" + getStorageItemsCount() + "/" + getStorageCapacity() + ")");
         if (countInput != null) {
-            countInput.setText(String.valueOf(getSuppliersCount()));
+            countInput.setText(String.valueOf(getEntityCount()));
         }
         loadPercentageProgressBar.setProgress((double) getStorageItemsCount() / getStorageCapacity());
         producedCountText.setText(String.valueOf(getTotalProducedComponents()));
@@ -99,7 +91,7 @@ public abstract class ComponentInfoPanelController implements StorageListener {
 
     protected abstract void setStorageCapacity(int capacity);
 
-    protected abstract void setSuppliersCount(int suppliersCount);
+    protected abstract void setEntityCount(int suppliersCount);
 
     protected abstract int getStorageCapacity();
 
@@ -107,7 +99,7 @@ public abstract class ComponentInfoPanelController implements StorageListener {
 
     protected abstract int getComponentFabricationTime();
 
-    protected abstract int getSuppliersCount();
+    protected abstract int getEntityCount();
 
     protected abstract int getTotalProducedComponents();
 }

@@ -17,10 +17,10 @@ public class CarStorageController implements StorageListener{
 
     @Override
     public void onStorageStateChange(int itemsCount, int capacity) {
-        int carsToRequest = (int) Math.ceil((capacity - itemsCount) * 0.75) - factoryService.getPendingAssemblyTasksCount();
+        int carsToRequest = (int) Math.ceil(capacity * 0.75) - itemsCount - factoryService.getPendingAssemblyTasksCount();
         if (carsToRequest > 0) {
             factoryService.requestCarAssembly(carsToRequest);
-            log.debug("Requesting assembly of {} cars", carsToRequest);
+            log.info("Requesting assembly of {} cars", carsToRequest);
         }
     }
 }

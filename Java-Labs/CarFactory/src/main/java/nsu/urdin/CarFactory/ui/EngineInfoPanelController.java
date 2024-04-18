@@ -31,7 +31,7 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected void setSuppliersCount(int suppliersCount) {
+    protected void setEntityCount(int suppliersCount) {
 
     }
 
@@ -51,7 +51,7 @@ public class EngineInfoPanelController extends ComponentInfoPanelController {
     }
 
     @Override
-    protected int getSuppliersCount() {
+    protected int getEntityCount() {
         return 1;
     }
 

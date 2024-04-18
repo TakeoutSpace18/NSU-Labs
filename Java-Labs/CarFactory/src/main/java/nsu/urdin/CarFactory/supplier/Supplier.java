@@ -12,13 +12,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class Supplier<T extends CarComponent> implements Runnable {
     private final Storage<T> targetStorage;
-    @Getter
-    private int fabricationTime;
-    Class<T> componentClass;
+    @Getter private int fabricationTime;
     private final String name;
-    @Getter
-    private int totalComponentsProduced;
+    @Getter private int totalComponentsProduced;
     private AtomicBoolean isRunning;
+
+    Class<T> componentClass;
 
     public Supplier(Storage<T> targetStorage, int fabricationTime, Class<T> componentClass, String name) {
         this.name = name;
@@ -58,7 +57,6 @@ public class Supplier<T extends CarComponent> implements Runnable {
     }
 
     public void stop() {
-
         isRunning.set(false);
     }
 }

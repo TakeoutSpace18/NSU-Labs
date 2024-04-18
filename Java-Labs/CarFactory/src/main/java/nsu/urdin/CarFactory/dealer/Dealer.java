@@ -36,7 +36,7 @@ public class Dealer implements Runnable {
         try {
             // initial delay to randomize among other dealers
             Thread.sleep(new Random().nextInt(carRequestDelay));
-            while (true) {
+            while (isRunning.get()) {
                 Car car = carStorage.getItem();
                 if (car == null) {
                     // null car means that the thread was interrupted during wait

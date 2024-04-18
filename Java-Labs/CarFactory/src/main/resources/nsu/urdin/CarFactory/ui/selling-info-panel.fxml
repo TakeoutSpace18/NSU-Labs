@@ -7,7 +7,7 @@
 
 <VBox alignment="CENTER_LEFT" prefHeight="221.0" prefWidth="432.0" spacing="7.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.CarFactory.ui.SellingInfoPanelController">
    <children>
-      <Text fx:id="panelTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Selling" underline="true" wrappingWidth="308.31029510498047">
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Selling" underline="true" wrappingWidth="308.31029510498047">
          <font>
             <Font name="System Bold Italic" size="20.0" />
          </font>
@@ -43,7 +43,7 @@
                   <Font name="System Bold" size="13.0" />
                </font></Text>
             <Slider fx:id="timeInput" majorTickUnit="1000.0" max="5000.0" showTickLabels="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Suppliers count:" GridPane.rowIndex="2" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Dealers count:" GridPane.rowIndex="2" />
             <TextField fx:id="countInput" onAction="#onCountInputAction" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
