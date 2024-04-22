@@ -33,7 +33,7 @@ int *return_local_var()
 
 void heap_allocation()
 {
-    if (mallopt(M_CHECK_ACTION, 0) != 1) {
+    if (mallopt(M_CHECK_ACTION, 3) != 1) {
         fprintf(stderr, "mallopt() failed");
         exit(EXIT_FAILURE);
     }
@@ -47,7 +47,9 @@ void heap_allocation()
     strcpy(buf2, "hello world");
     printf("buf2: %s", buf2);
 
-    free(buf2 + 50);
+    *(size_t*)(buf2 + 24) = 100;
+    *(size_t*)(buf2 + 28) = 100;
+    free(buf2 + 32);
     printf("buf2 after free in the middle: %s", buf2);
 }
 
@@ -75,10 +77,10 @@ int main()
     printf("returned addr of local variable: %p\n", ptr);
 
     printf("\n");
-    // heap_allocation();
+    heap_allocation();
     printf("\n");
 
-    env_variable();
+    // env_variable();
 
     getc(stdin);
     return EXIT_SUCCESS;
