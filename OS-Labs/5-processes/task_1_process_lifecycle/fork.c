@@ -41,15 +41,13 @@ int main()
         printf("PARENT: local_var: %i, addr: %p\n", local_var, &local_var);
         printf("PARENT: global_var: %i, addr: %p\n", global_var, &global_var);
 
-        sleep(20);
-
         int status;
         wait(&status);
         if (WIFEXITED(status)) {
             printf("PARENT: child process terminated with code %i\n", WEXITSTATUS(status));
         }
-        else {
-            printf("PARENT: wait finished without child process exiting\n");
+        else if (WIFSIGNALED(status)) {
+            printf("PARENT: child terminated recieving a signal\n");
         }
     }
     else {
