@@ -6,72 +6,77 @@
 #include <functional>
 
 #include <mpi.h>
+#include <optional>
 
 #define COORDS(x, y, z, gridSize) ((x) * gridSize[1] * gridSize[2] + (y) * gridSize[2] + (z))
 
-class DESolverMPI {
+class DESolverMPI
+{
 public:
     using ValueType = double;
     MPI::Datatype MPIValueType = MPI::DOUBLE;
 
-	using NextIterationCallback = std::function<ValueType(
-			const std::array<ValueType, 3>& stepSize,
- 			int i, int j, int k,
-			const ValueType* data,
-			std::array<int, 3>& gridSize)>;
+    using NextIterationCallback = std::function<ValueType(
+        const std::array<ValueType, 3>& stepSize,
+        ValueType x, ValueType y, ValueType z, // point in global coordinates that is currently updated
+        int i, int j, int k, // data array indexes of the current cell
+        const ValueType* data,
+        std::array<int, 3>& gridSize)>;
 
-	struct SolutionProperties {
-		std::array<ValueType, 3> areaStart;
-		std::array<ValueType, 3> areaSize;
-		std::array<int, 3> gridSize;
-	};
+    using Func = std::function<ValueType(ValueType x, ValueType y, ValueType z)>;
 
-    explicit DESolverMPI(const MPI::Comm& comm);
+    struct SolutionProperties
+    {
+        std::array<ValueType, 3> areaStart;
+        std::array<ValueType, 3> areaSize;
+        std::array<int, 3> gridSize;
+    };
 
-    std::vector<ValueType> Solve(
-		NextIterationCallback fnCallback,
-		ValueType borderValue,
-		ValueType innerValue,
-        SolutionProperties properties,
-		ValueType eps
-	);
+    explicit DESolverMPI(
+        const MPI::Comm& comm,
+        const SolutionProperties& properties);
 
-	std::vector<ValueType> CreateInitialData(
-		std::array<int, 3> gridSize,
-		ValueType borderValue,
-		ValueType innerValue);
+    void Solve(
+        NextIterationCallback nextIterFn,
+        Func boundaryConditionsFunc,
+        ValueType innerStartValue,
+        ValueType eps);
 
-	ValueType ExaminePrecision(
-		std::function<ValueType(int x, int y, int z)> referenceFunc,
-		const std::vector<ValueType> &data,
-		SolutionProperties properties);
+    ValueType GetMaxDelta(Func referenceFunc);
 
 private:
-	struct SplitInfo {
-		std::vector<int> sizes;
-		std::vector<int> offsets;
-	};
+    struct SplitInfo
+    {
+        std::vector<int> sizes;
+        std::vector<int> offsets;
+    };
 
 private:
-	std::array<ValueType, 3> GetStepSize(const SolutionProperties& properties);
+    std::array<ValueType, 3> GetStepSize(const SolutionProperties& properties);
 
-	SplitInfo GenerateSplitInfo(std::array<int, 3> gridSize);
+    SplitInfo GenerateSplitInfo(std::array<int, 3> gridSize);
 
-    void PrintDebugInfo(SolutionProperties properties, SplitInfo splitInfo,
-                        std::vector<DESolverMPI::ValueType> extendedChunk, int Ny, int Nz);
+    void SetInitialValues(ValueType* chunk,
+                          Func boundaryConditionsFunc,
+                          ValueType innerStartValue);
 
-    void SetInitialValues(ValueType *chunk, ValueType borderValue,
-                          ValueType innerValue, std::array<int, 3> gridSize, int xStart, int xEnd);
-
-	ValueType UpdatePlane(int x, int offset, const ValueType* srcChunk, ValueType* dstChunk, NextIterationCallback fn);
+    ValueType UpdatePlane(int i, int offset,
+                          const ValueType* srcChunk,
+                          ValueType* dstChunk,
+                          NextIterationCallback nextIterFn);
 
 private:
     const MPI::Comm& mCommWorld;
     int mProcRank;
     int mWorldSize;
 
-	std::array<int, 3> mGridSize;
-	std::array<ValueType, 3> mStepSize;
+    SplitInfo mSplitInfo;
+    SolutionProperties mProperties;
+    std::array<ValueType, 3> mStepSize;
+
+
+    std::optional<std::vector<ValueType>> mSolveResultExtendedChunk;
+    ValueType* mSolveResultData;
 };
 
 

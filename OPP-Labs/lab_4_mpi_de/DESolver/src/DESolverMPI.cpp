@@ -1,16 +1,20 @@
 #include "DESolverMPI.h"
 
+#include <utility>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <span>
 
 #include <mpi.h>
 #include <fmt/ranges.h>
 
 
-DESolverMPI::DESolverMPI(const MPI::Comm &comm) : mCommWorld(comm)
+DESolverMPI::DESolverMPI(const MPI::Comm& comm,
+                         const SolutionProperties& properties)
+    : mCommWorld(comm), mProperties(properties)
 {
     mWorldSize = mCommWorld.Get_size();
     mProcRank = mCommWorld.Get_rank();
@@ -19,59 +23,15 @@ DESolverMPI::DESolverMPI(const MPI::Comm &comm) : mCommWorld(comm)
     char procName[256];
     MPI::Get_processor_name(procName, procNameLen);
     std::cout << "Hello from " << procName << "\n";
+
+    mSplitInfo = GenerateSplitInfo(properties.gridSize);
+    mStepSize = GetStepSize(properties);
+
+    mSolveResultExtendedChunk = std::nullopt;
+    mSolveResultData = nullptr;
 }
 
-std::vector<DESolverMPI::ValueType> DESolverMPI::CreateInitialData(
-    std::array<int, 3> gridSize,
-    ValueType borderValue,
-    ValueType innerValue)
-{
-    int Nx = gridSize[0];
-    int Ny = gridSize[1];
-    int Nz = gridSize[2];
-
-    std::vector<ValueType> initialData(Nx * Ny * Nz, innerValue);
-    for (int x = 0; x < Nx; ++x) {
-        for (int y = 0; y < Ny; ++y) {
-            initialData[x * Ny * Nz + y * Nz] = borderValue;
-            initialData[COORDS(x, y, 0, gridSize)] = borderValue;
-            initialData[COORDS(x, y, Nz - 1, gridSize)] = borderValue;
-        }
-    }
-
-    for (int x = 0; x < Nx; ++x) {
-        for (int z = 0; z < Nz; ++z) {
-            initialData[COORDS(x, 0, z, gridSize)] = borderValue;
-            initialData[COORDS(x, Ny - 1, z, gridSize)] = borderValue;
-        }
-    }
-
-    for (int y = 0; y < Ny; ++y) {
-        for (int z = 0; z < Nz; ++z) {
-            initialData[COORDS(0, y, z, gridSize)] = borderValue;
-            initialData[COORDS(Nx - 1, y, z, gridSize)] = borderValue;
-        }
-    }
-
-    return initialData;
-}
-
-DESolverMPI::ValueType DESolverMPI::ExaminePrecision(std::function<ValueType(int x, int y, int z)> referenceFunc,
-                                                     const std::vector<ValueType> &data, SolutionProperties properties)
-{
-    throw std::runtime_error("Not implemented yet");
-    // TODO: paralellize this too
-    std::array stepSize = GetStepSize(properties);
-    ValueType precision = 0;
-    for (int x = 0; x < properties.gridSize[0]; ++x) {
-        for (int y = 0; y < properties.gridSize[1]; ++y) {
-            for (int z = 0; z < properties.gridSize[2]; ++z) {
-            }
-        }
-    }
-}
-
-std::array<DESolverMPI::ValueType, 3> DESolverMPI::GetStepSize(const SolutionProperties &properties)
+std::array<DESolverMPI::ValueType, 3> DESolverMPI::GetStepSize(const SolutionProperties& properties)
 {
     double hx = properties.areaSize[0] / properties.gridSize[0];
     double hy = properties.areaSize[1] / properties.gridSize[1];
@@ -106,199 +66,193 @@ DESolverMPI::SplitInfo DESolverMPI::GenerateSplitInfo(std::array<int, 3> gridSiz
     return splitInfo;
 }
 
-void DESolverMPI::PrintDebugInfo(DESolverMPI::SolutionProperties properties, DESolverMPI::SplitInfo splitInfo, std::vector<DESolverMPI::ValueType> extendedChunk, int Ny, int Nz)
-{
-    fmt::print("Rank: {}, splitSizes: {}, splitOffsets: {}", mProcRank, splitInfo.sizes, splitInfo.offsets);
-
-    std::stringstream ss;
-    ss << "Rank: " << mProcRank << "\n";
-    ss << "neighbour top:\n";
-    for (int y = 0; y < Ny; ++y) {
-        for (int z = 0; z < Nz; ++z) {
-            ss << extendedChunk[COORDS(0, y, z, properties.gridSize)] << " ";
-        }
-        ss << std::endl;
-    }
-
-    ss << "\nmy data:\n";
-    for (int x = 1; x < splitInfo.sizes[mProcRank] + 1; ++x) {
-        for (int y = 0; y < Ny; ++y) {
-            for (int z = 0; z < Nz; ++z) {
-                ss << extendedChunk[COORDS(x, y, z, properties.gridSize)] << " ";
-            }
-            ss << std::endl;
-        }
-        ss << std::endl;
-        ss << std::endl;
-    }
-
-    ss << "neighbour bottom:\n";
-    for (int y = 0; y < Ny; ++y) {
-        for (int z = 0; z < Nz; ++z) {
-            ss << extendedChunk[COORDS(splitInfo.sizes[mProcRank] + 1, y, z, properties.gridSize)] << " ";
-        }
-        ss << std::endl;
-    }
-    ss << std::endl;
-
-    std::cout << ss.str();
-}
-
 void DESolverMPI::SetInitialValues(
-    ValueType *chunk,
-    ValueType borderValue,
-    ValueType innerValue,
-    std::array<int, 3> gridSize,
-    int xStart, int xEnd)
+    ValueType* chunk,
+    Func boundaryConditionsFunc,
+    ValueType innerStartValue)
 {
-    int Nx = gridSize[0];
-    int Ny = gridSize[1];
-    int Nz = gridSize[2];
+    int Nx = mProperties.gridSize[0];
+    int Ny = mProperties.gridSize[1];
+    int Nz = mProperties.gridSize[2];
 
-    for (int x = xStart; x < xEnd; ++x) {
-        for (int y = 0; y < Ny; ++y) {
-            for (int z = 0; z < Nz; ++z) {
+    int iStart = mSplitInfo.offsets[mProcRank];
+    int iEnd = mSplitInfo.offsets[mProcRank] + mSplitInfo.sizes[mProcRank];
+
+    for (int i = iStart; i < iEnd; ++i) {
+        ValueType x = mProperties.areaStart[0] + mStepSize[0] * i;
+
+        for (int j = 0; j < Ny; ++j) {
+            ValueType y = mProperties.areaStart[1] + mStepSize[1] * j;
+
+            for (int k = 0; k < Nz; ++k) {
+                ValueType z = mProperties.areaStart[2] + mStepSize[2] * k;
+
                 ValueType value;
-                if (x == 0 || x == Nx - 1 || y == 0 || y == Ny - 1 || z == 0 || z == Nz - 1) {
-                    value = borderValue;
-                } else {
-                    value = innerValue;
+                if (i == 0 || i == Nx - 1 || j == 0 || j == Ny - 1 || k == 0 || k == Nz - 1) {
+                    value = boundaryConditionsFunc(x, y, z);
                 }
-                chunk[COORDS(x - xStart, y, z, gridSize)] = value;
+                else {
+                    value = innerStartValue;
+                }
+                chunk[COORDS(i - iStart, j, k, mProperties.gridSize)] = value;
             }
         }
     }
 }
 
-DESolverMPI::ValueType DESolverMPI::UpdatePlane(int x, int offset, const ValueType *srcChunk, ValueType *dstChunk,
-                                                NextIterationCallback fn)
+void DESolverMPI::Solve(
+    NextIterationCallback nextIterFn,
+    Func boundaryConditionsFunc,
+    ValueType innerStartValue,
+    const ValueType eps)
 {
-    ValueType precision = 0;
+    int iStart = mSplitInfo.offsets[mProcRank];
+    int iEnd = mSplitInfo.offsets[mProcRank] + mSplitInfo.sizes[mProcRank];
 
-    for (int y = 1; y < mGridSize[1] - 1; ++y) {
-        for (int z = 1; z < mGridSize[2] - 1; ++z) {
-            int idx = COORDS(x - offset, y, z, mGridSize);
-            dstChunk[idx] = fn(mStepSize, x - offset, y, z, srcChunk, mGridSize);
-
-            ValueType diff = std::abs(srcChunk[idx] - dstChunk[idx]);
-            precision = std::max(precision, diff);
-        }
-    }
-
-    return precision;
-}
-
-std::vector<DESolverMPI::ValueType> DESolverMPI::Solve(
-    NextIterationCallback fnCallback,
-    ValueType borderValue,
-    ValueType innerValue,
-    SolutionProperties properties,
-    ValueType eps)
-{
-    mGridSize = properties.gridSize;
-
-    SplitInfo splitInfo = GenerateSplitInfo(properties.gridSize);
-    int xStart = splitInfo.offsets[mProcRank];
-    int xEnd = splitInfo.offsets[mProcRank] + splitInfo.sizes[mProcRank];
-
-    int planeSize = properties.gridSize[1] * properties.gridSize[2];
-    int extendedChunkSize = planeSize * (splitInfo.sizes[mProcRank] + 2);
+    int planeSize = mProperties.gridSize[1] * mProperties.gridSize[2];
+    int extendedChunkSize = planeSize * (mSplitInfo.sizes[mProcRank] + 2);
 
     std::vector<ValueType> extendedChunk(extendedChunkSize);
-    ValueType *myDataChunk = &*(extendedChunk.begin() + planeSize);
+    ValueType* myDataChunk = &*(extendedChunk.begin() + planeSize);
+    std::span sp(extendedChunk.begin() + planeSize, extendedChunk.end() - planeSize);
 
-    std::vector<ValueType> extendedChunkSecond(extendedChunkSize);
+    SetInitialValues(myDataChunk, std::move(boundaryConditionsFunc), innerStartValue);
+
+    std::vector<ValueType> extendedChunkSecond = extendedChunk;
     ValueType* myDataChunkSecond = &*(extendedChunkSecond.begin() + planeSize);
 
-    SetInitialValues(myDataChunk, borderValue, innerValue, properties.gridSize, xStart, xEnd);
-
     int iterCount = 0;
-    while (true) {
+    ValueType globalPrecision = std::numeric_limits<ValueType>::max();
+    while (globalPrecision > eps) {
         iterCount++;
 
         MPI::Request topPlaneSend, topPlaneRecieve, bottomPlaneSend, bottomPlaneRecieve;
 
         if (mProcRank != 0) {
-            ValueType *myTopPlane = &*(extendedChunk.begin() + planeSize);
+            ValueType* myTopPlane = &*(extendedChunk.begin() + planeSize);
             topPlaneSend = mCommWorld.Isend(myTopPlane, planeSize, MPIValueType, mProcRank - 1, 0);
 
-            ValueType *neighbourTopPlane = &*(extendedChunk.begin());
+            ValueType* neighbourTopPlane = &*(extendedChunk.begin());
             topPlaneRecieve = mCommWorld.Irecv(neighbourTopPlane, planeSize, MPIValueType, mProcRank - 1, MPI::ANY_TAG);
         }
         if (mProcRank != mWorldSize - 1) {
-            ValueType *myBottomPlane = &*(extendedChunk.end() - 2 * planeSize);
+            ValueType* myBottomPlane = &*(extendedChunk.end() - 2 * planeSize);
             bottomPlaneSend = mCommWorld.Isend(myBottomPlane, planeSize, MPIValueType, mProcRank + 1, 0);
 
-            ValueType *neighbourBottomPlane = &*(extendedChunk.end() - planeSize);
-            bottomPlaneRecieve = mCommWorld.Irecv(neighbourBottomPlane, planeSize, MPIValueType, mProcRank + 1, MPI::ANY_TAG);
+            ValueType* neighbourBottomPlane = &*(extendedChunk.end() - planeSize);
+            bottomPlaneRecieve = mCommWorld.Irecv(neighbourBottomPlane, planeSize, MPIValueType, mProcRank + 1,
+                                                  MPI::ANY_TAG);
         }
 
-        mStepSize = GetStepSize(properties);
 
-        fmt::print("Proc: {}, xStart: {}, xEnd: {}\n", mProcRank, xStart, xEnd);
         // Calculate inner values
         ValueType localPrecision = 0;
-        for (int x = xStart + 1; x < xEnd - 1; ++x) {
-                ValueType p = UpdatePlane(x, xStart, myDataChunk, myDataChunkSecond, fnCallback);
-                localPrecision = std::max(p, localPrecision);
+        for (int i = iStart + 1; i < iEnd - 1; ++i) {
+            ValueType p = UpdatePlane(i, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+            localPrecision = std::max(p, localPrecision);
         }
 
-        fmt::print("Proc: {}, inner part updated\n", mProcRank);
 
         // TODO: maybe use conditional variable?
         while (!topPlaneRecieve.Test() || !bottomPlaneRecieve.Test()) {
             // do nothing
         }
 
-        fmt::print("Proc: {}, smth recieved\n", mProcRank);
 
         if (topPlaneRecieve.Test() && mProcRank != 0) {
-            fmt::print("Proc: {}, top recieved first\n", mProcRank);
             if (mProcRank != 0) {
-                ValueType p = UpdatePlane(xStart, xStart, myDataChunk, myDataChunkSecond, fnCallback);
+                ValueType p = UpdatePlane(iStart, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
 
 
             if (mProcRank != mWorldSize - 1) {
                 bottomPlaneRecieve.Wait();
-                fmt::print("Proc: {}, bottom recieved\n", mProcRank);
-                ValueType p = UpdatePlane(xEnd - 1, xStart, myDataChunk, myDataChunkSecond, fnCallback);
+                ValueType p = UpdatePlane(iEnd - 1, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
-
-        } else {
-            fmt::print("Proc: {}, bottom recieved first\n", mProcRank);
+        }
+        else {
             if (mProcRank != mWorldSize - 1) {
-                ValueType p = UpdatePlane(xEnd - 1, xStart, myDataChunk, myDataChunkSecond, fnCallback);
+                ValueType p = UpdatePlane(iEnd - 1, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
 
 
             if (mProcRank != 0) {
                 topPlaneRecieve.Wait();
-                fmt::print("Proc: {}, top recieved\n", mProcRank);
-                ValueType p = UpdatePlane(xStart, xStart, myDataChunk, myDataChunkSecond, fnCallback);
+                ValueType p = UpdatePlane(iStart, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
         }
-        std::cout << "Hello " + std::to_string(mProcRank) + "\n";
 
         ValueType globalPrecision;
         mCommWorld.Allreduce(&localPrecision, &globalPrecision, 1, MPIValueType, MPI::MAX);
 
+        std::swap(myDataChunk, myDataChunkSecond);
         std::swap(extendedChunk, extendedChunkSecond);
 
         if (mProcRank == 0) {
             std::cout << "Iteration: " << iterCount << "; precision: " << globalPrecision << "\n";
         }
+    }
 
-        if (globalPrecision < eps) {
-            break;
+    mSolveResultExtendedChunk = std::move(extendedChunk);
+    mSolveResultData = &*(mSolveResultExtendedChunk->begin() + planeSize);
+}
+
+DESolverMPI::ValueType DESolverMPI::UpdatePlane(int i, int offset,
+                                                const ValueType* srcChunk,
+                                                ValueType* dstChunk,
+                                                NextIterationCallback nextIterFn)
+{
+    ValueType precision = 0;
+    ValueType x = mProperties.areaStart[0] + mStepSize[0] * i;
+
+    for (int j = 1; j < mProperties.gridSize[1] - 1; ++j) {
+        ValueType y = mProperties.areaStart[1] + mStepSize[1] * j;
+
+        for (int k = 1; k < mProperties.gridSize[2] - 1; ++k) {
+            ValueType z = mProperties.areaStart[2] + mStepSize[2] * k;
+
+            int idx = COORDS(i - offset, j, k, mProperties.gridSize);
+            dstChunk[idx] = nextIterFn(mStepSize, x, y, z, i - offset, j, k, srcChunk, mProperties.gridSize);
+
+            ValueType diff = std::abs(srcChunk[idx] - dstChunk[idx]);
+            precision = std::max(precision, diff);
+        }
+    }
+    return precision;
+}
+
+DESolverMPI::ValueType DESolverMPI::GetMaxDelta(Func referenceFunc)
+{
+    if (!mSolveResultExtendedChunk.has_value()) {
+        throw std::runtime_error("There is no solving result yet");
+    }
+
+    ValueType localMaxDelta = 0;
+
+    int iStart = mSplitInfo.offsets[mProcRank];
+    int iEnd = mSplitInfo.offsets[mProcRank] + mSplitInfo.sizes[mProcRank];
+
+    for (int i = iStart; i < iEnd; ++i) {
+        ValueType x = mProperties.areaStart[0] + mStepSize[0] * i;
+
+        for (int j = 0; j < mProperties.gridSize[1]; ++j) {
+            ValueType y = mProperties.areaStart[1] + mStepSize[1] * j;
+
+            for (int k = 0; k < mProperties.gridSize[2]; ++k) {
+                ValueType z = mProperties.areaStart[2] + mStepSize[2] * k;
+
+                ValueType delta = std::fabs(
+                    mSolveResultData[COORDS(i - iStart, j, k, mProperties.gridSize)] - referenceFunc(x, y, z));
+                localMaxDelta = std::max(localMaxDelta, delta);
+            }
         }
     }
 
-    // PrintDebugInfo(properties, splitInfo, extendedChunk, mGridSize[1], mGridSize[2]);
-
-    return {};
+    ValueType globalMaxDelta;
+    mCommWorld.Allreduce(&localMaxDelta, &globalMaxDelta, 1, MPIValueType, MPI::MAX);
+    return globalMaxDelta;
 }
