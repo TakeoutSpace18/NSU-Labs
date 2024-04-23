@@ -6,7 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
-#include <span>
 
 #include <mpi.h>
 #include <fmt/ranges.h>
@@ -27,8 +26,8 @@ DESolverMPI::DESolverMPI(const MPI::Comm& comm,
     mSplitInfo = GenerateSplitInfo(properties.gridSize);
     mStepSize = GetStepSize(properties);
 
-    mSolveResultExtendedChunk = std::nullopt;
-    mSolveResultData = nullptr;
+    mSolveResultExtended = std::nullopt;
+    mSolveResultDataView = nullptr;
 }
 
 std::array<DESolverMPI::ValueType, 3> DESolverMPI::GetStepSize(const SolutionProperties& properties)
@@ -113,13 +112,12 @@ void DESolverMPI::Solve(
     int extendedChunkSize = planeSize * (mSplitInfo.sizes[mProcRank] + 2);
 
     std::vector<ValueType> extendedChunk(extendedChunkSize);
-    ValueType* myDataChunk = &*(extendedChunk.begin() + planeSize);
-    std::span sp(extendedChunk.begin() + planeSize, extendedChunk.end() - planeSize);
+    ValueType* dataChunkView = &*(extendedChunk.begin() + planeSize);
 
-    SetInitialValues(myDataChunk, std::move(boundaryConditionsFunc), innerStartValue);
+    SetInitialValues(dataChunkView, std::move(boundaryConditionsFunc), innerStartValue);
 
     std::vector<ValueType> extendedChunkSecond = extendedChunk;
-    ValueType* myDataChunkSecond = &*(extendedChunkSecond.begin() + planeSize);
+    ValueType* dataChunkViewSecond = &*(extendedChunkSecond.begin() + planeSize);
 
     int iterCount = 0;
     ValueType globalPrecision = std::numeric_limits<ValueType>::max();
@@ -128,6 +126,7 @@ void DESolverMPI::Solve(
 
         MPI::Request topPlaneSend, topPlaneRecieve, bottomPlaneSend, bottomPlaneRecieve;
 
+        // Initiate sending and recieving border planes
         if (mProcRank != 0) {
             ValueType* myTopPlane = &*(extendedChunk.begin() + planeSize);
             topPlaneSend = mCommWorld.Isend(myTopPlane, planeSize, MPIValueType, mProcRank - 1, 0);
@@ -135,6 +134,7 @@ void DESolverMPI::Solve(
             ValueType* neighbourTopPlane = &*(extendedChunk.begin());
             topPlaneRecieve = mCommWorld.Irecv(neighbourTopPlane, planeSize, MPIValueType, mProcRank - 1, MPI::ANY_TAG);
         }
+
         if (mProcRank != mWorldSize - 1) {
             ValueType* myBottomPlane = &*(extendedChunk.end() - 2 * planeSize);
             bottomPlaneSend = mCommWorld.Isend(myBottomPlane, planeSize, MPIValueType, mProcRank + 1, 0);
@@ -148,48 +148,47 @@ void DESolverMPI::Solve(
         // Calculate inner values
         ValueType localPrecision = 0;
         for (int i = iStart + 1; i < iEnd - 1; ++i) {
-            ValueType p = UpdatePlane(i, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+            ValueType p = UpdatePlane(i, iStart, dataChunkView, dataChunkViewSecond, nextIterFn);
             localPrecision = std::max(p, localPrecision);
         }
 
 
-        // TODO: maybe use conditional variable?
+        // Wait until top of bottom plane is recieved
         while (!topPlaneRecieve.Test() || !bottomPlaneRecieve.Test()) {
             // do nothing
         }
 
 
-        if (topPlaneRecieve.Test() && mProcRank != 0) {
+        if (topPlaneRecieve.Test()) { // If top plane was recieved first
             if (mProcRank != 0) {
-                ValueType p = UpdatePlane(iStart, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+                ValueType p = UpdatePlane(iStart, iStart, dataChunkView, dataChunkViewSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
 
+            bottomPlaneRecieve.Wait();
 
             if (mProcRank != mWorldSize - 1) {
-                bottomPlaneRecieve.Wait();
-                ValueType p = UpdatePlane(iEnd - 1, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+                ValueType p = UpdatePlane(iEnd - 1, iStart, dataChunkView, dataChunkViewSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
         }
-        else {
+        else { // If bottom plane was recieved first
             if (mProcRank != mWorldSize - 1) {
-                ValueType p = UpdatePlane(iEnd - 1, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+                ValueType p = UpdatePlane(iEnd - 1, iStart, dataChunkView, dataChunkViewSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
 
+            topPlaneRecieve.Wait();
 
             if (mProcRank != 0) {
-                topPlaneRecieve.Wait();
-                ValueType p = UpdatePlane(iStart, iStart, myDataChunk, myDataChunkSecond, nextIterFn);
+                ValueType p = UpdatePlane(iStart, iStart, dataChunkView, dataChunkViewSecond, nextIterFn);
                 localPrecision = std::max(p, localPrecision);
             }
         }
 
-        ValueType globalPrecision;
         mCommWorld.Allreduce(&localPrecision, &globalPrecision, 1, MPIValueType, MPI::MAX);
 
-        std::swap(myDataChunk, myDataChunkSecond);
+        std::swap(dataChunkView, dataChunkViewSecond);
         std::swap(extendedChunk, extendedChunkSecond);
 
         if (mProcRank == 0) {
@@ -197,8 +196,8 @@ void DESolverMPI::Solve(
         }
     }
 
-    mSolveResultExtendedChunk = std::move(extendedChunk);
-    mSolveResultData = &*(mSolveResultExtendedChunk->begin() + planeSize);
+    mSolveResultExtended = std::move(extendedChunk);
+    mSolveResultDataView = &*(mSolveResultExtended->begin() + planeSize);
 }
 
 DESolverMPI::ValueType DESolverMPI::UpdatePlane(int i, int offset,
@@ -227,7 +226,7 @@ DESolverMPI::ValueType DESolverMPI::UpdatePlane(int i, int offset,
 
 DESolverMPI::ValueType DESolverMPI::GetMaxDelta(Func referenceFunc)
 {
-    if (!mSolveResultExtendedChunk.has_value()) {
+    if (!mSolveResultExtended.has_value()) {
         throw std::runtime_error("There is no solving result yet");
     }
 
@@ -246,7 +245,7 @@ DESolverMPI::ValueType DESolverMPI::GetMaxDelta(Func referenceFunc)
                 ValueType z = mProperties.areaStart[2] + mStepSize[2] * k;
 
                 ValueType delta = std::fabs(
-                    mSolveResultData[COORDS(i - iStart, j, k, mProperties.gridSize)] - referenceFunc(x, y, z));
+                    mSolveResultDataView[COORDS(i - iStart, j, k, mProperties.gridSize)] - referenceFunc(x, y, z));
                 localMaxDelta = std::max(localMaxDelta, delta);
             }
         }

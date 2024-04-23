@@ -42,8 +42,8 @@ int main(int argc, char **argv)
 
     DESolverMPI::SolutionProperties properties{
         .areaStart = {-1, -1, -1},
-        .areaSize = {0.25, 0.25, 0.25},
-        .gridSize = {200, 200, 200}
+        .areaSize = {2, 2, 2},
+        .gridSize = {100, 100, 100}
     };
 
     DESolverMPI solver(MPI::COMM_WORLD, properties);

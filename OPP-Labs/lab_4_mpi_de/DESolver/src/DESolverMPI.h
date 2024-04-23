@@ -75,8 +75,8 @@ private:
     std::array<ValueType, 3> mStepSize;
 
 
-    std::optional<std::vector<ValueType>> mSolveResultExtendedChunk;
-    ValueType* mSolveResultData;
+    std::optional<std::vector<ValueType>> mSolveResultExtended;
+    ValueType* mSolveResultDataView;
 };
 
 
