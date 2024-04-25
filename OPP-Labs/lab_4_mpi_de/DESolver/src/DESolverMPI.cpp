@@ -8,7 +8,6 @@
 #include <cmath>
 
 #include <mpi.h>
-#include <fmt/ranges.h>
 
 
 DESolverMPI::DESolverMPI(const MPI::Comm& comm,
