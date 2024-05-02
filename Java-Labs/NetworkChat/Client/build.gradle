@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "io.freefair.lombok" version "8.6"
+}
+
+group = 'nsu.urdin'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'nsu.urdin.chatclient.ChatClient'
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.23.1'
+
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+test {
+    useJUnitPlatform()
+}

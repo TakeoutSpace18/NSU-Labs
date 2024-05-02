@@ -1,0 +1,4 @@
+rootProject.name = 'NetworkChat'
+
+include('Server')
+include('Client')
