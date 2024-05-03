@@ -20,7 +20,7 @@ public class Config {
         try {
             properties.load(stream);
         } catch (IOException e) {
-            log.error("Can't load config file:\n{}", e.getMessage());
+            log.error("Failed to load config file", e);
             throw new RuntimeException(e);
         }
     }

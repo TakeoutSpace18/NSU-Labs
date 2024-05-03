@@ -20,12 +20,16 @@ public class Config {
         try {
             properties.load(stream);
         } catch (IOException e) {
-            log.error("Can't load config file:\n{}", e.getMessage());
+            log.error("Failed to load config file", e);
             throw new RuntimeException(e);
         }
     }
 
     public int getServerPort() {
         return Integer.parseInt(properties.getProperty("ServerPort"));
+    }
+
+    public String getServerHost() {
+        return properties.getProperty("ServerHost");
     }
 }
