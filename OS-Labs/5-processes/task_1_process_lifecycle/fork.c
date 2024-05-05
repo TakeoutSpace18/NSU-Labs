@@ -30,7 +30,7 @@ int main()
         printf("CLILD: local_var: %i, addr: %p\n", local_var, &local_var);
         printf("CHILD: global_var: %i, addr: %p\n", global_var, &global_var);
 
-        sleep(20);
+        sleep(10);
 
         printf("CHILD: Exiting...\n");
         exit(5);
@@ -41,17 +41,21 @@ int main()
         printf("PARENT: local_var: %i, addr: %p\n", local_var, &local_var);
         printf("PARENT: global_var: %i, addr: %p\n", global_var, &global_var);
 
+        printf("PARENT: waiting for child...\n");
         int status;
         wait(&status);
         if (WIFEXITED(status)) {
             printf("PARENT: child process terminated with code %i\n", WEXITSTATUS(status));
         }
         else if (WIFSIGNALED(status)) {
-            printf("PARENT: child terminated recieving a signal\n");
+            printf("PARENT: child terminated recieving a signal %i\n", WTERMSIG(status));
+        }
+        else if (WIFSTOPPED(status)) {
+            printf("PARENT: child stopped recieving a signal %i\n", WSTOPSIG(status));
         }
     }
     else {
-        perror("fork");
+        perror("fork()");
         return EXIT_FAILURE;
     }
 
