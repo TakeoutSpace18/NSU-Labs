@@ -1,15 +1,19 @@
 package nsu.urdin.chatclient;
 
+import javafx.application.Application;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.config.Config;
-import nsu.urdin.chatprotocol.dto.Message;
+import nsu.urdin.chatclient.gui.ChatClientJavaFXGUI;
+import nsu.urdin.chatprotocol.dto.request.SendMessageRequest;
 
 import java.io.*;
 import java.net.Socket;
 
 @Slf4j
 public class ChatClient {
+    @Getter
     private Config config;
     private Socket clientSocket;
     private ObjectOutputStream out;
@@ -37,7 +41,7 @@ public class ChatClient {
 
     @SneakyThrows
     public void sendMessage(String msg) {
-        Message dto = new Message(msg);
+        SendMessageRequest dto = new SendMessageRequest(msg);
         out.writeObject(dto);
     }
 
@@ -50,11 +54,13 @@ public class ChatClient {
 
     @SneakyThrows
     public static void main(String[] args) {
-        ChatClient app = new ChatClient();
+//        ChatClient app = new ChatClient();
 
-        while (true) {
-            app.sendMessage("Hello World");
-            Thread.sleep(1000);
-        }
+        Application.launch(ChatClientJavaFXGUI.class, args);
+
+//        while (true) {
+//            app.sendMessage("Hello World");
+//            Thread.sleep(1000);
+//        }
     }
 }

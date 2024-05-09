@@ -2,7 +2,7 @@ package nsu.urdin.chatserver;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import nsu.urdin.chatprotocol.dto.Message;
+import nsu.urdin.chatprotocol.dto.request.SendMessageRequest;
 
 import java.io.*;
 import java.net.Socket;
@@ -26,7 +26,7 @@ public class Session implements Runnable {
     @Override
     public void run() {
         while (true) {
-            Message dto = (Message) in.readObject();
+            SendMessageRequest dto = (SendMessageRequest) in.readObject();
             log.info("Message received: {}", dto);
         }
     }

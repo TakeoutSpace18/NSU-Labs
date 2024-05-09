@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id "io.freefair.lombok" version "8.6"
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'nsu.urdin'
@@ -27,6 +28,13 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.23.1'
 
     annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.openjfx:javafx:22'
+}
+
+javafx {
+    version = "22"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
 }
 
 test {
