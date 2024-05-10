@@ -13,7 +13,7 @@ repositories {
 }
 
 application {
-    mainClass = 'nsu.urdin.chatclient.ChatClient'
+    mainClass = 'nsu.urdin.chatclient.Main'
 }
 
 dependencies {

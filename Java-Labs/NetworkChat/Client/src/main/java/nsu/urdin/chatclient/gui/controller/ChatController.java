@@ -10,12 +10,16 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import nsu.urdin.chatclient.ChatClient;
 
 import java.io.IOException;
 
 @Slf4j
 public class ChatController {
+    @Setter
+    private ChatClient chatClient;
 
     @FXML
     private Button disconnectButton;
@@ -37,7 +41,7 @@ public class ChatController {
 
     @FXML
     void onDisconnectButtonPress(ActionEvent event) {
-        LoginController.Load((Stage) disconnectButton.getScene().getWindow());
+        LoginController.Load((Stage) disconnectButton.getScene().getWindow(), chatClient);
     }
 
     @FXML
@@ -45,14 +49,19 @@ public class ChatController {
 
     }
 
-    public static void Load(Stage stage) {
+    public static void Load(Stage stage, ChatClient chatClient) {
+        FXMLLoader fxmlLoader = new FXMLLoader(ChatController.class.getResource("/chat-view.fxml"));
+
         Parent root;
         try {
-            root = FXMLLoader.load(ChatController.class.getResource("/chat-view.fxml"));
+            root = fxmlLoader.load();
         } catch (IOException e) {
             log.error("Failed to load chat-view.fxml", e);
             throw new RuntimeException(e);
         }
+
+        ChatController chatController = fxmlLoader.getController();
+        chatController.setChatClient(chatClient);
 
         Scene scene = new Scene(root, 1200, 900);
         stage.setTitle("Chat");
