@@ -3,10 +3,10 @@ package nsu.urdin.chatprotocol.dto;
 import lombok.Getter;
 
 @Getter
-public class ErrorReply extends ReplyBase {
+public class ErrorResponse extends ResponseBase {
     private final String message;
 
-    public ErrorReply(String message) {
+    public ErrorResponse(String message) {
         super("Error");
         this.message = message;
     }

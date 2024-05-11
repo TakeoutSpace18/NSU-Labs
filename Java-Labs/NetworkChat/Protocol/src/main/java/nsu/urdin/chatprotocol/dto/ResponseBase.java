@@ -7,6 +7,6 @@ import java.io.Serializable;
 
 @AllArgsConstructor
 @Getter
-public class ReplyBase implements Serializable {
+public class ResponseBase implements Serializable {
     private final String status;
 }

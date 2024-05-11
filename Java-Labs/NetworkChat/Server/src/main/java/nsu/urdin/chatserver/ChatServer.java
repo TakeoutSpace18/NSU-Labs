@@ -31,7 +31,7 @@ public class ChatServer implements Runnable {
         }
     }
 
-    private void stop() {
+    public void stop() {
         log.info("Stopping ChatServer...");
 
         sessions.forEach(Thread::interrupt);
@@ -53,7 +53,7 @@ public class ChatServer implements Runnable {
         while (!Thread.interrupted()) {
             try {
                 Socket client = serverSocket.accept();
-                Thread sessionThread = new Thread(new Session(client));
+                Thread sessionThread = new Thread(new ConnectionSession(client));
                 sessionThread.start();
                 sessions.add(sessionThread);
             } catch (IOException e) {
@@ -71,11 +71,5 @@ public class ChatServer implements Runnable {
             }
             catch (IOException ignored) {}
         }
-    }
-
-    public static void main(String[] args) {
-        ChatServer app = new ChatServer();
-        Runtime.getRuntime().addShutdownHook(new Thread(app::stop));
-        app.run();
     }
 }
