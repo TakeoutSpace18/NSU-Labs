@@ -1,5 +1,6 @@
 package nsu.urdin.chatclient.gui.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,6 +13,8 @@ import javafx.stage.Stage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.ChatClient;
+import nsu.urdin.chatclient.exception.ConnectionException;
+import nsu.urdin.chatclient.exception.RequestException;
 
 import java.io.IOException;
 
@@ -33,7 +36,7 @@ public class LoginController {
     private Button registerButton;
 
     @FXML
-    private TextField serverIPInputField;
+    private TextField serverHostInputField;
 
     @FXML
     private TextField serverPortInputField;
@@ -43,12 +46,26 @@ public class LoginController {
 
     @FXML
     void initialize() {
-        errorMessageText.setText("");
+        Platform.runLater(() -> {
+            serverHostInputField.setText(chatClient.getConfig().getServerHost());
+            serverPortInputField.setText(String.valueOf(chatClient.getConfig().getServerPort()));
+            errorMessageText.setText("");
+        });
     }
 
     @FXML
     void onLoginButtonPress(ActionEvent event) {
-        ChatController.Load((Stage) loginButton.getScene().getWindow(), chatClient);
+        try {
+            chatClient.login(
+                    serverHostInputField.getText(),
+                    Integer.valueOf(serverPortInputField.getText()),
+                    usernameInputField.getText(),
+                    passwordInputField.getText()
+            );
+            ChatController.Load((Stage) loginButton.getScene().getWindow(), chatClient);
+        } catch (RequestException | ConnectionException e) {
+            errorMessageText.setText(e.getMessage());
+        }
     }
 
     @FXML
@@ -58,11 +75,21 @@ public class LoginController {
 
     @FXML
     void onRegisterButtonPress(ActionEvent event) {
-        ChatController.Load((Stage) loginButton.getScene().getWindow(), chatClient);
+        try {
+            chatClient.register(
+                    serverHostInputField.getText(),
+                    Integer.valueOf(serverPortInputField.getText()),
+                    usernameInputField.getText(),
+                    passwordInputField.getText()
+            );
+            ChatController.Load((Stage) loginButton.getScene().getWindow(), chatClient);
+        } catch (RequestException | ConnectionException e) {
+            errorMessageText.setText(e.getMessage());
+        }
     }
 
     @FXML
-    void onServerIPInput(ActionEvent event) {
+    void onServerHostInput(ActionEvent event) {
 
     }
 
@@ -90,7 +117,7 @@ public class LoginController {
         LoginController loginController = fxmlLoader.getController();
         loginController.setChatClient(chatClient);
 
-        Scene scene = new Scene(root, 500, 400);
+        Scene scene = new Scene(root, 500, 500);
         stage.setTitle("Login");
         stage.setScene(scene);
     }

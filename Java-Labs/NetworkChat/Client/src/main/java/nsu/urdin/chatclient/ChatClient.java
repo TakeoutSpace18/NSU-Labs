@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.config.Config;
+import nsu.urdin.chatclient.exception.ConnectionException;
 import nsu.urdin.chatclient.exception.RequestException;
 import nsu.urdin.chatprotocol.dto.ErrorReply;
 import nsu.urdin.chatprotocol.dto.ReplyBase;
@@ -32,14 +33,14 @@ public class ChatClient {
         this.config = new Config();
     }
 
-    private void startConnection(String host, int port) {
+    private void startConnection(String host, int port) throws ConnectionException {
         try {
             this.clientSocket = new Socket(host, port);
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
         } catch (IOException e) {
             log.error("Failed to connect to server {}:{}", host, port, e);
-            throw new RuntimeException(e);
+            throw new ConnectionException(e.getMessage());
         }
 
         log.info("Connected to server {}:{}", host, port);
@@ -76,13 +77,15 @@ public class ChatClient {
         throw new RequestException("Unknown reply type received from server");
     }
 
-    public void register(String serverHost, int port, String username, String password) throws RequestException {
+    public void register(String serverHost, int port, String username, String password)
+            throws RequestException, ConnectionException {
         startConnection(serverHost, port);
         RegisterRequest dto = new RegisterRequest(username, password);
         sendRequest(dto);
     }
 
-    public void login(String serverHost, int port, String username, String password) throws RequestException {
+    public void login(String serverHost, int port, String username, String password)
+            throws RequestException, ConnectionException {
         startConnection(serverHost, port);
         LoginRequest dto = new LoginRequest(username, password);
         sendRequest(dto);
