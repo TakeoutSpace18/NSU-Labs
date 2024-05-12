@@ -15,9 +15,9 @@ void hello_recursion(int depth)
         return;
     }
 
-    char hello[]= "hello world\n";
+    char hello[]= "hello world";
 
-    printf(hello);
+    puts(hello);
     hello_recursion(depth - 1);
 }
 
