@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <semaphore.h>
+#include <wait.h>
 
 #define return_defer(code) do { status = (code); goto defer; } while (0);
 
@@ -39,7 +40,6 @@ int main()
 {
     int status = EXIT_SUCCESS;
 
-    const char *shmem_filename = "/shmem_test";
     size_t shmem_size = sysconf(_SC_PAGESIZE);
 
     void *shmem = mmap(NULL, shmem_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -77,5 +77,6 @@ defer:
     munmap(semaphore, sizeof(sem_t));
     munmap(shmem, shmem_size);
     sem_destroy(semaphore);
+    wait(NULL);
     return status;
 }
