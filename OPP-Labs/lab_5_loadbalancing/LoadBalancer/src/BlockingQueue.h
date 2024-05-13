@@ -1,6 +1,7 @@
 #ifndef BLOCKINGQUEUE_H
 #define BLOCKINGQUEUE_H
 #include <condition_variable>
+#include <optional>
 #include <queue>
 
 
@@ -16,11 +17,35 @@ public:
         mCondVar.notify_one();
     }
 
-    T Pop()
+    template<class... Args>
+    void Emplace(Args&&... args)
+    {
+        std::lock_guard lock(mMutex);
+        mQueue.emplace(std::forward<Args...>(args...));
+        mCondVar.notify_one();
+    }
+
+    std::optional<T> Pop()
     {
         std::unique_lock lock(mMutex);
-        mCondVar.wait(lock, !mQueue.empty());
-        return mQueue.pop();
+        while (mQueue.empty() && !mInterrupted) {
+            mCondVar.wait(lock);
+        }
+
+        if (mInterrupted) {
+            mInterrupted = false;
+            return std::nullopt;
+        }
+
+        T ret = mQueue.front();
+        mQueue.pop();
+        return ret;
+    }
+
+    void InterruptWaiting()
+    {
+        mCondVar.notify_all();
+        mInterrupted = true;
     }
 
     [[nodiscard]] std::size_t Size() const
@@ -37,6 +62,8 @@ private:
     std::queue<T> mQueue;
     std::condition_variable mCondVar;
     std::mutex mMutex;
+
+    bool mInterrupted = false;
 };
 
 
