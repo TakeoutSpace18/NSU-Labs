@@ -14,7 +14,8 @@ add_executable(LoadBalancer src/main.cpp
         src/RecieverThread.cpp
         src/RecieverThread.h
         src/SenderThread.cpp
-        src/SenderThread.h)
+        src/SenderThread.h
+        src/TasksRequest.h)
 
 target_include_directories(LoadBalancer PRIVATE src)
 target_compile_options(LoadBalancer PRIVATE -Wall -Wextra -Wpedantic -O0 -g)

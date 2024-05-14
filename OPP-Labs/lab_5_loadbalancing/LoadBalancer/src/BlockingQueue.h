@@ -25,7 +25,20 @@ public:
         mCondVar.notify_one();
     }
 
-    std::optional<T> Pop()
+    std::optional<T> TryPop()
+    {
+        std::unique_lock lock(mMutex);
+
+        if (mQueue.empty()) {
+            return std::nullopt;
+        }
+
+        T ret = mQueue.front();
+        mQueue.pop();
+        return ret;
+    }
+
+    std::optional<T> WaitAndPop()
     {
         std::unique_lock lock(mMutex);
         while (mQueue.empty() && !mInterrupted) {

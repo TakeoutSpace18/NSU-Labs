@@ -10,14 +10,13 @@
 #include "Task.h"
 #include "WorkerThread.h"
 
-constexpr int ITER_TASKS_COUNT = 10;
-constexpr int ITER_COUNT = 30;
+constexpr int ITER_TASKS_COUNT = 100;
+constexpr int ITER_COUNT = 24;
 
 void GenerateTasks(std::shared_ptr<BlockingQueue<Task>> queue, int procRank, int procCount, int iterCount)
 {
     for (int i = 0; i < ITER_TASKS_COUNT; ++i) {
-        // queue->Emplace(std::abs(procRank - (iterCount % procCount)));
-        queue->Emplace(100);
+        queue->Emplace(1 + std::abs(procRank - (iterCount % procCount)));
     }
 }
 
@@ -43,14 +42,15 @@ int main(int argc, char **argv)
 
         MPI::COMM_WORLD.Barrier();
         double beginTime = MPI::Wtime();
-        WorkerThread workerThread(taskQueue, recieverThread); // TODO: remove thread, make simple Worker?
+
+        WorkerThread workerThread(taskQueue, recieverThread);
         recieverThread->SetNoMoreTasksCallback([&](){
             workerThread.Stop();
             taskQueue->InterruptWaiting();
         });
         workerThread.Join();
-        double endTime = MPI::Wtime();
 
+        double endTime = MPI::Wtime();
         double timeElapsed = endTime - beginTime;
 
         plot << curIter << " " << timeElapsed << "\n";

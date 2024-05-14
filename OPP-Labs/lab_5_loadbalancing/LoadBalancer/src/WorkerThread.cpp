@@ -24,9 +24,9 @@ void WorkerThread::EntryPoint() const
             mRecieverThread->RequestTasks();
         }
 
-        std::optional<Task> task = mTaskQueue->Pop();
+        std::optional<Task> task = mTaskQueue->WaitAndPop();
         if (task.has_value()) {
-            task->execute();
+            task->Execute();
         }
     }
 }

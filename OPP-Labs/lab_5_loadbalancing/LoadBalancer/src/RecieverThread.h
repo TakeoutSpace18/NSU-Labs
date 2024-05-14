@@ -28,7 +28,7 @@ private:
 
     const MPI::Comm& mComm;
     int mProcRank;
-    int mWorldSize;
+    int mProcCount;
 
     std::shared_ptr<BlockingQueue<Task>> mTaskQueue;
 
