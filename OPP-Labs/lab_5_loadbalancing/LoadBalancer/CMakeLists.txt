@@ -15,9 +15,13 @@ add_executable(LoadBalancer src/main.cpp
         src/RecieverThread.h
         src/SenderThread.cpp
         src/SenderThread.h
-        src/TasksRequest.h)
+        src/TasksRequest.h
+        test/BlockingQueueTest.cpp)
 
 target_include_directories(LoadBalancer PRIVATE src)
 target_compile_options(LoadBalancer PRIVATE -Wall -Wextra -Wpedantic -O0 -g)
 
 target_link_libraries(LoadBalancer MPI::MPI_CXX fmt::fmt)
+
+add_executable(BlockingQueueTest src/BlockingQueue.h test/BlockingQueueTest.cpp)
+target_include_directories(BlockingQueueTest PRIVATE src test)

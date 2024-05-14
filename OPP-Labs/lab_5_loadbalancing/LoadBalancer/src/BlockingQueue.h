@@ -14,7 +14,7 @@ public:
     {
         std::lock_guard lock(mMutex);
         mQueue.push(std::forward<T>(value));
-        mCondVar.notify_one();
+        mCondVar.notify_all();
     }
 
     template<class... Args>
@@ -22,7 +22,7 @@ public:
     {
         std::lock_guard lock(mMutex);
         mQueue.emplace(std::forward<Args...>(args...));
-        mCondVar.notify_one();
+        mCondVar.notify_all();
     }
 
     std::optional<T> TryPop()
@@ -36,6 +36,17 @@ public:
         T ret = mQueue.front();
         mQueue.pop();
         return ret;
+    }
+
+    std::optional<T> TryFront()
+    {
+        std::unique_lock lock(mMutex);
+
+        if (mQueue.empty()) {
+            return std::nullopt;
+        }
+
+        return mQueue.front();
     }
 
     std::optional<T> WaitAndPop()
@@ -53,6 +64,21 @@ public:
         T ret = mQueue.front();
         mQueue.pop();
         return ret;
+    }
+
+    std::optional<T> WaitAndFront()
+    {
+        std::unique_lock lock(mMutex);
+        while (mQueue.empty() && !mInterrupted) {
+            mCondVar.wait(lock);
+        }
+
+        if (mInterrupted) {
+            mInterrupted = false;
+            return std::nullopt;
+        }
+
+        return mQueue.front();
     }
 
     void InterruptWaiting()
