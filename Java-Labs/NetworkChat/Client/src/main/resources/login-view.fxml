@@ -3,7 +3,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
 <BorderPane prefHeight="434.0" prefWidth="421.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="nsu.urdin.chatclient.gui.controller.LoginController">
    <center>
       <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="425.0" prefWidth="406.0" BorderPane.alignment="CENTER">
@@ -27,13 +26,13 @@
               </rowConstraints>
                <children>
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username" />
-                  <TextField fx:id="usernameInputField" onAction="#onUsernameInput" GridPane.columnIndex="1" />
-                  <TextField fx:id="passwordInputField" onAction="#onPasswordInput" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="usernameInputField" GridPane.columnIndex="1" />
+                  <TextField fx:id="passwordInputField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Password" GridPane.rowIndex="1" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Server Host" GridPane.rowIndex="2" />
-                  <TextField fx:id="serverHostInputField" onAction="#onServerHostInput" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <TextField fx:id="serverHostInputField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Server Port" GridPane.rowIndex="3" />
-                  <TextField fx:id="serverPortInputField" onAction="#onServerPortInput" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <TextField fx:id="serverPortInputField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                </children>
             </GridPane>
             <Button fx:id="loginButton" layoutX="229.0" layoutY="344.0" mnemonicParsing="false" onAction="#onLoginButtonPress" prefHeight="44.0" prefWidth="138.0" text="Login" />

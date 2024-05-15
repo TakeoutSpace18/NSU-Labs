@@ -58,7 +58,7 @@ public class LoginController {
         try {
             chatClient.login(
                     serverHostInputField.getText(),
-                    Integer.valueOf(serverPortInputField.getText()),
+                    Integer.parseInt(serverPortInputField.getText()),
                     usernameInputField.getText(),
                     passwordInputField.getText()
             );
@@ -66,41 +66,21 @@ public class LoginController {
         } catch (RequestException | ConnectionException e) {
             errorMessageText.setText(e.getMessage());
         }
-    }
-
-    @FXML
-    void onPasswordInput(ActionEvent event) {
-
     }
 
     @FXML
     void onRegisterButtonPress(ActionEvent event) {
         try {
-            chatClient.register(
+            chatClient.registerAndLogin(
                     serverHostInputField.getText(),
-                    Integer.valueOf(serverPortInputField.getText()),
+                    Integer.parseInt(serverPortInputField.getText()),
                     usernameInputField.getText(),
                     passwordInputField.getText()
             );
-            ChatController.Load((Stage) loginButton.getScene().getWindow(), chatClient);
+            ChatController.Load((Stage) registerButton.getScene().getWindow(), chatClient);
         } catch (RequestException | ConnectionException e) {
             errorMessageText.setText(e.getMessage());
         }
-    }
-
-    @FXML
-    void onServerHostInput(ActionEvent event) {
-
-    }
-
-    @FXML
-    void onServerPortInput(ActionEvent event) {
-
-    }
-
-    @FXML
-    void onUsernameInput(ActionEvent event) {
-
     }
 
     public static void Load(Stage stage, ChatClient chatClient) {
