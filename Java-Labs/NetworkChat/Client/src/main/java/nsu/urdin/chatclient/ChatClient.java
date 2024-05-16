@@ -14,6 +14,7 @@ import nsu.urdin.chatprotocol.dto.event.MessageEvent;
 import nsu.urdin.chatprotocol.entity.Message;
 import nsu.urdin.chatprotocol.entity.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -42,6 +43,9 @@ public class ChatClient implements ServerEventListener {
         this.requestController = new RequestController(connection);
         this.serverEventThread = new ServerEventThread(connection);
         this.serverEventThread.addListener(this);
+
+        this.onlineUsers = new ArrayList<>();
+        this.messages = new ArrayList<>();
     }
 
     public void login(String serverHost, int port, String username, String password)
@@ -105,9 +109,9 @@ public class ChatClient implements ServerEventListener {
     }
 
     private void fetchData() throws RequestException {
-        onlineUsers = requestController.getUsersList().getUsers();
+        onlineUsers = new ArrayList<>(requestController.getUsersList().getUsers());
         onlineUsersCount = onlineUsers.size();
-        messages = requestController.getChatHistory().getMessages();
+        messages = new ArrayList<>(requestController.getChatHistory().getMessages());
     }
 
     @Override

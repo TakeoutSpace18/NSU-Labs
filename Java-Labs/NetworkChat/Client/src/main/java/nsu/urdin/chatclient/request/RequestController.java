@@ -8,6 +8,8 @@ import nsu.urdin.chatprotocol.dto.ResponseBase;
 import nsu.urdin.chatprotocol.dto.SuccessResponse;
 import nsu.urdin.chatprotocol.dto.request.*;
 
+import java.io.IOException;
+
 @Slf4j
 public class RequestController {
 
@@ -19,7 +21,12 @@ public class RequestController {
 
     private SuccessResponse doRequest(RequestBase requestDto) throws RequestException {
         log.debug("Sending request... {}", requestDto);
-        ResponseBase responseDto = (ResponseBase) connection.sendAndReceive(requestDto, ResponseBase.class);
+        ResponseBase responseDto = null;
+        try {
+            responseDto = (ResponseBase) connection.sendAndReceive(requestDto, ResponseBase.class);
+        } catch (IOException e) {
+            throw new RequestException(e);
+        }
         log.debug("Received response: {}", responseDto);
 
         if (responseDto instanceof ErrorResponse) {

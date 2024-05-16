@@ -130,17 +130,21 @@ public class ChatController implements ServerEventListener {
 
     @Override
     public void onNewMessage(MessageEvent event) {
-        messagesListView.getItems().add(messageToTextFlow(event.getMessage()));
+        Platform.runLater(() -> {
+            messagesListView.getItems().add(messageToTextFlow(event.getMessage()));
+        });
     }
 
     @Override
     public void onUserLogin(LoginEvent event) {
-        onlineUsersListView.getItems().add(userToText(event.getUser()));
-        onlineUsersCountLabel.setText(String.valueOf(chatClient.getOnlineUsersCount()));
+        Platform.runLater(() -> {
+            onlineUsersListView.getItems().add(userToText(event.getUser()));
+            onlineUsersCountLabel.setText(String.valueOf(chatClient.getOnlineUsersCount()));
+        });
     }
 
     @Override
     public void onUserLogout(LogoutEvent event) {
-        updateOnlineUsers();
+        Platform.runLater(this::updateOnlineUsers);
     }
 }

@@ -40,7 +40,7 @@ public class Connection implements AutoCloseable {
         }
     }
 
-    public Object receiveData(Class<?> clazz){
+    public Object receiveData(Class<?> clazz) {
         lock.lock();
         try {
             while(received == null || !clazz.isAssignableFrom(received.getClass())){
@@ -54,18 +54,13 @@ public class Connection implements AutoCloseable {
         }
     }
 
-    public synchronized void sendData(Object data) {
-        try {
-            out.writeObject(data);
-            out.flush();
-            log.debug("Written object to socket: {}", data);
-        } catch (IOException e) {
-            log.error("Failed to write object to socket", e);
-            throw new RuntimeException(e);
-        }
+    public synchronized void sendData(Object data) throws IOException {
+        out.writeObject(data);
+        out.flush();
+        log.debug("Written object to socket: {}", data);
     }
 
-    public synchronized Object sendAndReceive(Object data, Class<?> receiveType) {
+    public synchronized Object sendAndReceive(Object data, Class<?> receiveType) throws IOException {
         lock.lock();
         sendData(data);
         try {

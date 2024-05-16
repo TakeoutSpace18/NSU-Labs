@@ -28,4 +28,16 @@ public class Config {
     public int getServerPort() {
         return Integer.parseInt(properties.getProperty("ServerPort"));
     }
+
+    public String getDatabaseURL() {
+        return properties.getProperty("DatabaseURL");
+    }
+
+    public String getDatabaseUsername() {
+        return properties.getProperty("DatabaseUsername");
+    }
+
+    public String getDatabasePassword() {
+        return properties.getProperty("DatabasePassword");
+    }
 }
