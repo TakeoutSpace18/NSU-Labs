@@ -6,22 +6,28 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.ChatClient;
-import nsu.urdin.chatclient.ChatEventListener;
+import nsu.urdin.chatclient.event.ServerEventListener;
+import nsu.urdin.chatclient.exception.RequestException;
+import nsu.urdin.chatprotocol.dto.event.LoginEvent;
+import nsu.urdin.chatprotocol.dto.event.LogoutEvent;
+import nsu.urdin.chatprotocol.dto.event.MessageEvent;
 import nsu.urdin.chatprotocol.entity.Message;
 import nsu.urdin.chatprotocol.entity.User;
 
 import java.io.IOException;
 
 @Slf4j
-public class ChatController implements ChatEventListener {
+public class ChatController implements ServerEventListener {
     @Setter
     private ChatClient chatClient;
 
@@ -32,13 +38,13 @@ public class ChatController implements ChatEventListener {
     private TextArea messageTextArea;
 
     @FXML
-    private ListView<String> messagesListView;
+    private ListView<TextFlow> messagesListView;
 
     @FXML
     private Label onlineUsersCountLabel;
 
     @FXML
-    private ListView<String> onlineUsersListView;
+    private ListView<Text> onlineUsersListView;
 
     @FXML
     private Button sendButton;
@@ -46,25 +52,60 @@ public class ChatController implements ChatEventListener {
     @FXML
     void initialize() {
         Platform.runLater(() -> {
-//            try {
-//                UsersListSuccessResponse usersResponse = chatClient.getUsersList();
-//                onlineUsersCountLabel.setText(String.valueOf(usersResponse.getUsers().size()));
-//            } catch (RequestException e) {
-//                Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to retrieve users list (" + e.getMessage() + ")", ButtonType.OK);
-//                alert.showAndWait();
-//            }
+            updateOnlineUsers();
+            updateMessages();
         });
+    }
+
+    private Text userToText(User user) {
+        Text text = new Text(user.getName());
+        text.setFill(Color.rgb(0, 109, 9));
+        text.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        return text;
+    }
+
+    private TextFlow messageToTextFlow(Message message) {
+        Text author = new Text(message.getUserName());
+        author.setLayoutX(100);
+        author.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        author.setFill(Color.rgb(0, 109, 9));
+        Text spacer = new Text("\t");
+        Text text = new Text(message.getText());
+        return new TextFlow(author, spacer, text);
+    }
+
+    private void updateMessages() {
+        messagesListView.getItems().clear();
+        chatClient.getMessages().stream()
+                .map(this::messageToTextFlow)
+                .forEach(textFlow -> messagesListView.getItems().add(textFlow));
+    }
+
+    void updateOnlineUsers() {
+        onlineUsersListView.getItems().clear();
+        onlineUsersCountLabel.setText(String.valueOf(chatClient.getOnlineUsersCount()));
+
+        chatClient.getOnlineUsers().stream()
+                .map(this::userToText)
+                .forEach(text -> onlineUsersListView.getItems().add(text));
     }
 
     @FXML
     void onDisconnectButtonPress(ActionEvent event) {
         chatClient.logout();
+        chatClient.removeServerEventListener(this);
         LoginController.Load((Stage) disconnectButton.getScene().getWindow(), chatClient);
     }
 
     @FXML
     void onSendButtonPress(ActionEvent event) {
-
+        try {
+            chatClient.sendMessage(messageTextArea.getText());
+            messageTextArea.clear();
+        } catch (RequestException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
+            alert.showAndWait();
+        }
     }
 
     public static void Load(Stage stage, ChatClient chatClient) {
@@ -80,6 +121,7 @@ public class ChatController implements ChatEventListener {
 
         ChatController chatController = fxmlLoader.getController();
         chatController.setChatClient(chatClient);
+        chatClient.addServerEventListener(chatController);
 
         Scene scene = new Scene(root, 1200, 900);
         stage.setTitle("Chat");
@@ -87,19 +129,18 @@ public class ChatController implements ChatEventListener {
     }
 
     @Override
-    public void onNewMessage(Message message) {
-        messagesListView.getItems().add(message.getUser() + ": " + message.getText());
+    public void onNewMessage(MessageEvent event) {
+        messagesListView.getItems().add(messageToTextFlow(event.getMessage()));
     }
 
     @Override
-    public void onUserLogin(User user) {
-        onlineUsersListView.getItems().add(user.getName());
-        onlineUsersCountLabel.setText(onlineUsersCountLabel.getText() + 1);
+    public void onUserLogin(LoginEvent event) {
+        onlineUsersListView.getItems().add(userToText(event.getUser()));
+        onlineUsersCountLabel.setText(String.valueOf(chatClient.getOnlineUsersCount()));
     }
 
     @Override
-    public void onUserLogout(User user) {
-        onlineUsersListView.getItems().remove(user.getName());
-//        onlineUsersCountLabel.setText(onlineUsersCountLabel.getText() - 1);
+    public void onUserLogout(LogoutEvent event) {
+        updateOnlineUsers();
     }
 }

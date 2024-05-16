@@ -58,6 +58,7 @@ public class Connection implements AutoCloseable {
         try {
             out.writeObject(data);
             out.flush();
+            log.debug("Written object to socket: {}", data);
         } catch (IOException e) {
             log.error("Failed to write object to socket", e);
             throw new RuntimeException(e);
@@ -68,6 +69,7 @@ public class Connection implements AutoCloseable {
         lock.lock();
         sendData(data);
         try {
+            receivedCondition.await();
             while(received == null || !receiveType.isAssignableFrom(received.getClass())){
                 receivedCondition.await();
             }
@@ -83,7 +85,8 @@ public class Connection implements AutoCloseable {
         while (!Thread.interrupted()) {
             received = readObject();
             lock.lock();
-            receivedCondition.signal();
+            receivedCondition.signalAll();
+            log.debug("signalled all waiters");
             lock.unlock();
         }
     }
@@ -95,6 +98,8 @@ public class Connection implements AutoCloseable {
             in = new ObjectInputStream(clientSocket.getInputStream());
 
             socketListener = new Thread(this::runSocketListener);
+            socketListener.setName("Socket Listener Thread");
+            socketListener.setDaemon(true);
             socketListener.start();
 
         } catch (IOException e) {
@@ -106,12 +111,15 @@ public class Connection implements AutoCloseable {
     }
 
     private Object readObject() {
-        Object obj;
+        Object obj = null;
         try {
             obj = in.readObject();
+            log.debug("Read object from socket: {}", obj);
         } catch (IOException | ClassNotFoundException e) {
-            log.error("Failed to read object from socket", e);
-            throw new RuntimeException(e);
+            if (!clientSocket.isClosed()) {
+                log.error("Failed to read object from socket", e);
+                throw new RuntimeException(e);
+            }
         }
         return obj;
     }

@@ -3,21 +3,29 @@ package nsu.urdin.chatclient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.config.Config;
+import nsu.urdin.chatclient.event.ServerEventListener;
+import nsu.urdin.chatclient.event.ServerEventThread;
 import nsu.urdin.chatclient.exception.ConnectionException;
 import nsu.urdin.chatclient.exception.RequestException;
+import nsu.urdin.chatclient.request.RequestController;
+import nsu.urdin.chatprotocol.dto.event.LoginEvent;
+import nsu.urdin.chatprotocol.dto.event.LogoutEvent;
+import nsu.urdin.chatprotocol.dto.event.MessageEvent;
 import nsu.urdin.chatprotocol.entity.Message;
 import nsu.urdin.chatprotocol.entity.User;
 
 import java.util.List;
 
 @Slf4j
-public class ChatClient {
+public class ChatClient implements ServerEventListener {
     private static final ChatClient INSTANCE = new ChatClient();
 
     @Getter
     private final Config config;
     private final Connection connection;
-    RequestController requestController;
+    private final RequestController requestController;
+    private final ServerEventThread serverEventThread;
+
     private int onlineUsersCount;
     private List<User> onlineUsers;
     private List<Message> messages;
@@ -32,6 +40,8 @@ public class ChatClient {
         this.config = new Config();
         this.connection = new Connection();
         this.requestController = new RequestController(connection);
+        this.serverEventThread = new ServerEventThread(connection);
+        this.serverEventThread.addListener(this);
     }
 
     public void login(String serverHost, int port, String username, String password)
@@ -42,6 +52,7 @@ public class ChatClient {
 
         connection.open(serverHost, port);
         requestController.login(username, password);
+        fetchData();
         isLoggedIn = true;
     }
 
@@ -53,6 +64,7 @@ public class ChatClient {
         connection.open(serverHost, port);
         requestController.register(username, password);
         requestController.login(username, password);
+        fetchData();
         isLoggedIn = true;
     }
 
@@ -80,9 +92,47 @@ public class ChatClient {
         ensureLoggedIn();
         return messages;
     }
+
+    public void sendMessage(String text) throws RequestException {
+        ensureLoggedIn();
+        requestController.sendMessage(text);
+    }
+
     private void ensureLoggedIn() {
         if (!isLoggedIn) {
-            throw new RuntimeException("Not logged in");
+            throw new IllegalStateException("Not logged in");
         }
+    }
+
+    private void fetchData() throws RequestException {
+        onlineUsers = requestController.getUsersList().getUsers();
+        onlineUsersCount = onlineUsers.size();
+        messages = requestController.getChatHistory().getMessages();
+    }
+
+    @Override
+    public void onNewMessage(MessageEvent event) {
+        messages.add(event.getMessage());
+    }
+
+    @Override
+    public void onUserLogin(LoginEvent event) {
+        onlineUsers.add(event.getUser());
+        onlineUsersCount++;
+    }
+
+    @Override
+    public void onUserLogout(LogoutEvent event) {
+        var userToDelete = onlineUsers.stream().filter(user -> user.getName().equals(event.getName())).findFirst();
+        userToDelete.ifPresent(user -> onlineUsers.remove(user));
+        onlineUsersCount--;
+    }
+
+    public void addServerEventListener(ServerEventListener listener) {
+        serverEventThread.addListener(listener);
+    }
+
+    public void removeServerEventListener(ServerEventListener listener) {
+        serverEventThread.removeListener(listener);
     }
 }

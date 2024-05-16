@@ -1,15 +1,14 @@
 package nsu.urdin.chatprotocol.dto.event;
 
 import lombok.Getter;
+import nsu.urdin.chatprotocol.entity.Message;
 
 @Getter
 public class MessageEvent extends EventBase {
-    private final String message;
-    private final String from;
+    private final Message message;
 
-    public MessageEvent(String message, String from) {
+    public MessageEvent(Message message) {
         super("message");
         this.message = message;
-        this.from = from;
     }
 }

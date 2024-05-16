@@ -1,10 +1,14 @@
 package nsu.urdin.chatprotocol.dto.event;
 
-public class LoginEvent extends EventBase {
-    private final String name;
+import lombok.Getter;
+import nsu.urdin.chatprotocol.entity.User;
 
-    public LoginEvent(String name) {
+@Getter
+public class LoginEvent extends EventBase {
+    private final User user;
+
+    public LoginEvent(User user) {
         super("userlogin");
-        this.name = name;
+        this.user = user;
     }
 }

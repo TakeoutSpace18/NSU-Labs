@@ -11,7 +11,6 @@ public class LoginHandler extends RequestHandler {
     @Override
     public ResponseBase handle(RequestBase requestDto) {
         if (requestDto instanceof LoginRequest loginRequest) {
-            log.info("Login request received: username -  {}, password - {}", loginRequest.getName(), loginRequest.getPassword());
 
             return new SuccessResponse();
         }
