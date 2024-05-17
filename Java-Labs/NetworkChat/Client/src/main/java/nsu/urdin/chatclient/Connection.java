@@ -31,7 +31,9 @@ public class Connection implements AutoCloseable {
     public Object receiveData() {
         lock.lock();
         try {
-            receivedCondition.await();
+            do {
+                receivedCondition.await();
+            } while (received == null);
             return received;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -43,9 +45,9 @@ public class Connection implements AutoCloseable {
     public Object receiveData(Class<?> clazz) {
         lock.lock();
         try {
-            while(received == null || !clazz.isAssignableFrom(received.getClass())){
+            do {
                 receivedCondition.await();
-            }
+            } while (received == null || !clazz.isAssignableFrom(received.getClass()));
             return received;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -64,10 +66,9 @@ public class Connection implements AutoCloseable {
         lock.lock();
         sendData(data);
         try {
-            receivedCondition.await();
-            while(received == null || !receiveType.isAssignableFrom(received.getClass())){
+            do {
                 receivedCondition.await();
-            }
+            } while (received == null || !receiveType.isAssignableFrom(received.getClass()));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
