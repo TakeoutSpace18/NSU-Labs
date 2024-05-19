@@ -127,16 +127,21 @@ int main(int argc, char **argv)
             continue;
         }
 
-        int64_t vaddr = strtoll(line, NULL, 16);
+        int64_t vaddr_start = strtoll(line, NULL, 16);
+        int64_t vaddr_stop = strtoll(line + 13, NULL, 16);
 
-        int64_t pmentry = read_pagemap_entry(pagemap, vaddr);
-        if (pmentry == -1) {
-            continue;
+        for (int64_t vaddr = vaddr_start; vaddr < vaddr_stop; vaddr += sysconf(_SC_PAGESIZE)) {
+            int64_t pmentry = read_pagemap_entry(pagemap, vaddr);
+            if (pmentry == -1) {
+                continue;
+            }
+
+            uint64_t pcount = read_pagecount(kpagecount, pmentry);
+
+            print_pmentry(vaddr,pmentry, pcount);
+
         }
 
-        uint64_t pcount = read_pagecount(kpagecount, pmentry);
-
-        print_pmentry(vaddr,pmentry, pcount);
     }
 
     printf("sd - soft dirty pte\n");
