@@ -1,6 +1,4 @@
-package nsu.urdin.chatprotocol;
-
-import nsu.urdin.chatprotocol.dto.ErrorResponse;
+package nsu.urdin.chatprotocol.dto;
 
 public class NotAuthenticatedResponse extends ErrorResponse {
     public NotAuthenticatedResponse() {

@@ -1,6 +1,6 @@
 package nsu.urdin.chatserver.request.handlers;
 
-import nsu.urdin.chatprotocol.NotAuthenticatedResponse;
+import nsu.urdin.chatprotocol.dto.NotAuthenticatedResponse;
 import nsu.urdin.chatprotocol.dto.ResponseBase;
 import nsu.urdin.chatprotocol.dto.SuccessResponse;
 import nsu.urdin.chatprotocol.dto.event.MessageEvent;

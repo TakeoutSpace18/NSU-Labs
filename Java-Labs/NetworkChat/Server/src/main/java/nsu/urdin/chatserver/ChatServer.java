@@ -2,6 +2,7 @@ package nsu.urdin.chatserver;
 
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatprotocol.dto.event.EventBase;
+import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.config.Config;
 
 import java.io.IOException;
@@ -91,5 +92,12 @@ public class ChatServer implements Runnable {
             }
             catch (IOException ignored) {}
         }
+    }
+
+    public List<User> getOnlineUsersList() {
+        return sessions.stream()
+                .filter(ConnectionSession::isLoggedIn)
+                .map(ConnectionSession::getUser)
+                .toList();
     }
 }
