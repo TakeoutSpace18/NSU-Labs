@@ -5,6 +5,7 @@ constexpr int TASK_REQUEST_TAG = 777;
 
 struct TasksRequest
 {
+    int sourceProcRank;
     int wantedCount;
 };
 

@@ -3,15 +3,16 @@
 #include <memory>
 #include <mpi.h>
 #include <sstream>
+#include <unistd.h>
 
 #include "BlockingQueue.h"
-#include "RecieverThread.h"
+#include "ReceiverThread.h"
 #include "SenderThread.h"
 #include "Task.h"
 #include "WorkerThread.h"
 
-constexpr int ITER_TASKS_COUNT = 100;
-constexpr int ITER_COUNT = 24;
+constexpr int ITER_TASKS_COUNT = 2000;
+constexpr int ITER_COUNT = 33;
 
 void GenerateTasks(std::shared_ptr<BlockingQueue<Task>> queue, int procRank, int procCount, int iterCount)
 {
@@ -30,21 +31,27 @@ int main(int argc, char **argv)
     int procRank = MPI::COMM_WORLD.Get_rank();
     int procCount = MPI::COMM_WORLD.Get_size();
 
-    std::shared_ptr<BlockingQueue<Task>> taskQueue = std::make_shared<BlockingQueue<Task>>();
+    std::cout << "Proc: " + std::to_string(procRank) + "; pid: " + std::to_string(getpid()) + "\n";
 
-    std::shared_ptr<RecieverThread> recieverThread = std::make_shared<RecieverThread>(MPI::COMM_WORLD, taskQueue);
-    std::shared_ptr<SenderThread> senderThread = std::make_shared<SenderThread>(MPI::COMM_WORLD, taskQueue);
+    auto taskQueue = std::make_shared<BlockingQueue<Task>>();
+
+    auto receiverThread = std::make_shared<ReceiverThread>(MPI::COMM_WORLD, taskQueue);
+    auto senderThread = std::make_shared<SenderThread>(MPI::COMM_WORLD, taskQueue);
 
     std::ofstream plot("plot_proc_" + std::to_string(procRank) + ".dat");
 
     for (int curIter = 0; curIter < ITER_COUNT; ++curIter) {
+        MPI::COMM_WORLD.Barrier();
+        if (procRank == 0) {
+            std::cout << "Began " + std::to_string(curIter) +  " iteration...\n";
+        }
+
         GenerateTasks(taskQueue, procRank, procCount, curIter);
 
-        MPI::COMM_WORLD.Barrier();
         double beginTime = MPI::Wtime();
 
-        WorkerThread workerThread(taskQueue, recieverThread);
-        recieverThread->SetNoMoreTasksCallback([&](){
+        WorkerThread workerThread(taskQueue, receiverThread);
+        receiverThread->SetNoMoreTasksCallback([&](){
             workerThread.Stop();
             taskQueue->InterruptWaiting();
         });
@@ -55,10 +62,24 @@ int main(int argc, char **argv)
 
         plot << curIter << " " << timeElapsed << "\n";
         std::stringstream ss;
-        ss << "Proc " << procRank << "; Iter " << curIter << "; time elapsed: " << timeElapsed << "\n";
-        std::cout << ss.str();
+        ss << "Proc " << procRank << ": Iter " << curIter << "; time elapsed: " << timeElapsed << "\n";
+        ss << "\tTotal tasks received: " << receiverThread->GetTotalTasksReceived() << "\n";
+        ss << "\tTotal tasks sent: " << senderThread->GetTotalTasksSent() << "\n";
+        ss << "\tTotal tasks executed: " << workerThread.GetTotalTasksExecuted() << "\n";
+        std::cout << ss.str() << std::endl;
     }
 
+    MPI::COMM_WORLD.Barrier();
+
+    receiverThread->Stop();
+    senderThread->Stop();
+
+    receiverThread->Join();
+    senderThread->Join();
+
+    plot.close();
+
+    MPI::COMM_WORLD.Barrier();
 
     MPI::Finalize();
     return EXIT_SUCCESS;

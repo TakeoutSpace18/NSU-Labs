@@ -8,23 +8,27 @@ class Task;
 template <class T>
 class BlockingQueue;
 
-class RecieverThread;
+class ReceiverThread;
 
 class WorkerThread {
 public:
     explicit WorkerThread(std::shared_ptr<BlockingQueue<Task>> taskQueue,
-        std::shared_ptr<RecieverThread> recieverThread);
+        std::shared_ptr<ReceiverThread> recieverThread);
 
     void Stop() { mStopped = true; }
     void Join() { mWorker.join(); }
 
-private:
-    void EntryPoint() const;
+    [[nodiscard]] int GetTotalTasksExecuted() const { return mTotalTasksExecuted; }
 
-    std::shared_ptr<RecieverThread> mRecieverThread;
+private:
+    void EntryPoint();
+
+    std::shared_ptr<ReceiverThread> mRecieverThread;
     std::shared_ptr<BlockingQueue<Task>> mTaskQueue;
     std::thread mWorker;
     bool mStopped;
+
+    int mTotalTasksExecuted = 0;
 };
 
 
