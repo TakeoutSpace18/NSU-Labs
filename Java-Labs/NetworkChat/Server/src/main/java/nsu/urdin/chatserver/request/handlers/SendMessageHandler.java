@@ -15,7 +15,7 @@ import nsu.urdin.chatserver.exception.DatabaseException;
 
 public class SendMessageHandler extends RequestHandler {
     @Override
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         if (requestDto instanceof SendMessageRequest sendMessageRequest) {
             if (!session.isLoggedIn()) {
                 return new NotAuthenticatedResponse();
@@ -25,8 +25,6 @@ public class SendMessageHandler extends RequestHandler {
                     .userName(session.getUser().getName())
                     .text(sendMessageRequest.getMessage())
                     .build();
-
-            Database db = ChatServer.getInstance().getDatabase();
 
             try {
                 db.addMessage(message);

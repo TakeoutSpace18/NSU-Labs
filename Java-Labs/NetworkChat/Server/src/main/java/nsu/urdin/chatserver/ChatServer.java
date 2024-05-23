@@ -3,6 +3,7 @@ package nsu.urdin.chatserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatprotocol.dto.event.EventBase;
+import nsu.urdin.chatprotocol.dto.event.LogoutEvent;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.config.Config;
 import nsu.urdin.chatserver.database.Database;
@@ -89,9 +90,9 @@ public class ChatServer implements Runnable {
     }
 
     public void broadcastEvent(EventBase event, ConnectionSession sourceSession, boolean sendToYourself) {
-        log.debug("Broadcasting event {} to {} clients...", event, sessions.size());
+        log.debug("Broadcasting event {} to {} clients...", event, sendToYourself ? sessions.size() : sessions.size() - 1);
         sessions.forEach(session -> {
-            if (sendToYourself || session != sourceSession) {
+            if (session.isLoggedIn() && (sendToYourself || session != sourceSession)) {
                 session.sendEvent(event);
             }
         });
@@ -111,5 +112,17 @@ public class ChatServer implements Runnable {
                 .filter(ConnectionSession::isLoggedIn)
                 .map(ConnectionSession::getUser)
                 .toList();
+    }
+
+    public void closeSession(ConnectionSession session) {
+        log.info("Closing session with {}...", session.getRemoteSocketAddress());
+
+
+        if (session.isLoggedIn()) {
+            broadcastEvent(new LogoutEvent(session.getUser().getName()), session, false);
+            session.logout();
+        }
+        session.stop();
+        sessions.remove(session);
     }
 }

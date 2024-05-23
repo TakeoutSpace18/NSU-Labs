@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketAddress;
 
 @Slf4j
 public class ConnectionSession implements Runnable {
@@ -40,8 +41,17 @@ public class ConnectionSession implements Runnable {
     @Override
     public void run() {
         while (isActive) {
-            RequestBase requestDto = receiveRequest();
-            ResponseBase responseDto = HANDLER_CHAIN.handle(requestDto, this);
+            RequestBase requestDto;
+            try {
+                requestDto = (RequestBase) in.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                ChatServer.getInstance().closeSession(this);
+                break;
+            }
+
+            log.debug("Received request from {}: {}", clientSocket.getRemoteSocketAddress(), requestDto);
+
+            ResponseBase responseDto = HANDLER_CHAIN.handle(requestDto, this, ChatServer.getInstance().getDatabase());
             sendResponse(responseDto);
         }
     }
@@ -53,18 +63,6 @@ public class ConnectionSession implements Runnable {
             log.error("Failed to send response to {}", clientSocket.getRemoteSocketAddress(), e);
         }
         log.debug("Sent response to {}: {}", clientSocket.getRemoteSocketAddress(), responseDto);
-    }
-
-    private RequestBase receiveRequest() {
-        RequestBase requestDto;
-        try {
-            requestDto = (RequestBase) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            log.error("Failed to receive request", e);
-            throw new RuntimeException(e);
-        }
-        log.debug("Received request from {}: {}", clientSocket.getRemoteSocketAddress(), requestDto);
-        return requestDto;
     }
 
     private synchronized void writeObject(Object obj) throws IOException {
@@ -82,6 +80,10 @@ public class ConnectionSession implements Runnable {
 
     public void stop() {
         isActive = false;
+    }
+
+    public SocketAddress getRemoteSocketAddress() {
+        return clientSocket.getRemoteSocketAddress();
     }
 
     public boolean isLoggedIn() {

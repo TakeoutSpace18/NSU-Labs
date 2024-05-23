@@ -5,6 +5,7 @@ import nsu.urdin.chatprotocol.dto.ErrorResponse;
 import nsu.urdin.chatprotocol.dto.ResponseBase;
 import nsu.urdin.chatprotocol.dto.request.RequestBase;
 import nsu.urdin.chatserver.ConnectionSession;
+import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.request.handlers.*;
 
 import java.util.ArrayList;
@@ -25,9 +26,9 @@ public class RequestHandlerChain
         handlers.add(new GetChatHistoryHandler());
     }
 
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         for (RequestHandler handler : handlers) {
-            ResponseBase reply = handler.handle(requestDto, session);
+            ResponseBase reply = handler.handle(requestDto, session, db);
             if (reply != null) {
                 return reply;
             }

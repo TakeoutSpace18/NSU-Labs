@@ -6,20 +6,17 @@ import nsu.urdin.chatprotocol.dto.ResponseBase;
 import nsu.urdin.chatprotocol.dto.request.ChatHistoryRequest;
 import nsu.urdin.chatprotocol.dto.request.ChatHistorySuccessResponse;
 import nsu.urdin.chatprotocol.dto.request.RequestBase;
-import nsu.urdin.chatserver.ChatServer;
 import nsu.urdin.chatserver.ConnectionSession;
 import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.exception.DatabaseException;
 
 public class GetChatHistoryHandler extends RequestHandler {
     @Override
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         if (requestDto instanceof ChatHistoryRequest chatHistoryRequest) {
             if (!session.isLoggedIn()) {
                 return new NotAuthenticatedResponse();
             }
-
-            Database db = ChatServer.getInstance().getDatabase();
 
             try {
                 db.getMessages();

@@ -25,9 +25,12 @@ public class Connection implements AutoCloseable {
     private final Lock lock;
     private final Condition receivedCondition;
 
+    private boolean isOpen;
+
     public Connection() {
         lock = new ReentrantLock();
         receivedCondition = lock.newCondition();
+        isOpen = false;
     }
 
     public Object receiveData(Class<?> clazz) {
@@ -85,7 +88,7 @@ public class Connection implements AutoCloseable {
     }
 
     private void runSocketListener() {
-        while (!Thread.interrupted()) {
+        while (!Thread.interrupted() || !clientSocket.isClosed()) {
             received = readObject();
             lock.lock();
             receivedCondition.signalAll();
@@ -95,6 +98,10 @@ public class Connection implements AutoCloseable {
     }
 
     public void open(String host, int port) throws ConnectionException {
+        if (isOpen) {
+            throw new ConnectionException("Connection is already open");
+        }
+
         try {
             this.clientSocket = new Socket(host, port);
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -104,6 +111,7 @@ public class Connection implements AutoCloseable {
             socketListener.setName("Socket Listener Thread");
             socketListener.setDaemon(true);
             socketListener.start();
+            isOpen = true;
 
         } catch (IOException e) {
             log.error("Failed to connect to server {}:{}", host, port, e);
@@ -139,6 +147,7 @@ public class Connection implements AutoCloseable {
             log.error("Failed to close connection", e);
         } finally {
             closeConnectionSilently();
+            isOpen = false;
         }
     }
 

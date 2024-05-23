@@ -18,13 +18,11 @@ import java.util.Optional;
 @Slf4j
 public class LoginHandler extends RequestHandler {
     @Override
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         if (requestDto instanceof LoginRequest loginRequest) {
             if (session.isLoggedIn()) {
                 return new ErrorResponse("You are already logged in");
             }
-
-            Database db = ChatServer.getInstance().getDatabase();
 
             try {
                 Optional<User> user = db.findUser(loginRequest.getName());

@@ -7,7 +7,6 @@ import nsu.urdin.chatprotocol.dto.request.RegisterRequest;
 import nsu.urdin.chatprotocol.dto.request.RequestBase;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatprotocol.exception.ValidationException;
-import nsu.urdin.chatserver.ChatServer;
 import nsu.urdin.chatserver.ConnectionSession;
 import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.exception.DatabaseException;
@@ -15,11 +14,8 @@ import nsu.urdin.chatserver.exception.DatabaseException;
 public class RegisterHandler extends RequestHandler {
 
     @Override
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         if (requestDto instanceof RegisterRequest registerRequest) {
-
-            Database db = ChatServer.getInstance().getDatabase();
-
             try {
                 if (db.findUser(registerRequest.getName()).isPresent()) {
                     return new ErrorResponse("Username already exists");

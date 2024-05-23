@@ -55,7 +55,12 @@ public class ChatClient implements ServerEventListener {
         }
 
         connection.open(serverHost, port);
-        requestController.login(username, password);
+        try {
+            requestController.login(username, password);
+        } catch (RequestException e) {
+            connection.close();
+            throw e;
+        }
         fetchData();
         isLoggedIn = true;
     }

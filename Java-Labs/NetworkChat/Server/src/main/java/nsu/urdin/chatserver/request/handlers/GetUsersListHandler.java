@@ -9,13 +9,14 @@ import nsu.urdin.chatprotocol.dto.request.UsersListSuccessResponse;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.ChatServer;
 import nsu.urdin.chatserver.ConnectionSession;
+import nsu.urdin.chatserver.database.Database;
 
 import java.util.List;
 
 @Slf4j
 public class GetUsersListHandler extends RequestHandler {
     @Override
-    public ResponseBase handle(RequestBase requestDto, ConnectionSession session) {
+    public ResponseBase handle(RequestBase requestDto, ConnectionSession session, Database db) {
         if (requestDto instanceof UsersListRequest usersListRequest) {
             if (!session.isLoggedIn()) {
                 return new NotAuthenticatedResponse();
