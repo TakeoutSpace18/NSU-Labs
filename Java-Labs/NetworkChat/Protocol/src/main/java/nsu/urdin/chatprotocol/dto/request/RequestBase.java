@@ -1,12 +1,16 @@
 package nsu.urdin.chatprotocol.dto.request;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-
-import java.io.Serializable;
+import nsu.urdin.chatprotocol.dto.DtoBase;
 
 @Getter
-@AllArgsConstructor
-public class RequestBase implements Serializable {
+public class RequestBase extends DtoBase {
     private final String commandName;
+
+    @JsonCreator
+    public RequestBase(@JsonProperty("commandName") String commandName) {
+        this.commandName = commandName;
+    }
 }

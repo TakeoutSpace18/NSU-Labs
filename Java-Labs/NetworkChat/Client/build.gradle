@@ -30,6 +30,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation 'org.openjfx:javafx:22'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+
 }
 
 javafx {

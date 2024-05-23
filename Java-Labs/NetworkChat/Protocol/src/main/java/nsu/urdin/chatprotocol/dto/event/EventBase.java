@@ -1,12 +1,16 @@
 package nsu.urdin.chatprotocol.dto.event;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-
-import java.io.Serializable;
+import nsu.urdin.chatprotocol.dto.DtoBase;
 
 @Getter
-@AllArgsConstructor
-public class EventBase implements Serializable {
+public class EventBase extends DtoBase {
     private final String eventName;
+
+    @JsonCreator
+    public EventBase(@JsonProperty("eventName") String eventName) {
+        this.eventName = eventName;
+    }
 }

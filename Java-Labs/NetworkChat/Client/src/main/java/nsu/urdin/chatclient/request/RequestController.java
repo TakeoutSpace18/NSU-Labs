@@ -1,13 +1,11 @@
 package nsu.urdin.chatclient.request;
 
 import lombok.extern.slf4j.Slf4j;
-import nsu.urdin.chatclient.Connection;
+import nsu.urdin.chatclient.connection.Connection;
 import nsu.urdin.chatclient.exception.ConnectionTimeoutException;
 import nsu.urdin.chatclient.exception.RequestException;
-import nsu.urdin.chatprotocol.dto.ErrorResponse;
-import nsu.urdin.chatprotocol.dto.ResponseBase;
-import nsu.urdin.chatprotocol.dto.SuccessResponse;
 import nsu.urdin.chatprotocol.dto.request.*;
+import nsu.urdin.chatprotocol.dto.response.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

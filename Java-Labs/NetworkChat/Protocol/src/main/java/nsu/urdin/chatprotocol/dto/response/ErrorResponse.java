@@ -1,16 +1,16 @@
-package nsu.urdin.chatprotocol.dto.request;
+package nsu.urdin.chatprotocol.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
-public class SendMessageRequest extends RequestBase {
+public class ErrorResponse extends ResponseBase {
     private final String message;
 
     @JsonCreator
-    public SendMessageRequest(@JsonProperty("message") String message) {
-        super("message");
+    public ErrorResponse(@JsonProperty("message") String message) {
+        super("Error");
         this.message = message;
     }
 }

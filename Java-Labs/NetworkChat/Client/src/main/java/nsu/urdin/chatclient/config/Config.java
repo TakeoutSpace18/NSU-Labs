@@ -32,4 +32,8 @@ public class Config {
     public String getServerHost() {
         return properties.getProperty("ServerHost");
     }
+
+    public boolean jsonCommunication() {
+        return Boolean.parseBoolean(properties.getProperty("UseJsonCommunication"));
+    }
 }

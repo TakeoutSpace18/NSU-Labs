@@ -1,7 +1,7 @@
 package nsu.urdin.chatclient.event;
 
 import lombok.extern.slf4j.Slf4j;
-import nsu.urdin.chatclient.Connection;
+import nsu.urdin.chatclient.connection.Connection;
 import nsu.urdin.chatprotocol.dto.event.EventBase;
 import nsu.urdin.chatprotocol.dto.event.LoginEvent;
 import nsu.urdin.chatprotocol.dto.event.LogoutEvent;
@@ -12,13 +12,11 @@ import java.util.List;
 
 @Slf4j
 public class ServerEventThread implements AutoCloseable {
-    private final Connection connection;
     private final Thread thread;
 
     private List<ServerEventListener> listeners;
 
     public ServerEventThread(Connection connection) {
-        this.connection = connection;
         thread = new Thread(() -> {
             while (!Thread.interrupted()) {
                 EventBase event = (EventBase) connection.receiveData(EventBase.class);

@@ -1,13 +1,13 @@
 package nsu.urdin.chatserver.request.handlers;
 
-import nsu.urdin.chatprotocol.dto.ErrorResponse;
-import nsu.urdin.chatprotocol.dto.ResponseBase;
-import nsu.urdin.chatprotocol.dto.SuccessResponse;
 import nsu.urdin.chatprotocol.dto.request.RegisterRequest;
 import nsu.urdin.chatprotocol.dto.request.RequestBase;
+import nsu.urdin.chatprotocol.dto.response.ErrorResponse;
+import nsu.urdin.chatprotocol.dto.response.ResponseBase;
+import nsu.urdin.chatprotocol.dto.response.SuccessResponse;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatprotocol.exception.ValidationException;
-import nsu.urdin.chatserver.ConnectionSession;
+import nsu.urdin.chatserver.connection.ConnectionSession;
 import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.exception.DatabaseException;
 

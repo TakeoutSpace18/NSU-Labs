@@ -1,10 +1,10 @@
 package nsu.urdin.chatserver.request;
 
 import lombok.extern.slf4j.Slf4j;
-import nsu.urdin.chatprotocol.dto.ErrorResponse;
-import nsu.urdin.chatprotocol.dto.ResponseBase;
 import nsu.urdin.chatprotocol.dto.request.RequestBase;
-import nsu.urdin.chatserver.ConnectionSession;
+import nsu.urdin.chatprotocol.dto.response.ErrorResponse;
+import nsu.urdin.chatprotocol.dto.response.ResponseBase;
+import nsu.urdin.chatserver.connection.ConnectionSession;
 import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.request.handlers.*;
 

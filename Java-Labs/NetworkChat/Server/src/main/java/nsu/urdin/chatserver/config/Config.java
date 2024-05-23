@@ -40,4 +40,8 @@ public class Config {
     public String getDatabasePassword() {
         return properties.getProperty("DatabasePassword");
     }
+
+    public boolean jsonCommunication() {
+        return Boolean.parseBoolean(properties.getProperty("UseJsonCommunication"));
+    }
 }

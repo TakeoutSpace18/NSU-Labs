@@ -1,12 +1,10 @@
-package nsu.urdin.chatclient;
+package nsu.urdin.chatclient.connection;
 
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.exception.ConnectionException;
 import nsu.urdin.chatclient.exception.ConnectionTimeoutException;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -14,10 +12,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-public class Connection implements AutoCloseable {
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+public abstract class Connection implements AutoCloseable {
+    private Socket socket;
     private Thread socketListener;
 
     private Object received;
@@ -33,6 +29,7 @@ public class Connection implements AutoCloseable {
         isOpen = false;
     }
 
+    // Blocking receive
     public Object receiveData(Class<?> clazz) {
         lock.lock();
         try {
@@ -47,6 +44,7 @@ public class Connection implements AutoCloseable {
         }
     }
 
+    // Receive with timeout
     public Object receiveData(Class<?> clazz, long timeout, TimeUnit unit) throws ConnectionTimeoutException {
         lock.lock();
         try {
@@ -61,12 +59,6 @@ public class Connection implements AutoCloseable {
         } finally {
             lock.unlock();
         }
-    }
-
-    public synchronized void sendData(Object data) throws IOException {
-        out.writeObject(data);
-        out.flush();
-        log.debug("Written object to socket: {}", data);
     }
 
     public synchronized Object sendAndReceive(Object data, Class<?> receiveType, long timeout, TimeUnit unit)
@@ -88,8 +80,15 @@ public class Connection implements AutoCloseable {
     }
 
     private void runSocketListener() {
-        while (!Thread.interrupted() || !clientSocket.isClosed()) {
-            received = readObject();
+        while (!Thread.interrupted() || !socket.isClosed()) {
+            try {
+                received = readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                if (!socket.isClosed()) {
+                    log.error("Failed to receive data", e);
+                    throw new RuntimeException(e);
+                }
+            }
             lock.lock();
             receivedCondition.signalAll();
             log.debug("signalled all waiters");
@@ -103,9 +102,8 @@ public class Connection implements AutoCloseable {
         }
 
         try {
-            this.clientSocket = new Socket(host, port);
-            out = new ObjectOutputStream(clientSocket.getOutputStream());
-            in = new ObjectInputStream(clientSocket.getInputStream());
+            socket = new Socket(host, port);
+            createStreams(socket);
 
             socketListener = new Thread(this::runSocketListener);
             socketListener.setName("Socket Listener Thread");
@@ -121,30 +119,24 @@ public class Connection implements AutoCloseable {
         log.info("Connected to server {}:{}", host, port);
     }
 
-    private Object readObject() {
-        Object obj = null;
-        try {
-            obj = in.readObject();
-            log.debug("Read object from socket: {}", obj);
-        } catch (IOException | ClassNotFoundException e) {
-            if (!clientSocket.isClosed()) {
-                log.error("Failed to read object from socket", e);
-                throw new RuntimeException(e);
-            }
-        }
-        return obj;
+    protected abstract void createStreams(Socket socket) throws IOException;
+    protected abstract void closeStreams();
+    protected abstract Object readObject() throws IOException, ClassNotFoundException;
+    protected abstract void writeObject(Object object) throws IOException;
+
+    public synchronized void sendData(Object data) throws IOException {
+        writeObject(data);
     }
 
     @Override
     public void close() {
         socketListener.interrupt();
+        closeStreams();
 
         try {
-            in.close();
-            out.close();
-            clientSocket.close();
+            socket.close();
         } catch (IOException e) {
-            log.error("Failed to close connection", e);
+            log.warn("Failed to close socket connection. Closing silently...", e);
         } finally {
             closeConnectionSilently();
             isOpen = false;
@@ -152,21 +144,9 @@ public class Connection implements AutoCloseable {
     }
 
     private void closeConnectionSilently() {
-        if (in != null) {
+        if (socket != null) {
             try {
-                in.close();
-            }
-            catch (IOException ignored) {}
-        }
-        if (out != null) {
-            try {
-                out.close();
-            }
-            catch (IOException ignored) {}
-        }
-        if (clientSocket != null) {
-            try {
-                clientSocket.close();
+                socket.close();
             }
             catch (IOException ignored) {}
         }

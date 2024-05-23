@@ -6,6 +6,9 @@ import nsu.urdin.chatprotocol.dto.event.EventBase;
 import nsu.urdin.chatprotocol.dto.event.LogoutEvent;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.config.Config;
+import nsu.urdin.chatserver.connection.ConnectionSession;
+import nsu.urdin.chatserver.connection.JsonConnectionSession;
+import nsu.urdin.chatserver.connection.ObjectConnectionSession;
 import nsu.urdin.chatserver.database.Database;
 import nsu.urdin.chatserver.exception.DatabaseException;
 
@@ -78,7 +81,14 @@ public class ChatServer implements Runnable {
         while (!Thread.interrupted()) {
             try {
                 Socket client = serverSocket.accept();
-                ConnectionSession session = new ConnectionSession(client);
+
+                ConnectionSession session;
+                if (config.jsonCommunication()) {
+                    session = new JsonConnectionSession(client);
+                } else {
+                    session = new ObjectConnectionSession(client);
+                }
+
                 sessions.add(session);
                 threadPool.execute(session);
             } catch (IOException e) {

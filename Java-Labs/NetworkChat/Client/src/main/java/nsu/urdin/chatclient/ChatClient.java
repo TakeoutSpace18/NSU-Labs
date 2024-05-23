@@ -3,6 +3,9 @@ package nsu.urdin.chatclient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.config.Config;
+import nsu.urdin.chatclient.connection.Connection;
+import nsu.urdin.chatclient.connection.JsonConnection;
+import nsu.urdin.chatclient.connection.ObjectConnection;
 import nsu.urdin.chatclient.event.ServerEventListener;
 import nsu.urdin.chatclient.event.ServerEventThread;
 import nsu.urdin.chatclient.exception.ConnectionException;
@@ -39,7 +42,15 @@ public class ChatClient implements ServerEventListener {
     private ChatClient() {
         this.isLoggedIn = false;
         this.config = new Config();
-        this.connection = new Connection();
+
+        if (config.jsonCommunication()) {
+            // Use json to send data
+            this.connection = new JsonConnection();
+        } else {
+            // Use Java object serialization to send data
+            this.connection = new ObjectConnection();
+        }
+
         this.requestController = new RequestController(connection);
         this.serverEventThread = new ServerEventThread(connection);
         this.serverEventThread.addListener(this);

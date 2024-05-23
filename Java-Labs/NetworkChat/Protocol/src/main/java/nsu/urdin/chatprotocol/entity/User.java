@@ -1,5 +1,7 @@
 package nsu.urdin.chatprotocol.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NonNull;
 import nsu.urdin.chatprotocol.exception.ValidationException;
@@ -11,7 +13,8 @@ public class User implements Serializable {
     @NonNull
     private final String name;
 
-    public User(@NonNull String name) throws ValidationException {
+    @JsonCreator
+    public User(@NonNull @JsonProperty("name") String name) throws ValidationException {
         validateName(name);
         this.name = name;
     }
