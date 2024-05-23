@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -54,6 +55,15 @@ public class ChatController implements ServerEventListener {
         Platform.runLater(() -> {
             updateOnlineUsers();
             updateMessages();
+
+            messageTextArea.setOnKeyPressed(event -> {
+                if (event.getCode().equals(KeyCode.ENTER)) {
+                    // remove \n character that have been typed into field
+                    String text = messageTextArea.getText();
+                    messageTextArea.setText(text.substring(0, text.length() - 1));
+                    onSendButtonPress();
+                }
+            });
         });
     }
 
@@ -98,7 +108,7 @@ public class ChatController implements ServerEventListener {
     }
 
     @FXML
-    void onSendButtonPress(ActionEvent event) {
+    void onSendButtonPress() {
         try {
             if (!messageTextArea.getText().isEmpty()) {
                 chatClient.sendMessage(messageTextArea.getText());
