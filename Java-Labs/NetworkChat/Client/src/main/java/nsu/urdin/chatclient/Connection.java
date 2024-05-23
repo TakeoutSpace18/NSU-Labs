@@ -2,11 +2,13 @@ package nsu.urdin.chatclient;
 
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.exception.ConnectionException;
+import nsu.urdin.chatclient.exception.ConnectionTimeoutException;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,12 +30,12 @@ public class Connection implements AutoCloseable {
         receivedCondition = lock.newCondition();
     }
 
-    public Object receiveData() {
+    public Object receiveData(Class<?> clazz) {
         lock.lock();
         try {
             do {
                 receivedCondition.await();
-            } while (received == null);
+            } while (received == null || !clazz.isAssignableFrom(received.getClass()));
             return received;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -42,11 +44,13 @@ public class Connection implements AutoCloseable {
         }
     }
 
-    public Object receiveData(Class<?> clazz) {
+    public Object receiveData(Class<?> clazz, long timeout, TimeUnit unit) throws ConnectionTimeoutException {
         lock.lock();
         try {
             do {
-                receivedCondition.await();
+                if (!receivedCondition.await(timeout, unit)) {
+                    throw new ConnectionTimeoutException();
+                }
             } while (received == null || !clazz.isAssignableFrom(received.getClass()));
             return received;
         } catch (InterruptedException e) {
@@ -62,12 +66,15 @@ public class Connection implements AutoCloseable {
         log.debug("Written object to socket: {}", data);
     }
 
-    public synchronized Object sendAndReceive(Object data, Class<?> receiveType) throws IOException {
+    public synchronized Object sendAndReceive(Object data, Class<?> receiveType, long timeout, TimeUnit unit)
+            throws IOException, ConnectionTimeoutException {
         lock.lock();
         sendData(data);
         try {
             do {
-                receivedCondition.await();
+                if (!receivedCondition.await(timeout, unit)) {
+                    throw new ConnectionTimeoutException();
+                }
             } while (received == null || !receiveType.isAssignableFrom(received.getClass()));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

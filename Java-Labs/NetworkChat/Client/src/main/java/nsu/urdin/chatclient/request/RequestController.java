@@ -2,6 +2,7 @@ package nsu.urdin.chatclient.request;
 
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatclient.Connection;
+import nsu.urdin.chatclient.exception.ConnectionTimeoutException;
 import nsu.urdin.chatclient.exception.RequestException;
 import nsu.urdin.chatprotocol.dto.ErrorResponse;
 import nsu.urdin.chatprotocol.dto.ResponseBase;
@@ -9,9 +10,12 @@ import nsu.urdin.chatprotocol.dto.SuccessResponse;
 import nsu.urdin.chatprotocol.dto.request.*;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RequestController {
+
+    private static final long REQUEST_TIMEOUT_MS = 1000;
 
     Connection connection;
 
@@ -21,11 +25,11 @@ public class RequestController {
 
     private SuccessResponse doRequest(RequestBase requestDto) throws RequestException {
         log.debug("Sending request... {}", requestDto);
-        ResponseBase responseDto = null;
+        ResponseBase responseDto;
         try {
-            responseDto = (ResponseBase) connection.sendAndReceive(requestDto, ResponseBase.class);
-        } catch (IOException e) {
-            throw new RequestException(e);
+            responseDto = (ResponseBase) connection.sendAndReceive(requestDto, ResponseBase.class, REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (IOException | ConnectionTimeoutException e) {
+            throw new RequestException(e.getMessage());
         }
         log.debug("Received response: {}", responseDto);
 
