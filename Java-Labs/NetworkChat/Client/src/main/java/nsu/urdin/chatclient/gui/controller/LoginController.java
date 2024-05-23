@@ -50,6 +50,13 @@ public class LoginController {
             serverHostInputField.setText(chatClient.getConfig().getServerHost());
             serverPortInputField.setText(String.valueOf(chatClient.getConfig().getServerPort()));
             errorMessageText.setText("");
+
+            // force the field to be numeric only
+            serverPortInputField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.matches("\\d*")) {
+                    serverPortInputField.setText(newValue.replaceAll("\\D", ""));
+                }
+            });
         });
     }
 

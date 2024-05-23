@@ -113,7 +113,7 @@ public class Connection implements AutoCloseable {
             socketListener.start();
             isOpen = true;
 
-        } catch (IOException e) {
+        } catch (IllegalArgumentException | IOException e) {
             log.error("Failed to connect to server {}:{}", host, port, e);
             throw new ConnectionException(e.getMessage());
         }
