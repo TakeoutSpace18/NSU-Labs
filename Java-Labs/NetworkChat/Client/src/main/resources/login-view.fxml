@@ -27,7 +27,7 @@
                <children>
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Username" />
                   <TextField fx:id="usernameInputField" GridPane.columnIndex="1" />
-                  <TextField fx:id="passwordInputField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <PasswordField fx:id="passwordInputField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Password" GridPane.rowIndex="1" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Server Host" GridPane.rowIndex="2" />
                   <TextField fx:id="serverHostInputField" GridPane.columnIndex="1" GridPane.rowIndex="2" />

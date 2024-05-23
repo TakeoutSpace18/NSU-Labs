@@ -100,8 +100,10 @@ public class ChatController implements ServerEventListener {
     @FXML
     void onSendButtonPress(ActionEvent event) {
         try {
-            chatClient.sendMessage(messageTextArea.getText());
-            messageTextArea.clear();
+            if (!messageTextArea.getText().isEmpty()) {
+                chatClient.sendMessage(messageTextArea.getText());
+                messageTextArea.clear();
+            }
         } catch (RequestException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR, e.getMessage(), ButtonType.OK);
             alert.showAndWait();

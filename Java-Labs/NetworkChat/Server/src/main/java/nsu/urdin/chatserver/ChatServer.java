@@ -1,9 +1,12 @@
 package nsu.urdin.chatserver;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nsu.urdin.chatprotocol.dto.event.EventBase;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.config.Config;
+import nsu.urdin.chatserver.database.Database;
+import nsu.urdin.chatserver.exception.DatabaseException;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -22,6 +25,9 @@ public class ChatServer implements Runnable {
     private final List<ConnectionSession> sessions;
     private final ExecutorService threadPool;
 
+    @Getter
+    private final Database database;
+
     public static ChatServer getInstance() {
         return INSTANCE;
     }
@@ -30,6 +36,12 @@ public class ChatServer implements Runnable {
         config = new Config();
         sessions = new ArrayList<>();
         threadPool = Executors.newCachedThreadPool();
+
+        try {
+            database = new Database(config);
+        } catch (DatabaseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void start(int port) {

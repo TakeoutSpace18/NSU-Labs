@@ -10,6 +10,10 @@ import nsu.urdin.chatprotocol.dto.request.RequestBase;
 import nsu.urdin.chatprotocol.entity.User;
 import nsu.urdin.chatserver.ChatServer;
 import nsu.urdin.chatserver.ConnectionSession;
+import nsu.urdin.chatserver.database.Database;
+import nsu.urdin.chatserver.exception.DatabaseException;
+
+import java.util.Optional;
 
 @Slf4j
 public class LoginHandler extends RequestHandler {
@@ -20,12 +24,24 @@ public class LoginHandler extends RequestHandler {
                 return new ErrorResponse("You are already logged in");
             }
 
-            //TODO: check credentials in database, retrieve user from db
+            Database db = ChatServer.getInstance().getDatabase();
 
-            User user = new User(loginRequest.getName());
+            try {
+                Optional<User> user = db.findUser(loginRequest.getName());
+                if (user.isEmpty()) {
+                    return new ErrorResponse("User not found");
+                }
 
-            session.login(user);
-            ChatServer.getInstance().broadcastEvent(new LoginEvent(user), session, true);
+                if (!db.authenticateUser(loginRequest.getName(), loginRequest.getPassword())) {
+                    return new ErrorResponse("Incorrect password");
+                }
+
+                session.login(user.get());
+                ChatServer.getInstance().broadcastEvent(new LoginEvent(user.get()), session, true);
+            } catch (DatabaseException e) {
+                return new ErrorResponse(e.getMessage());
+            }
+
             return new SuccessResponse();
         }
         return null;

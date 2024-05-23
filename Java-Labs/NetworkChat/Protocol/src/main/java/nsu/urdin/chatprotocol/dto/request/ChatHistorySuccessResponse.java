@@ -1,5 +1,6 @@
 package nsu.urdin.chatprotocol.dto.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Builder
 @Getter
+@AllArgsConstructor
 public class ChatHistorySuccessResponse extends SuccessResponse {
     @Singular
     private List<Message> messages;

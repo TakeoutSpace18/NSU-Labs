@@ -3,6 +3,7 @@ package nsu.urdin.chatprotocol.entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.io.Serializable;
 
@@ -10,6 +11,8 @@ import java.io.Serializable;
 @Getter
 @AllArgsConstructor
 public class Message implements Serializable {
+    @NonNull
     private String userName;
+    @NonNull
     private String text;
 }

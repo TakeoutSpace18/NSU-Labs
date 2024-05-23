@@ -27,7 +27,8 @@ public class RequestController {
         log.debug("Sending request... {}", requestDto);
         ResponseBase responseDto;
         try {
-            responseDto = (ResponseBase) connection.sendAndReceive(requestDto, ResponseBase.class, REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            responseDto = (ResponseBase) connection.sendAndReceive(
+                    requestDto, ResponseBase.class, REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (IOException | ConnectionTimeoutException e) {
             throw new RequestException(e.getMessage());
         }

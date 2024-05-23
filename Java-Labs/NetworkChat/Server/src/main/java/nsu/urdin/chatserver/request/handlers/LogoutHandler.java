@@ -19,6 +19,7 @@ public class LogoutHandler extends RequestHandler {
 
             ChatServer.getInstance().broadcastEvent(new LogoutEvent(session.getUser().getName()), session, false);
             session.logout();
+            session.stop();
 
             return new SuccessResponse();
         }
