@@ -91,7 +91,6 @@ public abstract class Connection implements AutoCloseable {
             }
             lock.lock();
             receivedCondition.signalAll();
-            log.debug("signalled all waiters");
             lock.unlock();
         }
     }
