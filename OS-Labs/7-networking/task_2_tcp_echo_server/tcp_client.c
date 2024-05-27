@@ -13,7 +13,7 @@
 
 int main() {
 
-    int sfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1) {
         perror("socket()");
         return EXIT_FAILURE;

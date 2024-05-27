@@ -9,13 +9,46 @@
 
 #include "utils.h"
 
-/* 64 KB is the max datagram size in UDP protocol */
-/* such size ensures that no data will be discarded */
-#define BUFSIZE 64 * 1024
+#define BUFSIZE 64
+
+int client_process(int sfd, struct sockaddr_in addr)
+{
+    char addr_text[20];
+    inet_ntop(AF_INET, &addr.sin_addr, addr_text, sizeof(addr_text));
+    printf("Connected client %s:%i, pid: %i\n", addr_text, ntohs(addr.sin_port), getpid());
+
+    while (true) {
+        char buffer[BUFSIZE];
+
+        ssize_t received_len = recv(sfd, buffer, BUFSIZE, 0);
+        if (received_len == -1) {
+            perror("recv()");
+            close(sfd);
+            return EXIT_FAILURE;
+        }
+
+        if (received_len == 0) {
+            break;
+        }
+
+        if (send_n(sfd, buffer, received_len, 0) == -1) {
+            perror("send_n()");
+            close(sfd);
+            return EXIT_FAILURE;
+        }
+    }
+
+    close(sfd);
+    printf("Disconnected client %s:%i, pid: %i\n", addr_text, ntohs(addr.sin_port), getpid());
+
+    return EXIT_SUCCESS;
+}
 
 int main()
 {
-    int sfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int ret_code = EXIT_SUCCESS;
+
+    int sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1) {
         perror("socket()");
         return EXIT_FAILURE;
@@ -32,28 +65,32 @@ int main()
         return EXIT_FAILURE;
     }
 
-    char buffer[BUFSIZE];
-    while (true) {
-        struct sockaddr_in src_addr;
-        socklen_t src_addr_len = sizeof(src_addr);
-        ssize_t received_len = recvfrom(sfd, buffer, BUFSIZE, 0,  (struct sockaddr*)&src_addr, &src_addr_len);
-        if (received_len == -1) {
-            perror("recvfrom()");
-            close(sfd);
-            return EXIT_FAILURE;
-        }
-
-        char addr_text[20];
-        inet_ntop(AF_INET, &src_addr.sin_addr, addr_text, sizeof(addr_text));
-        printf("Received datagram from %s:%i\n", addr_text, ntohs(src_addr.sin_port));
-
-        if (sendto_n(sfd, buffer, received_len, 0, (struct sockaddr*)&src_addr, src_addr_len) == -1) {
-            perror("sendto_n()");
-            close(sfd);
-            return EXIT_FAILURE;
-        }
+    if (listen(sfd, 128) == -1) {
+        perror("listen()");
+        close(sfd);
+        return EXIT_FAILURE;
     }
 
+    while (true) {
+        struct sockaddr_in client_addr;
+        socklen_t client_addr_len = sizeof(client_addr);
+        int client_sfd = accept(sfd, (struct sockaddr*)&client_addr, &client_addr_len);
+
+        if (client_sfd == -1) {
+            perror("accept()");
+            return EXIT_FAILURE;
+        }
+
+        pid_t pid = fork();
+
+        switch (pid) {
+        case -1:
+            perror("fork()");
+            close(client_sfd);
+        case 0:
+            return client_process(client_sfd, client_addr);
+        }
+    }
 
     return EXIT_SUCCESS;
 }
