@@ -50,7 +50,6 @@ int main() {
         fputs(buffer, stdout);
     }
 
-    close(sfd);
 
     return EXIT_SUCCESS;
 }
