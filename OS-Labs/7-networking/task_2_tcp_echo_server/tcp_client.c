@@ -11,7 +11,12 @@
 
 #define BUFSIZE 64
 
-int main() {
+int main(int argc, char **argv) {
+
+    if (argc < 3) {
+        printf("usage: tcp_client <host> <port>");
+        return EXIT_FAILURE;
+    }
 
     int sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd == -1) {
@@ -19,11 +24,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(6666);
-    server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
+    struct sockaddr_in server_addr = parse_address(argv[1], argv[2]);
 
     if (connect(sfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         perror("connect()");

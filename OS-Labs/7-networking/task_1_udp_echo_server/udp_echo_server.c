@@ -13,18 +13,20 @@
 /* such size ensures that no data will be discarded */
 #define BUFSIZE 64 * 1024
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc < 3) {
+        printf("usage: udp_echo_server <host> <port>");
+        return EXIT_FAILURE;
+    }
+
     int sfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sfd == -1) {
         perror("socket()");
         return EXIT_FAILURE;
     }
 
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(6666);
-    server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    struct sockaddr_in server_addr = parse_address(argv[1], argv[2]);
 
     if (bind(sfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         perror("bind()");

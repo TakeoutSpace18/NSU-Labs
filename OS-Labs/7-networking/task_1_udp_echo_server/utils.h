@@ -2,7 +2,10 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 static ssize_t sendto_n(int sockfd, const void *buf, size_t len, int flags,
     const struct sockaddr *dest_addr, socklen_t addrlen)
@@ -42,6 +45,26 @@ static ssize_t recvfrom_n(int sockfd, void *buf, size_t len, int flags,
 static ssize_t recv_n(int sockfd, void *buf, size_t len, int flags)
 {
     return recvfrom_n(sockfd, buf, len, flags, NULL, NULL);
+}
+
+
+static struct sockaddr_in parse_address(char *host, char *port)
+{
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(atoi(port));
+
+    if (strcmp(host, "any")) {
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    }
+    else {
+        if (inet_aton(host, &addr.sin_addr) == 0) {
+            printf("host address is invalid");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return addr;
 }
 
 #endif
