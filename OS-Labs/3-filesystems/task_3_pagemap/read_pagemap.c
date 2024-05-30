@@ -15,10 +15,10 @@
 
 #define PM_ENTRY_SIZE 8
 
-
 void print_usage()
 {
-    printf("usage:\n\tread_pagemap <pid>\n\tread_pagemap self");
+    printf("usage:\n\tread_pagemap <pid> <addr_1> ... <addr_n>\n");
+    printf("\tread_pagemap self <addr_1> ... <addr_n>");
 }
 
 void print_pmentry(int64_t vaddr, int64_t entry, uint64_t pagecount)
@@ -77,29 +77,20 @@ uint64_t read_pagecount(FILE *kpagecount, int64_t pmentry)
     return pagecount;
 }
 
-int main(int argc, char **argv)
+void print_vaddr_info(int64_t vaddr, FILE *pagemap, FILE *kpagecount)
 {
-    if (argc < 2) {
-        print_usage();
-        return EXIT_FAILURE;
+    int64_t pmentry = read_pagemap_entry(pagemap, vaddr);
+    if (pmentry == -1) {
+        printf("%llx\t*** address is not mapped ***\n", vaddr);
+        return;
     }
 
+    uint64_t pcount = read_pagecount(kpagecount, pmentry);
+    print_pmentry(vaddr,pmentry, pcount);
+}
 
-    pid_t pid;
-    if (strcmp(argv[1], "self") == 0) {
-        pid = getpid();
-    } else {
-        pid = atoi(argv[1]);
-    }
-
-    char pagemap_filename[30];
-    snprintf(pagemap_filename, 30, "/proc/%i/pagemap", pid);
-    FILE *pagemap = fopen(pagemap_filename, "r");
-    if (pagemap == NULL) {
-        perror("open(pagemap)");
-        return EXIT_FAILURE;
-    }
-
+int print_addresses_from_pagemap(pid_t pid, FILE *pagemap, FILE *kpagecount)
+{
     char maps_filename[30];
     snprintf(maps_filename, 30, "/proc/%i/maps", pid);
     FILE *maps = fopen(maps_filename, "r");
@@ -107,14 +98,6 @@ int main(int argc, char **argv)
         perror("open(maps)");
         return EXIT_FAILURE;
     }
-
-    FILE *kpagecount = fopen("/proc/kpagecount", "r");
-    if (kpagecount == NULL) {
-        perror("open(kpagecount)");
-        return EXIT_FAILURE;
-    }
-
-    printf("addr\t\tPFN\tpagecnt\tpresent\tsd\texcl-mp\tfilepage\tswapped\tswtype\tswoffset\n");
 
     size_t bufsize = 256 * sizeof(char);
     char *line = (char*)malloc(bufsize);
@@ -131,25 +114,65 @@ int main(int argc, char **argv)
         int64_t vaddr_stop = strtoll(line + 13, NULL, 16);
 
         for (int64_t vaddr = vaddr_start; vaddr < vaddr_stop; vaddr += sysconf(_SC_PAGESIZE)) {
-            int64_t pmentry = read_pagemap_entry(pagemap, vaddr);
-            if (pmentry == -1) {
-                continue;
-            }
-
-            uint64_t pcount = read_pagecount(kpagecount, pmentry);
-
-            print_pmentry(vaddr,pmentry, pcount);
-
+            print_vaddr_info(vaddr, pagemap, kpagecount);
         }
-
     }
+
+    free(line);
+    fclose(maps);
+
+    return EXIT_SUCCESS;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc < 2) {
+        print_usage();
+        return EXIT_FAILURE;
+    }
+
+    pid_t pid;
+    if (strcmp(argv[1], "self") == 0) {
+        pid = getpid();
+    } else {
+        pid = atoi(argv[1]);
+    }
+
+    char pagemap_filename[30];
+    snprintf(pagemap_filename, 30, "/proc/%i/pagemap", pid);
+    FILE *pagemap = fopen(pagemap_filename, "r");
+    if (pagemap == NULL) {
+        perror("open(pagemap)");
+        return EXIT_FAILURE;
+    }
+
+    FILE *kpagecount = fopen("/proc/kpagecount", "r");
+    if (kpagecount == NULL) {
+        perror("open(kpagecount)");
+        return EXIT_FAILURE;
+    }
+
+    printf("addr\t\tPFN\tpagecnt\tpresent\tsd\texcl-mp\tfilepage\tswapped\tswtype\tswoffset\n");
+
+    if (argc == 2) {
+        int ret = print_addresses_from_pagemap(pid, pagemap, kpagecount);
+        if (ret != EXIT_SUCCESS) {
+            return ret;
+        }
+    } else {
+        for (int i = 2; i < argc; ++i) {
+            int64_t vaddr = strtoll(argv[i], NULL, 16);
+            int64_t page_vaddr = vaddr / sysconf(_SC_PAGESIZE) * sysconf(_SC_PAGESIZE);
+            print_vaddr_info(page_vaddr, pagemap, kpagecount);
+        }
+    }
+
 
     printf("sd - soft dirty pte\n");
     printf("excl-mp - exclusively mapped page\n");
     printf("pagecnt - data from /proc/kpagecount\n");
 
-    free(line);
-    fclose(maps);
+
     fclose(pagemap);
     fclose(kpagecount);
     return EXIT_SUCCESS;
