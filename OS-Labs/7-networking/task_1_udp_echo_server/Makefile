@@ -6,10 +6,10 @@ BUILDDIR=$(CURDIR)/build
 all: server client
 
 server: udp_echo_server.c | $(BUILDDIR)
-	gcc $(CFLAGS) udp_echo_server.c -O0 -g -o $(BUILDDIR)/udp_echo_server
+	gcc $(CFLAGS) udp_echo_server.c -O0 -I ../ -g -o $(BUILDDIR)/udp_echo_server
 
 client: udp_client.c | $(BUILDDIR)
-	gcc $(CFLAGS) udp_client.c -O0 -g -o $(BUILDDIR)/udp_client
+	gcc $(CFLAGS) udp_client.c -O0 -I ../ -g -o $(BUILDDIR)/udp_client
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)

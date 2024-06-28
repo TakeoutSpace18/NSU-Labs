@@ -6,10 +6,10 @@ BUILDDIR=$(CURDIR)/build
 all: server client
 
 server: tcp_echo_server.c | $(BUILDDIR)
-	gcc $(CFLAGS) tcp_echo_server.c -O0 -g -o $(BUILDDIR)/tcp_echo_server
+	gcc $(CFLAGS) tcp_echo_server.c -I ../ -g -o $(BUILDDIR)/tcp_echo_server
 
 client: tcp_client.c | $(BUILDDIR)
-	gcc $(CFLAGS) tcp_client.c -O0 -g -o $(BUILDDIR)/tcp_client
+	gcc $(CFLAGS) tcp_client.c -O0 -I ../ -g -o $(BUILDDIR)/tcp_client
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
