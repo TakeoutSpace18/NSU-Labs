@@ -2,9 +2,9 @@ use core::fmt;
 use std::io::{self, Read, Write};
 
 #[derive(Debug)]
-struct EquationSolutions {
-    solutions: Vec<f64>,
-    multiplicities: Vec<i32>
+pub struct EquationSolutions {
+    pub solutions: Vec<f64>,
+    pub multiplicities: Vec<i32>
 }
 
 impl EquationSolutions {
@@ -19,15 +19,24 @@ impl EquationSolutions {
         self.solutions.push(sol);
         self.multiplicities.push(multiplicity);
     }
+
+    pub fn roots_count(&self) -> usize {
+        self.solutions.len()
+    }
 }
 
 impl fmt::Display for EquationSolutions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-       write!(f, "{} solutions found:\n", self.solutions.len())?;
-       let zipped = self.solutions.iter().zip(self.multiplicities.iter());
-       for (i, (sol, mult)) in zipped.enumerate() {
-            write!(f, "\t{}) {}, multiplicity - {}\n", i, sol, mult)?;
-       }
+        if self.solutions.len() == 0 {
+           write!(f, "0 solutions found.\n")?;
+           return Ok(());
+        }
+
+        write!(f, "{} solutions found:\n", self.solutions.len())?;
+        let zipped = self.solutions.iter().zip(self.multiplicities.iter());
+        for (i, (sol, mult)) in zipped.enumerate() {
+             write!(f, "\t{}) {}, multiplicity - {}\n", i, sol, mult)?;
+        }
 
        Ok(())
     }

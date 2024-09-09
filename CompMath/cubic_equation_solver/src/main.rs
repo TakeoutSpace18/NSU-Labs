@@ -7,11 +7,13 @@ use cubic_equation::CubicEquation;
 
 
 fn main() -> Result<(), String> {
-    let mut quadratic = QuadraticEquation::input_from_stdin()
+    let mut cubic = CubicEquation::input_from_stdin()
         .map_err(|e| format!("Failed to read equation data: {:?}", e))?;
 
-    quadratic.normalize()
-        .map_err(|e| format!("Failed to normalize equation: {}", e))?;
+    println!("Equation: {}", cubic);
+    let roots = cubic.solve();
+
+    println!("{}", roots);
 
     Ok(())
 }

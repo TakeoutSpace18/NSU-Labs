@@ -1,6 +1,8 @@
 use std::io;
+use core::fmt;
 
 use crate::common::is_zero;
+use crate::common::EquationSolutions;
 use crate::common::get_float_input;
 
 #[derive(Debug)]
@@ -9,17 +11,15 @@ pub struct QuadraticEquation{
     b: f64,
     c: f64,
     eps: f64,
-    dt: f64
 }
 
 impl QuadraticEquation {
-    pub fn new(coefs: &[f64; 3], eps: f64, dt: f64) -> QuadraticEquation {
+    pub fn new(coefs: &[f64; 3], eps: f64) -> QuadraticEquation {
         QuadraticEquation {
             a: coefs[0],
             b: coefs[1],
             c: coefs[2],
-            eps,
-            dt
+            eps
         }
     }
 
@@ -28,21 +28,32 @@ impl QuadraticEquation {
         let b = get_float_input("Enter b: ")?;
         let c = get_float_input("Enter c: ")?;
         let eps = get_float_input("Enter epsilon: ")?;
-        let dt = get_float_input("Enter delta: ")?;
 
-        Ok(QuadraticEquation{ a, b, c, eps, dt })
+        Ok(QuadraticEquation{ a, b, c, eps })
     }
 
-    pub fn normalize(&mut self) -> Result<(), &str>{
-        if is_zero(self.a, self.eps) {
-            return Err("coefficient a can't be zero!");
+    pub fn solve(&self) -> EquationSolutions {
+        let mut roots = EquationSolutions::new();
+
+        let discr = self.b * self.b - 4.0 * self.a * self.c;
+
+        if is_zero(discr, self.eps) {
+            roots.add(-self.b / (2.0 * self.a), 2);
+            return roots;
         }
 
-        self.b /= self.a;
-        self.c /= self.a;
-        self.a = 1.0;
+        if discr.is_sign_positive() {
+            roots.add((-self.b + discr.sqrt()) / (2.0 * self.a), 1);
+            roots.add((-self.b - discr.sqrt()) / (2.0 * self.a), 1);
+        }
 
-        Ok(())
+        return roots;
     }
 }
 
+impl fmt::Display for QuadraticEquation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}x^2 + {}x + {} = 0", self.a, self.b, self.c);
+        Ok(())
+    }
+}
