@@ -1,9 +1,9 @@
 use core::fmt;
 use core::panic;
 use std::thread::park;
-use crate::common::is_zero;
 use crate::common::get_float_input;
 use crate::common::EquationSolutions;
+use crate::common::is_zero;
 use crate::quadratic_equation::QuadraticEquation;
 use std::io::{self, Read, Write};
 
@@ -143,18 +143,20 @@ impl CubicEquation {
                 let x1 = derivative.solutions[0];
                 let x2 = derivative.solutions[1];
                 let (x1, x2) = if x1 < x2 {(x1, x2)} else {(x2, x1)};
+                println!("{}, {}", x1, x2);
 
                 if is_zero(self.f(x1), self.eps) {
                     roots.add(x1, 2);
                     let root = self.find_root_at_inf_interval(x2, Direction::Right).unwrap();
                     roots.add(root, 1);
+                    return roots;
                 } else if is_zero(self.f(x2), self.eps) {
                     roots.add(x2, 2);
                     let root = self.find_root_at_inf_interval(x1, Direction::Left).unwrap();
                     roots.add(root, 1);
+                    return roots;
                 }
 
-                return roots;
 
                 if self.f(x2).is_sign_positive() {
                     let root = self.find_root_at_inf_interval(x1, Direction::Left).unwrap();
@@ -164,6 +166,7 @@ impl CubicEquation {
                     let root = self.find_root_at_inf_interval(x2, Direction::Right).unwrap();
                     roots.add(root, 1);
                 }
+
 
                 if self.f(x2).is_sign_negative() {
                     let root1 = self.find_root_at_inf_interval(x1, Direction::Left).unwrap();
