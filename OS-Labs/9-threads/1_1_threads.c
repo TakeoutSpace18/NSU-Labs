@@ -67,7 +67,11 @@ int main() {
     pthread_mutex_init(&mythread_mutex, NULL);
 
     for (int i = 0; i < 5; ++i) {
+        if (i == 0)
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
         int err = pthread_create(&tid[i], NULL, mythread, &tid[i]);
+        if (i == 0)
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
         if (err) {
             printf("main: pthread_create() failed: %s\n", strerror(err));
             return -1;
