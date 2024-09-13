@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/cdefs.h>
 #include <unistd.h>
 #include <signal.h>
 #include <arpa/inet.h>
@@ -20,7 +21,7 @@ const char *default_port = "8686";
 #define IM_ALIVE_MSG 0xA11A
 #define UPDATE_TRIGGER_MSG 0xB22B
 
-typedef enum { OK, ERROR, TIMED_OUT } Result_t;
+typedef enum { OK, ERROR, TIMED_OUT, INTERRUPTED } Result_t;
 
 #define ERR_DESCR_BUFSIZE 512
 static char err_descr[ERR_DESCR_BUFSIZE];
@@ -69,7 +70,7 @@ enable_reuse_addr(int sfd)
     return OK;
 }
 
-static Result_t
+static Result_t __attribute_maybe_unused__
 disable_multicast_loop(int sfd, int af)
 {
     int optlevel, option;
@@ -201,10 +202,6 @@ bind_multicast_group(const char *ip, const char *port, int *sfd,
     if (ret != OK)
         goto error;
 
-    ret = disable_multicast_loop(*sfd, address_family);
-    if (ret != OK)
-        goto error;
-
     return OK;
 
 error:
@@ -242,8 +239,7 @@ recieve_message(int sockfd, int* msg, struct sockaddr* src_addr,
             return TIMED_OUT;
 
         if (ret == -1 && errno == EINTR) {
-            is_interrupted = true;
-            return OK;
+            return INTERRUPTED;
         }
 
         if (ret == -1) {
@@ -381,6 +377,9 @@ int main(int argc, char** argv) {
         socklen_t               srclen;
 
         ret = recieve_message(sfd, &msg, (struct sockaddr *) &src, &srclen);
+        if (ret == INTERRUPTED)
+            break;
+
         if (ret != OK)
             goto error;
 
@@ -392,7 +391,7 @@ int main(int argc, char** argv) {
 
             struct timeval collect_timeout;
             collect_timeout.tv_sec = 0;
-            collect_timeout.tv_usec = 50000;
+            collect_timeout.tv_usec = 500000;
             ret = collect_app_instances_info(sfd, collect_timeout);
 
             if (ret != OK)
