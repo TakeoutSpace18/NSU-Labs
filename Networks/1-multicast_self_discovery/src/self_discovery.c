@@ -14,7 +14,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-const char *default_group_ip = "224.0.0.1";
+const char *default_group_ip = "224.1.2.3";
 const char *default_port = "8686";
 
 #define IM_ALIVE_MSG 0xA11A
@@ -50,17 +50,95 @@ setup_signal_handlers()
         return ERROR;
     }
 
+    return OK;
 }
 
 static Result_t
-socket_config(int sfd)
+enable_reuse_addr(int sfd)
 {
     int reuse = 1;
     int err = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR,
                          (char *) &reuse, sizeof(reuse));
     if (err == -1) {
         snprintf(err_descr, ERR_DESCR_BUFSIZE, 
-                 "setsockopt(): %s", strerror(errno));
+                 "Failed to set SO_REUSEADDR, setsockopt(): %s",
+                 strerror(errno));
+        return ERROR;
+    }
+
+    return OK;
+}
+
+static Result_t
+disable_multicast_loop(int sfd, int af)
+{
+    int optlevel, option;
+
+    if (af == AF_INET) {
+        optlevel = IPPROTO_IP;
+        option = IP_MULTICAST_LOOP;
+
+    } else if (af == AF_INET6) {
+        optlevel = IPPROTO_IPV6;
+        option = IPV6_MULTICAST_LOOP;
+    } else {
+        snprintf(err_descr, ERR_DESCR_BUFSIZE, 
+                 "Failed disable multicast loop, unknown protocol family");
+        return ERROR;
+    }
+
+    bool val = false;
+    int err = setsockopt(sfd, optlevel, option, &val, sizeof(val));
+    if (err == -1) {
+        snprintf(err_descr, ERR_DESCR_BUFSIZE, 
+                 "Failed to add multicast membership, setsockopt(): %s",
+                 strerror(errno));
+        return ERROR;
+    }
+
+    return OK;
+}
+
+static Result_t
+multicast_add_membership(int sfd, int af, struct sockaddr_storage *bound_addr)
+{
+    char *optval=NULL;
+    int   optlevel, option, optlen;
+
+    if (af == AF_INET) {
+        struct sockaddr_in *addr = (struct sockaddr_in *) bound_addr;
+
+        struct ip_mreq mreq;
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+        mreq.imr_multiaddr = addr->sin_addr;
+
+        optlevel = IPPROTO_IP;
+        option = IP_ADD_MEMBERSHIP;
+        optval = (char *) &mreq;
+        optlen = sizeof(mreq);
+
+    } else if (af == AF_INET6) {
+        struct sockaddr_in6 *addr = (struct sockaddr_in6 *) bound_addr;
+
+        struct ipv6_mreq mreq6;
+        mreq6.ipv6mr_interface = htonl(INADDR_ANY);
+        mreq6.ipv6mr_multiaddr = addr->sin6_addr;
+
+        optlevel = IPPROTO_IPV6;
+        option = IPV6_ADD_MEMBERSHIP;
+        optval = (char *) &mreq6;
+        optlen = sizeof(mreq6);
+    } else {
+        snprintf(err_descr, ERR_DESCR_BUFSIZE, 
+                 "Failed to add multicast membership, unknown protocol family");
+        return ERROR;
+    }
+
+    int err = setsockopt(sfd, optlevel, option, optval, optlen);
+    if (err == -1) {
+        snprintf(err_descr, ERR_DESCR_BUFSIZE, 
+                 "Failed to add multicast membership, setsockopt(): %s",
+                 strerror(errno));
         return ERROR;
     }
 
@@ -72,6 +150,9 @@ bind_multicast_group(const char *ip, const char *port, int *sfd,
                      struct sockaddr_storage *bound_addr,
                      socklen_t *bound_addr_len)
 {
+    Result_t ret;
+    int address_family;
+
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
@@ -94,14 +175,13 @@ bind_multicast_group(const char *ip, const char *port, int *sfd,
         if (*sfd == -1)
             continue;
 
-        Result_t ret = socket_config(*sfd);
-        if (ret != OK) {
-            close(*sfd);
-            continue;
-        }
+        ret = enable_reuse_addr(*sfd);
+        if (ret != OK)
+            goto error;
 
         if (bind(*sfd, rp->ai_addr, rp->ai_addrlen) == 0) {
             memcpy(bound_addr, rp->ai_addr, rp->ai_addrlen);
+            address_family = rp->ai_family;
             *bound_addr_len = rp->ai_addrlen;
             break; /* Success */
         }
@@ -117,7 +197,19 @@ bind_multicast_group(const char *ip, const char *port, int *sfd,
         return ERROR;
     }
 
+    ret = multicast_add_membership(*sfd, address_family, bound_addr);
+    if (ret != OK)
+        goto error;
+
+    ret = disable_multicast_loop(*sfd, address_family);
+    if (ret != OK)
+        goto error;
+
     return OK;
+
+error:
+    close(*sfd);
+    return ERROR;
 }
 
 static Result_t
