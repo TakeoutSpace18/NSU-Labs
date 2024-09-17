@@ -1,5 +1,3 @@
-#include <asm-generic/socket.h>
-#include <bits/types/struct_timeval.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -19,9 +17,14 @@ const char *default_group_ip = "224.1.2.3";
 const char *default_port = "8686";
 
 #define IM_ALIVE_MSG 0xA11A
-#define UPDATE_TRIGGER_MSG 0xB22B
+#define STATUS_REQUEST_MSG 0xB22B
 
-typedef enum { OK, ERROR, TIMED_OUT, INTERRUPTED } Result_t;
+typedef enum {
+    OK,
+    ERROR,
+    TIMED_OUT,
+    INTERRUPTED
+} Result_t;
 
 #define ERR_DESCR_BUFSIZE 512
 static char err_descr[ERR_DESCR_BUFSIZE];
@@ -117,7 +120,6 @@ multicast_add_membership(int sfd, int af, struct sockaddr_storage *bound_addr)
         option = IP_ADD_MEMBERSHIP;
         optval = (char *) &mreq;
         optlen = sizeof(mreq);
-
     } else if (af == AF_INET6) {
         struct sockaddr_in6 *addr = (struct sockaddr_in6 *) bound_addr;
 
@@ -158,7 +160,6 @@ bind_multicast_group(const char *ip, const char *port, int *sfd,
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
-    hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     hints.ai_protocol = 0;          /* Any protocol */
 
     struct addrinfo* result;
@@ -366,7 +367,7 @@ int main(int argc, char** argv) {
  
     /* Ask all instances of the app to broadcast their state
      * (this instance itself gets this message too)*/
-    ret = send_message(sfd, UPDATE_TRIGGER_MSG,
+    ret = send_message(sfd, STATUS_REQUEST_MSG,
                        (struct sockaddr *) &groupaddr, groupaddr_len);
     if (ret != OK)
         goto error;
@@ -383,7 +384,7 @@ int main(int argc, char** argv) {
         if (ret != OK)
             goto error;
 
-        if (msg == UPDATE_TRIGGER_MSG) {
+        if (msg == STATUS_REQUEST_MSG) {
             ret = send_message(sfd, IM_ALIVE_MSG,
                                (struct sockaddr *) &groupaddr, groupaddr_len);
             if (ret != OK)
@@ -403,7 +404,7 @@ int main(int argc, char** argv) {
     printf("Finishing...");
 
     /* Notify other instances of your death */
-    ret = send_message(sfd, UPDATE_TRIGGER_MSG,
+    ret = send_message(sfd, STATUS_REQUEST_MSG,
                        (struct sockaddr *) &groupaddr, groupaddr_len);
     if (ret != OK)
         goto error;
