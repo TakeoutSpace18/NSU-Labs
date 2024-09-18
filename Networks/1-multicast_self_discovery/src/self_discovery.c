@@ -3,17 +3,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include <sys/cdefs.h>
-#include <unistd.h>
-#include <signal.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
-const char *default_group_ip = "224.1.2.3";
+const char *default_group_ip = "224.1.2.3"; /* use ff06::1 for IPv6 */
 const char *default_port = "8686";
 
 #define IM_ALIVE_MSG 0xA11A
@@ -149,7 +150,7 @@ multicast_add_membership(int sfd, int af, struct sockaddr_storage *bound_addr)
 }
 
 static Result_t
-bind_multicast_group(const char *ip, const char *port, int *sfd,
+create_multicast_socket(const char *ip, const char *port, int *sfd,
                      struct sockaddr_storage *bound_addr,
                      socklen_t *bound_addr_len)
 {
@@ -299,7 +300,11 @@ collect_app_instances_info(int sfd, struct timeval timeout)
         return ERROR;
     }
 
-    printf("------------ ALIVE INSTANCES ------------\n");
+    char time_str[32];
+    time_t now = time(NULL);
+    strftime(time_str, 32, "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+    printf("------------ ALIVE INSTANCES (%s) ------------\n", time_str);
 
     for (;;) {
         int                     msg;
@@ -360,7 +365,7 @@ int main(int argc, char** argv) {
     struct sockaddr_storage groupaddr;
     socklen_t               groupaddr_len;
 
-    ret = bind_multicast_group(group_ip, port, &sfd,
+    ret = create_multicast_socket(group_ip, port, &sfd,
                                &groupaddr, &groupaddr_len);
     if (ret != OK)
         goto error;
