@@ -1,5 +1,5 @@
 use core::fmt;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 
 #[derive(Debug)]
 pub struct EquationSolutions {
@@ -48,7 +48,7 @@ pub fn is_zero(val: f64, eps: f64) -> bool {
 
 pub fn get_float_input(prompt: &str) -> Result<f64, io::Error> {
     print!("{}", prompt);
-    io::stdout().flush();
+    io::stdout().flush()?;
     
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

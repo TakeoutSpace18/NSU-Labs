@@ -23,6 +23,7 @@ impl QuadraticEquation {
         }
     }
 
+    #[allow(dead_code)]
     pub fn input_from_stdin() -> Result<QuadraticEquation, io::Error> {
         let a = get_float_input("Enter a: ")?;
         let b = get_float_input("Enter b: ")?;
@@ -53,7 +54,7 @@ impl QuadraticEquation {
 
 impl fmt::Display for QuadraticEquation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}x^2 + {}x + {} = 0", self.a, self.b, self.c);
+        write!(f, "{}x^2 + {}x + {} = 0", self.a, self.b, self.c)?;
         Ok(())
     }
 }

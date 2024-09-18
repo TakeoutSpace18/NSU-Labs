@@ -2,9 +2,8 @@ mod common;
 mod cubic_equation;
 mod quadratic_equation;
 
-use std::{env, fmt::Pointer};
+use std::env;
 
-use quadratic_equation::QuadraticEquation;
 use cubic_equation::CubicEquation;
 
 

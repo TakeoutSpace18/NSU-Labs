@@ -1,11 +1,10 @@
 use core::fmt;
 use core::panic;
-use std::thread::park;
 use crate::common::get_float_input;
 use crate::common::EquationSolutions;
 use crate::common::is_zero;
 use crate::quadratic_equation::QuadraticEquation;
-use std::io::{self, Read, Write};
+use std::io;
 
 #[derive(Debug)]
 pub struct CubicEquation {
