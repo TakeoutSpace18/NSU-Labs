@@ -124,6 +124,7 @@ impl CubicEquation {
                     root = self.find_root_at_inf_interval(0.0, Direction::Right).unwrap();
                 }
                 roots.add(root, 1);
+                return roots;
             }
             1 => {
                 let x = derivative.solutions[0];
@@ -136,13 +137,12 @@ impl CubicEquation {
                     let root = self.find_root_at_inf_interval(x, Direction::Right).unwrap();
                     roots.add(root, 1);
                 }
-
+                return roots;
             }
             2 => {
                 let x1 = derivative.solutions[0];
                 let x2 = derivative.solutions[1];
                 let (x1, x2) = if x1 < x2 {(x1, x2)} else {(x2, x1)};
-                println!("{}, {}", x1, x2);
 
                 if is_zero(self.f(x1), self.eps) {
                     roots.add(x1, 2);
@@ -160,10 +160,12 @@ impl CubicEquation {
                 if self.f(x2).is_sign_positive() {
                     let root = self.find_root_at_inf_interval(x1, Direction::Left).unwrap();
                     roots.add(root, 1);
+                    return roots;
                 }
                 if self.f(x1).is_sign_negative() {
                     let root = self.find_root_at_inf_interval(x2, Direction::Right).unwrap();
                     roots.add(root, 1);
+                    return roots;
                 }
 
 
@@ -174,7 +176,7 @@ impl CubicEquation {
                     roots.add(root1, 1);
                     roots.add(root2, 1);
                     roots.add(root3, 1);
-
+                    return roots;
                 }
             }
             _ => { panic!() }
