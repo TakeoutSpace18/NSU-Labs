@@ -24,8 +24,8 @@ void *get_string_pointer(void *arg)
 
 void *tid_printer(void *arg)
 {
-    pthread_detach(pthread_self());
-    usleep(500000);
+    // pthread_detach(pthread_self());
+    // usleep(500000);
     printf("hello from thread [tid=%i]\n", gettid());
     return NULL;
 }
@@ -67,7 +67,7 @@ int main()
 
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        // pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
         if (pthread_create(&thread, &attr, tid_printer, NULL) != 0) {
             perror("pthread_create()");

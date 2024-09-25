@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -14,6 +13,7 @@ void *mythread(void *arg) {
     pthread_t *thread = (pthread_t *) arg;
 
     pthread_mutex_lock(&mythread_mutex);
+    usleep(500000);
 
     char buf[BUFSIZE];
 	ssize_t len = 0;
@@ -45,7 +45,7 @@ void *mythread(void *arg) {
                     global, &global);
 
     local = pthread_self() % 100;
-    global = pthread_self() % 100;
+    global = pthread_self() % 100 + 1;
 
     len += snprintf(buf + len, BUFSIZE - len,
                     "\t[ changed local & global ]\n"
@@ -60,18 +60,19 @@ void *mythread(void *arg) {
 }
 
 int main() {
+    printf("pid: %i\n", getpid());
+
 	pthread_t tid[5];
 
 	printf("main [%d %d %d]: Hello from main!\n", getpid(), getppid(), gettid());
 
     pthread_mutex_init(&mythread_mutex, NULL);
 
+    /* Thread's stack size is 8 MB */
+
     for (int i = 0; i < 5; ++i) {
-        if (i == 0)
-            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("creating thread...\n");
         int err = pthread_create(&tid[i], NULL, mythread, &tid[i]);
-        if (i == 0)
-            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
         if (err) {
             printf("main: pthread_create() failed: %s\n", strerror(err));
             return -1;

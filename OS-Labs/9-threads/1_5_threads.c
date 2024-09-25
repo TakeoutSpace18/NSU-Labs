@@ -75,6 +75,8 @@ thread_two(void *arg)
         pthread_exit(EXIT_FAILURE);
     }
 
+    sleep(5);
+
     return NULL;
 }
 
@@ -153,11 +155,9 @@ main()
     }
 
     sleep(1);
-    // raise(SIGINT);
-    pthread_kill(threads[1], SIGINT);
+    kill(getpid(), SIGINT);
     sleep(1);
-    pthread_kill(threads[2], SIGQUIT);
-    // raise(SIGQUIT);
+    kill(getpid(), SIGQUIT);
     sleep(1);
 
     for (int i = 0; i < 3; i++) {
