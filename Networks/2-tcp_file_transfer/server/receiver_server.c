@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "client_thread.h"
 #include "log.h"
 #include "error.h"
 #include "util.h"
@@ -27,20 +28,6 @@ static void sigint_handler(int signo);
 static Result_t setup_signal_handlers(void);
 static Result_t create_listening_socket(char *port, int *sockfd);
 static Result_t run_accept_clients_loop(int sockfd);
-static Result_t create_client_thread(int sockfd);
-static void* client_thread_main(void *arg);
-static Result_t shutdown_active_clients(void);
-
-typedef struct Client
-{
-    pthread_t thread;
-}
-ClientData_t;
-
-#define MAX_ALLOWED_CLIENTS 16
-static ClientData_t *active_clients[MAX_ALLOWED_CLIENTS];
-static size_t num_active_clients = 0;
-static pthread_mutex_t active_clients_mtx;
 
 static void
 do_help(void)
@@ -97,6 +84,8 @@ main(int argc, char** argv)
 
     if (setup_signal_handlers() != OK)
         goto error;
+
+    log_info("Waiting for client connections on port %s...", port);
 
     if (run_accept_clients_loop(sockfd) != OK)
         goto error;
@@ -185,7 +174,8 @@ create_listening_socket(char *port, int *sockfd)
 static Result_t
 run_accept_clients_loop(int sockfd)
 {
-    log_info("Waiting for client connections...");
+    ActiveClients_t clients;
+    clients_list_init(&clients);
 
     while (!is_interrupted) {
         int client_sockfd;
@@ -207,7 +197,7 @@ run_accept_clients_loop(int sockfd)
         char client_descr[SOCKADDR2STR_MAX_BUFSIZE];
         sockaddr2str((struct sockaddr *) &client_sa, client_sa_len, client_descr);
 
-        Result_t status = create_client_thread(client_sockfd);
+        Result_t status = create_client_thread(&clients, client_sockfd);
         if (status == CLIENTS_LIMIT_REACHED) {
             log_error("Couldn't accept connection from %s: "
                       "clients limit reached", client_descr);
@@ -221,40 +211,6 @@ run_accept_clients_loop(int sockfd)
 
         log_info("New client connected: %s", client_descr);
     }
-
-    return OK;
-}
-
-static Result_t
-create_client_thread(int sockfd)
-{
-    if (num_active_clients == MAX_ALLOWED_CLIENTS)
-        return CLIENTS_LIMIT_REACHED;
-
-    ClientData_t *new_client = (ClientData_t *) malloc(sizeof(ClientData_t));
-
-    if (pthread_create(&new_client->thread, NULL,
-                       client_thread_main, new_client) != 0) {
-        log_error("pthread_create(): %s", strerror(errno));
-        return ERROR;
-    }
-
-    num_active_clients++;
-    return OK;
-}
-
-static void*
-client_thread_main(void *arg) {
-    ClientData_t *self = (ClientData_t *) arg;
-
-    sleep(5);
-
-    return EXIT_SUCCESS;
-}
-
-static Result_t
-shutdown_active_clients(void)
-{
 
     return OK;
 }
