@@ -85,9 +85,6 @@ thread_three(void *arg)
 {
     thread_name = "thread_three";
 
-    /* Block sigint here to handle it in thread_two */
-    block_signal(SIGINT);
-
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGQUIT);

@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-// #define USE_MALLOC
+#define USE_MALLOC
 
 typedef struct thread_arg
 {
@@ -83,7 +83,6 @@ main()
 
     create_thread();
 
-    sleep(1);
-
+    pthread_exit(EXIT_SUCCESS);
     return EXIT_SUCCESS;
 }

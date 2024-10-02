@@ -16,7 +16,10 @@ thread_main(void *arg)
 {
     /* it is unsafe to use async cancellation type with malloc */
     /* async cancel is implemented using a signal (NPTL)*/
-    if (pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL) != 0) {
+
+    int canceltype = PTHREAD_CANCEL_DEFERRED;
+    // int canceltype = PTHREAD_CANCEL_ASYNCHRONOUS;
+    if (pthread_setcanceltype(canceltype, NULL) != 0) {
         perror("pthread_setcanceltype()");
         pthread_exit(EXIT_FAILURE);
     }
@@ -25,10 +28,10 @@ thread_main(void *arg)
     pthread_cleanup_push(free, str);
 
     for (int i = 0; true; i++) {
-        // printf("thread is working (%i)\n", i);
+        printf("thread is working (%i)\n", i);
 
-        snprintf(str, STRSIZE, "thread is working (%i)", i);
-        puts(str);
+        // snprintf(str, STRSIZE, "thread is working (%i)", i);
+        // puts(str);
 
         usleep(50000);
     }
@@ -54,7 +57,7 @@ main()
         exit(EXIT_FAILURE);
     }
 
-    sleep(3);
+    sleep(2);
 
     printf("cancelling thread...\n");
     if (pthread_cancel(thread) != 0) {
