@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-
 #include <time.h>
 #include <unistd.h>
 #include <signal.h>
@@ -27,7 +26,7 @@ static bool is_interrupted = false;
 static void sigint_handler(int signo);
 static Result_t setup_signal_handlers(void);
 static Result_t create_listening_socket(char *port, int *sockfd);
-static Result_t run_accept_clients_loop(int sockfd);
+static Result_t run_accept_clients_loop(int sockfd, ActiveClients_t *clients);
 
 static void
 do_help(void)
@@ -79,6 +78,9 @@ main(int argc, char** argv)
 
     int sockfd = -1;
 
+    ActiveClients_t clients;
+    clients_list_init(&clients);
+
     if (create_listening_socket(port, &sockfd) != OK)
         goto error;
 
@@ -87,7 +89,7 @@ main(int argc, char** argv)
 
     log_info("Waiting for client connections on port %s...", port);
 
-    if (run_accept_clients_loop(sockfd) != OK)
+    if (run_accept_clients_loop(sockfd, &clients) != OK)
         goto error;
 
     log_info("Shutting down the server...");
@@ -172,11 +174,8 @@ create_listening_socket(char *port, int *sockfd)
 }
 
 static Result_t
-run_accept_clients_loop(int sockfd)
+run_accept_clients_loop(int sockfd, ActiveClients_t *clients)
 {
-    ActiveClients_t clients;
-    clients_list_init(&clients);
-
     while (!is_interrupted) {
         int client_sockfd;
         struct sockaddr_storage client_sa;
@@ -197,7 +196,7 @@ run_accept_clients_loop(int sockfd)
         char client_descr[SOCKADDR2STR_MAX_BUFSIZE];
         sockaddr2str((struct sockaddr *) &client_sa, client_sa_len, client_descr);
 
-        Result_t status = create_client_thread(&clients, client_sockfd);
+        Result_t status = create_client_thread(clients, client_sockfd, client_descr);
         if (status == CLIENTS_LIMIT_REACHED) {
             log_error("Couldn't accept connection from %s: "
                       "clients limit reached", client_descr);
@@ -209,7 +208,7 @@ run_accept_clients_loop(int sockfd)
             return ERROR;
         }
 
-        log_info("New client connected: %s", client_descr);
+        log_info("%s: New client connected.", client_descr);
     }
 
     return OK;
