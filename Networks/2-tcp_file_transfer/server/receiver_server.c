@@ -16,7 +16,7 @@
 #include "client_thread.h"
 #include "log.h"
 #include "error.h"
-#include "util.h"
+#include "common.h"
 
 static char *port = "6666";
 static char *storage_dir = "uploads/";

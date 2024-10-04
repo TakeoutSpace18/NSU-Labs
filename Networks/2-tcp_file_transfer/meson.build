@@ -3,13 +3,19 @@ project('tcp_file_transfer', 'c',
   default_options: ['warning_level=3']
 )
 
-inc = include_directories('.')
+inc = include_directories('.', 'third-party/')
 
-common_src = files('log.c', 'protocol.c')
+common_src = files(
+  'third-party/log.c',
+  'third-party/progressbar.c',
+  'common.c')
+
+curses_dep = dependency('curses')
 
 common_lib = static_library(
   'common',
   common_src,
+  dependencies : curses_dep
   )
 
 subdir('server')

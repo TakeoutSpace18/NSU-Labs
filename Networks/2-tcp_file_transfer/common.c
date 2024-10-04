@@ -1,4 +1,4 @@
-#include "protocol.h"
+#include "common.h"
 
 #include <sys/socket.h>
 #include <errno.h>

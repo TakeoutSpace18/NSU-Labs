@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #include "log.h"
-#include "protocol.h"
+#include "common.h"
 
 static void *client_thread_main(void *arg);
 
@@ -100,6 +100,8 @@ client_thread_main(void *arg)
         goto finish;
     }
 
+
+    char file_chunk[FILE_CHUNK_SIZE];
     for (size_t recv_size = 0; recv_size < begin_dto.file_size; ) {
         
     }

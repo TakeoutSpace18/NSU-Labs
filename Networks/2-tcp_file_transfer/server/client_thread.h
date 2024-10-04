@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 #include "error.h"
-#include "util.h"
+#include "common.h"
 
 #define MAX_ALLOWED_CLIENTS 16
 

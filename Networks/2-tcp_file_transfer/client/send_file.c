@@ -1,8 +1,8 @@
-#include <cerrno>
 #define _GNU_SOURCE
 
 #include <stdbool.h>
 #include <string.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -14,22 +14,29 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
 #include "error.h"
+#include "common.h"
 #include "log.h"
-#include "protocol.h"
+#include "progressbar.h"
 
-char *host = NULL;
-char *port = NULL;
-char *filepath = NULL;
+#define STATUS_UPDATE_INTERVAL_USEC 500000
+
+static char *host = NULL;
+static char *port = NULL;
+static char *filepath = NULL;
+
+static bool needs_status_update = false;
 
 static Result_t connect_to_server(char *host, char *port, int *sockfd);
 static size_t get_file_size(FILE *file);
 static Result_t send_file(int sockfd, char *filepath);
-static void update_status(struct timespec *last_update, const char *filename,
-                          size_t filesize, size_t sent_size);
+static void update_status(progressbar *pbar, struct timeval *last_update,
+                          size_t sent_size);
+
 
 static void
 do_help(void)
@@ -145,6 +152,42 @@ get_file_size(FILE *file)
     return sz;
 }
 
+static void
+sigalarm_handler(int signo)
+{
+    if (signo == SIGALRM)
+        needs_status_update = true;
+}
+
+static Result_t
+setup_status_print_timer(void)
+{
+    struct timeval interval = {
+        .tv_sec = 0,
+        .tv_usec = STATUS_UPDATE_INTERVAL_USEC
+    };
+
+    struct itimerval new = {
+        .it_value = interval,
+        .it_interval = interval
+    };
+
+    if (setitimer(ITIMER_REAL, &new, NULL) != 0) {
+        log_error("Failed to setup itimer: %s", strerror(errno));
+        return ERROR;
+    }
+
+    struct sigaction sa = { 0 };
+    sa.sa_handler = sigalarm_handler;
+
+    if (sigaction(SIGALRM, &sa, NULL) != 0) {
+        log_error("Failed to setup itimer: %s", strerror(errno));
+        return ERROR;
+    }
+
+    return OK;
+}
+
 static Result_t
 send_file(int sockfd, char *filepath)
 {
@@ -159,13 +202,14 @@ send_file(int sockfd, char *filepath)
     }
 
     const char *filename = basename(filepath);
+    size_t      filesize = get_file_size(file);
 
     disable_send_timeout(sockfd);
 
     BeginFileTransferDTO_t begin_dto;
     begin_dto.magic = BEGIN_FILE_TRANSFER_MAGIC;
     begin_dto.filename_size = strlen(filename) + 1;
-    begin_dto.file_size = get_file_size(file);
+    begin_dto.file_size = filesize;
 
     status = send_buffer(sockfd, &begin_dto, sizeof(begin_dto));
     if (status != OK) {
@@ -183,9 +227,12 @@ send_file(int sockfd, char *filepath)
 
     log_debug("File name sent");
 
+    progressbar *pbar = progressbar_new(filename, filesize);
+
     char file_chunk[FILE_CHUNK_SIZE];
 
-    for (size_t total_sent_size = 0; total_sent_size < begin_dto.file_size; ) {
+    size_t total_sent_size = 0;
+    while (total_sent_size < begin_dto.file_size) {
         size_t read_chunk_sz = fread(file_chunk, sizeof(char), FILE_CHUNK_SIZE, file);
 
         for (size_t sent = 0; sent < read_chunk_sz; ) {
@@ -198,22 +245,30 @@ send_file(int sockfd, char *filepath)
 
             sent += ret;
 
-            update_status()
+            if (needs_status_update)
+                progressbar_update(pbar, total_sent_size);
+
         }
 
         total_sent_size += read_chunk_sz;
     }
-    
 
+    FileAcceptedDTO_t file_accepted;
+    status = receive_buffer(sockfd, &file_accepted, sizeof(file_accepted));
+    if (status != OK || file_accepted.magic != FILE_ACCEPTED_MAGIC) {
+        log_error("Did not receive file accept confirmation from server");
+        goto error;
+    }
+
+
+    progressbar_finish(pbar);
+    log_info("File was sent successfully!");
     return OK;
 
 error:
-}
+cancel_send:
 
-static void
-update_status(struct timespec *last_update, const char *filename,
-              size_t filesize, size_t sent_size)
-{
-
+    progressbar_finish(pbar);
+    return ERROR;
 }
 
