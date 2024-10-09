@@ -1,6 +1,6 @@
-#include <sys/cdefs.h>
 #define _GNU_SOURCE
 
+#include <sys/cdefs.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -11,21 +11,26 @@
 
 #define STRSIZE 256
 
+void cleanup(char *p) {
+    printf("%p\n", p);
+}
+
 static void*
 thread_main(void *arg)
 {
     /* it is unsafe to use async cancellation type with malloc */
     /* async cancel is implemented using a signal (NPTL)*/
 
-    int canceltype = PTHREAD_CANCEL_DEFERRED;
-    // int canceltype = PTHREAD_CANCEL_ASYNCHRONOUS;
+    // int canceltype = PTHREAD_CANCEL_DEFERRED;
+    int canceltype = PTHREAD_CANCEL_ASYNCHRONOUS;
     if (pthread_setcanceltype(canceltype, NULL) != 0) {
         perror("pthread_setcanceltype()");
         pthread_exit(EXIT_FAILURE);
     }
 
-    char *str = malloc(STRSIZE);
+    char *str = NULL;
     pthread_cleanup_push(free, str);
+    str = malloc(STRSIZE);
 
     for (int i = 0; true; i++) {
         printf("thread is working (%i)\n", i);

@@ -75,7 +75,7 @@ thread_two(void *arg)
         pthread_exit(EXIT_FAILURE);
     }
 
-    sleep(5);
+    sleep(40);
 
     return NULL;
 }
