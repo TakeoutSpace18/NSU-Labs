@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
+#include <assert.h>
 #include <unistd.h>
 #include <signal.h>
 #include <getopt.h>
@@ -18,8 +19,9 @@
 #include "error.h"
 #include "common.h"
 
+const char *storage_dir = "./uploads";
+
 static char *port = "6666";
-static char *storage_dir = "uploads/";
 
 static bool is_interrupted = false;
 
@@ -43,6 +45,7 @@ do_help(void)
 int
 main(int argc, char** argv)
 {
+    log_debug("Process PID: %i", getpid());
 
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
@@ -94,7 +97,7 @@ main(int argc, char** argv)
 
     log_info("Shutting down the server...");
 
-    if (shutdown_active_clients() != OK)
+    if (shutdown_active_clients(&clients) != OK)
         goto error;
 
     close(sockfd);

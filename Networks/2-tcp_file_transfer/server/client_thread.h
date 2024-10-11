@@ -7,6 +7,8 @@
 #include "common.h"
 
 #define MAX_ALLOWED_CLIENTS 16
+#define SPD_UPDATE_MSECS 100
+#define REPORT_INTERVAL_MSECS 2000
 
 typedef struct ActiveClients ActiveClients_t;
 
@@ -27,9 +29,18 @@ typedef struct ActiveClients
 }
 ActiveClients_t;
 
+typedef struct FileData
+{
+    FILE *f;
+    char *pathname;
+}
+FileData_t;
+
+extern const char *storage_dir; /* defined in receiver_server.c */
+
 void clients_list_init(ActiveClients_t *active_clients);
 Result_t create_client_thread(ActiveClients_t *clients, int sockfd,
                               const char *description);
-Result_t shutdown_active_clients(void);
+Result_t shutdown_active_clients(ActiveClients_t *clients);
 
 #endif /* CLIENT_THREAD_H */

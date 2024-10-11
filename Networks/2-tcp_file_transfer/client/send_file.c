@@ -34,9 +34,6 @@ static bool needs_status_update = false;
 static Result_t connect_to_server(char *host, char *port, int *sockfd);
 static size_t get_file_size(FILE *file);
 static Result_t send_file(int sockfd, char *filepath);
-static void update_status(progressbar *pbar, struct timeval *last_update,
-                          size_t sent_size);
-
 
 static void
 do_help(void)
@@ -227,6 +224,9 @@ send_file(int sockfd, char *filepath)
 
     log_debug("File name sent");
 
+    if (setup_status_print_timer() != OK)
+        return ERROR;
+
     progressbar *pbar = progressbar_new(filename, filesize);
 
     char file_chunk[FILE_CHUNK_SIZE];
@@ -240,13 +240,17 @@ send_file(int sockfd, char *filepath)
             if (ret == -1 && errno == EINTR)
                 goto cancel_send;
 
-            if (ret == -1)
+            if (ret == -1) {
+                log_error("send() failed: %s", strerror(errno));
                 goto error;
+            }
 
             sent += ret;
 
-            if (needs_status_update)
+            if (needs_status_update) {
                 progressbar_update(pbar, total_sent_size);
+                needs_status_update = false;
+            }
 
         }
 
@@ -266,9 +270,12 @@ send_file(int sockfd, char *filepath)
     return OK;
 
 error:
-cancel_send:
-
     progressbar_finish(pbar);
     return ERROR;
+
+cancel_send:
+    progressbar_finish(pbar);
+    log_info("File send cancelled");
+    return OK;
 }
 

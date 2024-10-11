@@ -3,6 +3,8 @@ project('tcp_file_transfer', 'c',
   default_options: ['warning_level=3']
 )
 
+add_project_arguments('-DLOG_USE_COLOR', language : 'c')
+
 inc = include_directories('.', 'third-party/')
 
 common_src = files(
