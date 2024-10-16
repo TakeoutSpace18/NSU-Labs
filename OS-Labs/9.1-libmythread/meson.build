@@ -11,11 +11,18 @@ libmythread = library(
   libmythread_src
   )
 
-# incdir = include_directories()
-test1 = executable('test1',
-  ['test.c', 'libmythread.h'],
+tst_create_join = executable('tst-create-join',
+  ['tst-create-join.c'],
   # include_directories : incdir,
   link_with: libmythread
   )
 
-test('test1', test1)
+test('tst-create-join', tst_create_join)
+
+tst_cancel = executable('tst-cancel',
+  ['tst-cancel.c'],
+  # include_directories : incdir,
+  link_with: libmythread
+  )
+
+test('tst-cancel', tst_cancel)

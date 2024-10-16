@@ -13,8 +13,7 @@ MtResult_t MyThreadCreate(MyThread_t *thread, void *(*start_routine)(void *),
 
 MyThread_t MyThreadSelf(void);
 
-MtResult_t MyThreadJoin(MyThread_t *thread);
-MtResult_t MyThreadDetach(MyThread_t *thread);
+MtResult_t MyThreadJoin(MyThread_t *thread, void **ret);
 
 MtResult_t MyThreadCancel(MyThread_t *thread);
 void MyThreadTestCancel(void);
