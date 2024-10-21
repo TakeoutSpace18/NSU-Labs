@@ -11,18 +11,23 @@ libmythread = library(
   libmythread_src
   )
 
-tst_create_join = executable('tst-create-join',
-  ['tst-create-join.c'],
-  # include_directories : incdir,
-  link_with: libmythread
+test('tst-create-join', 
+  executable('tst-create-join',
+    ['tst-create-join.c'],
+    link_with: libmythread
   )
+)
 
-test('tst-create-join', tst_create_join)
-
-tst_cancel = executable('tst-cancel',
-  ['tst-cancel.c'],
-  # include_directories : incdir,
-  link_with: libmythread
+test('tst-cancel', 
+  executable('tst-cancel',
+    ['tst-cancel.c'],
+    link_with: libmythread
   )
+)
 
-test('tst-cancel', tst_cancel)
+test('tst-many-threads', 
+  executable('tst-many-threads',
+    ['tst-many-threads.c'],
+    link_with: libmythread
+  )
+)
