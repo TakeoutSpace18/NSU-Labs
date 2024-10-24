@@ -4,14 +4,19 @@
 #include <string.h>
 #include <stdint.h>
 #include <execinfo.h>
+#include <stdbool.h>
 
 #include "libmythread.h"
+
+bool all_created = false;
 
 static void *
 thread_main(void *arg)
 {
+    while (!all_created);
+        
     uint64_t num = (uint64_t) arg;
-    printf("%lu\n", num);
+    printf("%lu ", num);
     return EXIT_SUCCESS;
 }
 
@@ -28,6 +33,8 @@ int main(void)
             return EXIT_FAILURE;
         }
     }
+
+    all_created = true;
 
     printf("[main] joining threads...\n");
     for (uint64_t i = 0; i < NUM_THREADS; ++i) {
