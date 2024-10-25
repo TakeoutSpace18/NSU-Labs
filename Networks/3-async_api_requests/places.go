@@ -3,15 +3,17 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"sync"
+	"errors"
+	"time"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/joho/godotenv"
+    "github.com/briandowns/spinner"
 )
 
 type GeocodingResponse struct {
@@ -35,9 +37,12 @@ type GeocodingResponse struct {
 	Locale string `json:"locale"`
 }
 
-func geocodingRequest(placeName string) GeocodingResponse {
+func geocodingRequest(placeName string) (*GeocodingResponse, error) {
 	reqUrl := "https://graphhopper.com/api/1/geocode"
 	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	query := req.URL.Query()
 	query.Add("q", placeName)
@@ -45,25 +50,24 @@ func geocodingRequest(placeName string) GeocodingResponse {
 	query.Add("key", os.Getenv("GRAPHHOPPER_API_KEY"))
 	req.URL.RawQuery = query.Encode()
 
-	if err != nil {
-		panic(err)
-	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+
+	if res.StatusCode != 200 {
+		return nil, errors.New(res.Status)
 	}
 
 	var response GeocodingResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
 	}
 
-	return response
+	return &response, nil
 }
 
 type WeatherResponse struct {
@@ -109,9 +113,12 @@ type WeatherResponse struct {
 	Cod      int    `json:"cod"`
 }
 
-func weatherRequest(lat, lng float64) WeatherResponse {
+func weatherRequest(lat, lng float64) (*WeatherResponse, error) {
 	reqUrl := "https://api.openweathermap.org/data/2.5/weather"
 	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	query := req.URL.Query()
 	query.Add("lat", strconv.FormatFloat(lat, 'f', -1, 64))
@@ -120,25 +127,24 @@ func weatherRequest(lat, lng float64) WeatherResponse {
 	query.Add("appid", os.Getenv("OPENWEATHERMAP_API_KEY"))
 	req.URL.RawQuery = query.Encode()
 
-	if err != nil {
-		panic(err)
-	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+
+	if res.StatusCode != 200 {
+		return nil, errors.New(res.Status)
 	}
 
 	var response WeatherResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
 	}
 
-	return response
+	return &response, nil
 }
 
 func weatherPrettyPrint(dto *WeatherResponse) {
@@ -152,168 +158,187 @@ func weatherPrettyPrint(dto *WeatherResponse) {
 }
 
 type InterestingPlacesResponse struct {
-	Type     string `json:"type"`
-	Features []struct {
-		Type     string `json:"type"`
-		ID       string `json:"id"`
-		Geometry struct {
-			Type        string    `json:"type"`
-			Coordinates []float64 `json:"coordinates"`
-		} `json:"geometry"`
-		Properties struct {
-			Xid   string  `json:"xid"`
-			Name  string  `json:"name"`
-			Dist  float64 `json:"dist"`
-			Rate  int     `json:"rate"`
-			Osm   string  `json:"osm"`
-			Kinds string  `json:"kinds"`
-		} `json:"properties"`
-	} `json:"features"`
+	Count    int `json:"count"`
+	Next     any `json:"next"`
+	Previous any `json:"previous"`
+	Results  []struct {
+		ID            int    `json:"id"`
+		Title         string `json:"title"`
+		Slug          string `json:"slug"`
+		Address       string `json:"address"`
+		Phone         string `json:"phone"`
+		SiteURL       string `json:"site_url"`
+		Subway        string `json:"subway"`
+		IsClosed      bool   `json:"is_closed"`
+		Location      string `json:"location"`
+		HasParkingLot bool   `json:"has_parking_lot"`
+	} `json:"results"`
 }
 
-func interestingPlacesRequest(lat, lng float64) InterestingPlacesResponse {
-	reqUrl := "https://api.opentripmap.com/0.1/ru/places/radius"
+func interestingPlacesRequest(lat, lng float64) (*InterestingPlacesResponse, error) {
+	reqUrl := "https://kudago.com/public-api/v1.4/places"
 	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	query := req.URL.Query()
 	query.Add("lat", strconv.FormatFloat(lat, 'f', -1, 64))
 	query.Add("lon", strconv.FormatFloat(lng, 'f', -1, 64))
-	query.Add("radius", "5000")
-	query.Add("limit", "5")
-	query.Add("apikey", os.Getenv("OPENTRIPMAP_API_KEY"))
+	query.Add("radius", "10000")
+	query.Add("page_size", "5")
 	req.URL.RawQuery = query.Encode()
 
-	if err != nil {
-		panic(err)
-	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	fmt.Println(res)
-	fmt.Println(string(body))
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, errors.New(res.Status)
+	}
 
 	var response InterestingPlacesResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
 	}
 
-	return response
+	return &response, nil
 }
 
 type InterestingPlaceDescriptionResponse struct {
-	Xid     string `json:"xid"`
-	Name    string `json:"name"`
-	Address struct {
-		Road          string `json:"road"`
-		Town          string `json:"town"`
-		State         string `json:"state"`
-		County        string `json:"county"`
-		Suburb        string `json:"suburb"`
-		Country       string `json:"country"`
-		Postcode      string `json:"postcode"`
-		CountryCode   string `json:"country_code"`
-		Neighbourhood string `json:"neighbourhood"`
-	} `json:"address"`
-	Rate    string `json:"rate"`
-	Osm     string `json:"osm"`
-	Kinds   string `json:"kinds"`
-	Sources struct {
-		Geometry   string   `json:"geometry"`
-		Attributes []string `json:"attributes"`
-	} `json:"sources"`
-	Otm   string `json:"otm"`
-	Point struct {
-		Lon float64 `json:"lon"`
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Slug        string `json:"slug"`
+	Address     string `json:"address"`
+	Timetable   string `json:"timetable"`
+	Phone       string `json:"phone"`
+	IsStub      bool   `json:"is_stub"`
+	BodyText    string `json:"body_text"`
+	Description string `json:"description"`
+	SiteURL     string `json:"site_url"`
+	ForeignURL  string `json:"foreign_url"`
+	Coords      struct {
 		Lat float64 `json:"lat"`
-	} `json:"point"`
+		Lon float64 `json:"lon"`
+	} `json:"coords"`
+	Subway         string `json:"subway"`
+	FavoritesCount int    `json:"favorites_count"`
+	Images         []struct {
+		Image  string `json:"image"`
+		Source struct {
+			Name string `json:"name"`
+			Link string `json:"link"`
+		} `json:"source"`
+	} `json:"images"`
+	CommentsCount   int      `json:"comments_count"`
+	IsClosed        bool     `json:"is_closed"`
+	Categories      []string `json:"categories"`
+	ShortTitle      string   `json:"short_title"`
+	Tags            []string `json:"tags"`
+	Location        string   `json:"location"`
+	AgeRestriction  any      `json:"age_restriction"`
+	DisableComments bool     `json:"disable_comments"`
+	HasParkingLot   bool     `json:"has_parking_lot"`
 }
 
-func interestingPlaceDescriptionRequest(xid string) InterestingPlaceDescriptionResponse {
-	reqUrl := fmt.Sprintf("https://api.opentripmap.com/0.1/ru/places/xid/%s", xid)
+func interestingPlaceDescriptionRequest(id int) (*InterestingPlaceDescriptionResponse, error) {
+	reqUrl := fmt.Sprintf("https://kudago.com/public-api/v1.4/places/%d", id)
 	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	query := req.URL.Query()
-	query.Add("apikey", os.Getenv("OPENTRIPMAP_API_KEY"))
 	req.URL.RawQuery = query.Encode()
 
-	if err != nil {
-		panic(err)
-	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	fmt.Println(res)
-	fmt.Println(string(body))
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, errors.New(res.Status)
+	}
 
 	var response InterestingPlaceDescriptionResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		fmt.Println("Can not unmarshal JSON")
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return nil, err
 	}
 
-	return response
+	return &response, nil
 }
 
 func printPlaceDescription(descr *InterestingPlaceDescriptionResponse) {
-    fmt.Printf("%s\n", descr.Name)
+	fmt.Printf("%s\n", descr.Title)
+    fmt.Printf("\tDescription: %s\n", descr.Description)
+    fmt.Printf("\tLocation: %s\n", descr.Location)
+    fmt.Printf("\tPhone: %s\n", descr.Phone)
 }
 
 type LocationData struct {
-    weather *WeatherResponse
-    interestingPlaces []InterestingPlaceDescriptionResponse
+	weather           *WeatherResponse
+	interestingPlaces []*InterestingPlaceDescriptionResponse
 }
 
-func collectLocationData(lat, lng float64) LocationData {
-    var data LocationData
-
-    weatherChan := make(chan WeatherResponse, 1)
-    go func() {
-        weatherChan <- weatherRequest(lat, lng)
-    }()
-
-    interestingPlacesChan := make(chan InterestingPlacesResponse, 1)
-    go func() {
-        interestingPlacesChan <- interestingPlacesRequest(lat, lng)
-    }()
-
-    interestingPlaces := <-interestingPlacesChan
-
+func (data *LocationData) collectInterestingPlacesDescriptions(places *InterestingPlacesResponse) {
     var descrWG sync.WaitGroup
-    descrChan := make (chan InterestingPlaceDescriptionResponse)
-    for _, place := range interestingPlaces.Features {
+    descrChan := make(chan *InterestingPlaceDescriptionResponse)
+    for _, place := range places.Results {
         descrWG.Add(1)
         go func() {
             defer descrWG.Done()
-            descrChan <- interestingPlaceDescriptionRequest(place.Properties.Xid)
+            response, err := interestingPlaceDescriptionRequest(place.ID)
+            if (err != nil) {
+                fmt.Println("Failed to receive interesting place description: ", err)
+            }
+            descrChan <- response
         }()
     }
 
     go func() {
-		descrWG.Wait()
-		close(descrChan)
-	}()
+        descrWG.Wait()
+        close(descrChan)
+    }()
 
-    data.interestingPlaces = make([]InterestingPlaceDescriptionResponse, 0)
+    data.interestingPlaces = make([]*InterestingPlaceDescriptionResponse, 0)
     for descr := range descrChan {
         data.interestingPlaces = append(data.interestingPlaces, descr)
     }
+}
 
-    *data.weather = <-weatherChan
+func (data *LocationData) collectLocationData(lat, lng float64) {
+	weatherChan := make(chan *WeatherResponse, 1)
+	go func() {
+        response, err := weatherRequest(lat, lng)
+        if err != nil {
+            fmt.Println("Failed to receive weather: ", err)
+        }
+		weatherChan <- response
+	}()
 
-    return data
+	interestingPlacesChan := make(chan *InterestingPlacesResponse, 1)
+	go func() {
+        response, err := interestingPlacesRequest(lat, lng)
+        if (err != nil) {
+            fmt.Println("Failed to receive interesting places list: ", err)
+        }
+		interestingPlacesChan <- response
+	}()
+
+	interestingPlaces := <-interestingPlacesChan
+
+    if interestingPlaces != nil {
+        data.collectInterestingPlacesDescriptions(interestingPlaces)
+    }
+
+	data.weather = <-weatherChan
 }
 
 func choosePlace(variants *GeocodingResponse) int {
@@ -338,29 +363,44 @@ func choosePlace(variants *GeocodingResponse) int {
 }
 
 func main() {
-    fmt.Printf("pid: %d\n", os.Getpid())
+	fmt.Printf("pid: %d\n", os.Getpid())
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+        log.Fatal("Error loading .env file")
+    }
 
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("Enter place name: ")
 	placeName, _ := reader.ReadString('\n')
 
-	geocodingResponse := geocodingRequest(placeName)
+    spinner := spinner.New(spinner.CharSets[12], 150 * time.Millisecond)
+    spinner.Start()
 
-	placeNum := choosePlace(&geocodingResponse)
+	geocodingResponse, err := geocodingRequest(placeName)
+    spinner.Stop()
+    if err != nil {
+        log.Fatal("Failed to receive geocoding data: ", err)
+    }
+
+	placeNum := choosePlace(geocodingResponse)
 
 	lat := geocodingResponse.Hits[placeNum].Point.Lat
 	lng := geocodingResponse.Hits[placeNum].Point.Lng
 
-    locationData := collectLocationData(lat, lng)
 
-	weatherPrettyPrint(locationData.weather)
-    for _, descr := range locationData.interestingPlaces {
-        printPlaceDescription(&descr)
+    spinner.Start()
+    var data LocationData
+    data.collectLocationData(lat, lng)
+    spinner.Stop()
+
+    if data.weather != nil {
+        weatherPrettyPrint(data.weather)
     }
+
+    fmt.Println("Interesting places:")
+	for _, descr := range data.interestingPlaces {
+		printPlaceDescription(descr)
+	}
 }
