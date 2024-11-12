@@ -21,6 +21,7 @@
 void server_coroutine_main(void *arg);
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents);
 static void on_client_wakeup_cb(EV_P_ struct ev_io *w, int revents);
+static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
 int server_create_listening_socket(uint16_t port, int *sockfd) {
     struct sockaddr_in sa;
@@ -108,8 +109,11 @@ static client_t *server_client_add(server_t *server, int sockfd, const char *des
     coro_create(&c->context, (coro_func) server->client_routine, c,
                 c->stack.sptr, c->stack.ssze);
 
-    ev_io_init(&c->watcher, on_client_wakeup_cb, sockfd, EV_READ);
-    ev_io_start(server->loop, &c->watcher);
+    ev_io_init(&c->io_watcher, on_client_wakeup_cb, sockfd, EV_READ);
+    ev_io_start(server->loop, &c->io_watcher);
+
+    ev_async_init(&c->drop_watcher, on_client_drop_cb);
+    ev_async_start(server->loop, &c->drop_watcher);
 
     list_push(&server->clients, &c->link);
 
@@ -126,13 +130,16 @@ fail:
 
 void server_drop_client(client_t *c)
 {
-    log_info("[%s] Closing connection...", c->description);
+    /* releasing client resources happens in server coroutine, 
+     * because we can't destroy stack of currently running client coroutine
+     * from itself */
+    ev_async_send(c->server_p->loop, &c->drop_watcher);
 
-    ev_io_stop(c->server_p->loop, &c->watcher);
-    close(server_client_sockfd(c));
-    list_unlink(&c->link);
-    free(c->description);
-    free(c);
+    coro_context *client_context = &c->context;
+    coro_context *server_context = &c->server_p->context;
+
+    log_trace("context switch: client(%s) --> server", c->description);
+    coro_transfer(client_context, server_context);
 }
 
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
@@ -169,10 +176,24 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
     coro_transfer(&new_client->server_p->context, &new_client->context);
 }
 
-static void on_client_wakeup_cb(EV_P_ struct ev_io *w, int revents)
+static void on_client_wakeup_cb(EV_P_ ev_io *w, int revents)
 {
-    client_t *client = (client_t *) w;
+    client_t *client = (client_t *) io_w_2_client(w);
 
     log_trace("context switch: server --> client(%s)", client->description);
     coro_transfer(&client->server_p->context, &client->context);
+}
+
+static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
+{
+    client_t *client = (client_t *) drop_w_2_client(w);
+
+    log_info("[%s] Closing connection...", client->description);
+    
+    ev_io_stop(client->server_p->loop, &client->io_watcher);
+    close(server_client_sockfd(client));
+    list_unlink(&client->link);
+    coro_stack_free(&client->stack);
+    free(client->description);
+    free(client);
 }

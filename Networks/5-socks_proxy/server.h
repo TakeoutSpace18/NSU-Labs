@@ -23,7 +23,8 @@ struct server {
 };
 
 struct client {
-    ev_io watcher; /* mandatory to be the first field */
+    ev_io    io_watcher; 
+    ev_async drop_watcher;
 
     coro_context context;
     struct coro_stack stack;
@@ -34,8 +35,12 @@ struct client {
     server_t *server_p;
 };
 
+/* access holder structure from watcher pointer */
+#define io_w_2_client(p) container_of(p, client_t, io_watcher)
+#define drop_w_2_client(p) container_of(p, client_t, drop_watcher)
+
 static inline int server_client_sockfd(client_t *c) {
-    return c->watcher.fd;
+    return c->io_watcher.fd;
 }
 
 void server_drop_client(client_t *c);

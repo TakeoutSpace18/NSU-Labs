@@ -48,5 +48,4 @@
 
 #define container_of(N, T, F) ((T *)((char *)(N) - __builtin_offsetof(T, F)))
 
-
 #endif /* C_H */

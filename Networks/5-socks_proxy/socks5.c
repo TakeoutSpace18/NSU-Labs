@@ -5,7 +5,7 @@
 #include "server.h"
 
 /* Simple echo server for test */
-void socks5_main(client_t *client)
+void attribute_noreturn() socks5_main(client_t *client)
 {
     log_debug("Hello from socks5_main coroutine");
     char msg_buf[4096];
@@ -16,7 +16,6 @@ void socks5_main(client_t *client)
 
         if (!res) {
             server_drop_client(client);
-            return;
         }
 
         if (res < 0) {
@@ -27,15 +26,14 @@ void socks5_main(client_t *client)
 
             log_error("read() failed: %s", strerror(errno));
             server_drop_client(client);
-            return;
         }
 
         res = write(server_client_sockfd(client), msg_buf, (size_t)res);
-
         if (!res || res < 0) {
             log_error("write() failed: %s", strerror(errno));
             server_drop_client(client);
-            return;
         }
     }
+
+    unreachable();
 }
