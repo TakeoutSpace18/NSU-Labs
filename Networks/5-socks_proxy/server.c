@@ -23,6 +23,8 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents);
 static void on_client_wakeup_cb(EV_P_ struct ev_io *w, int revents);
 static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
+client_t *g_running_client = NULL;
+
 int server_create_listening_socket(uint16_t port, int *sockfd) {
     struct sockaddr_in sa;
     *sockfd = -1;
@@ -84,12 +86,6 @@ void server_run(server_t *s) {
     ev_run(s->loop, 0);
 }
 
-void server_yield(client_t *c)
-{
-    log_trace("context switch: client(%s) --> server", c->description);
-    coro_transfer(&c->context, &c->server_p->context);
-}
-
 static client_t *server_client_add(server_t *server, int sockfd, const char *descr)
 {
     client_t *c = malloc(sizeof(*c));
@@ -128,8 +124,39 @@ fail:
     return NULL;
 }
 
-void server_drop_client(client_t *c)
+void switch_to_client(client_t *client)
 {
+    coro_context *client_ctx = &client->context;
+    coro_context *server_ctx = &client->server_p->context;
+
+    g_running_client = client;
+
+    log_trace("context switch: server --> client(%s)", client->description);
+    coro_transfer(server_ctx, client_ctx);
+}
+
+void switch_to_server(client_t *client)
+{
+    coro_context *client_ctx = &client->context;
+    coro_context *server_ctx = &client->server_p->context;
+
+    g_running_client = NULL;
+
+    log_trace("context switch: client(%s) --> server", client->description);
+    coro_transfer(client_ctx, server_ctx);
+}
+
+void client_yield(void)
+{
+    client_t *c = g_running_client;
+
+    switch_to_server(c);
+}
+
+void client_drop(void)
+{
+    client_t *c = g_running_client;
+
     /* releasing client resources happens in server coroutine, 
      * because we can't destroy stack of currently running client coroutine
      * from itself */
@@ -138,8 +165,10 @@ void server_drop_client(client_t *c)
     coro_context *client_context = &c->context;
     coro_context *server_context = &c->server_p->context;
 
-    log_trace("context switch: client(%s) --> server", c->description);
-    coro_transfer(client_context, server_context);
+    /* loop in case client coroutine will wake up again, but it shouldn't */
+    for (;;) {
+        switch_to_server(c);
+    }
 }
 
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
@@ -172,16 +201,13 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
         return;
     }
 
-    log_trace("context switch: server --> client(%s)", new_client->description);
-    coro_transfer(&new_client->server_p->context, &new_client->context);
+    switch_to_client(new_client);
 }
 
 static void on_client_wakeup_cb(EV_P_ ev_io *w, int revents)
 {
     client_t *client = (client_t *) io_w_2_client(w);
-
-    log_trace("context switch: server --> client(%s)", client->description);
-    coro_transfer(&client->server_p->context, &client->context);
+    switch_to_client(client);
 }
 
 static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
