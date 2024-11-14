@@ -126,6 +126,8 @@ fail:
 
 void switch_to_client(client_t *client)
 {
+    assert(g_running_client == NULL);
+
     coro_context *client_ctx = &client->context;
     coro_context *server_ctx = &client->server_p->context;
 
@@ -137,6 +139,8 @@ void switch_to_client(client_t *client)
 
 void switch_to_server(client_t *client)
 {
+    assert(g_running_client != NULL);
+
     coro_context *client_ctx = &client->context;
     coro_context *server_ctx = &client->server_p->context;
 
@@ -153,7 +157,7 @@ void client_yield(void)
     switch_to_server(c);
 }
 
-void client_drop(void)
+void attribute_noreturn() client_drop(void)
 {
     client_t *c = g_running_client;
 
@@ -169,6 +173,71 @@ void client_drop(void)
     for (;;) {
         switch_to_server(c);
     }
+}
+
+ssize_t client_recv(void *buf, size_t n, int flags)
+{
+    if (n == 0) assert(0);
+    client_log_trace("client_recv()");
+    ssize_t ret;
+    for (;;) {
+        ret = recv(client_sockfd(), buf, n, flags);
+        client_log_trace("recv() returned %zi", ret);
+
+        if (ret == -1 && errno == EAGAIN) {
+            client_log_trace("yeild");
+            client_yield();
+        }
+        else
+            return ret;
+
+    }
+}
+
+ssize_t client_send(void *buf, size_t n, int flags)
+{
+    client_log_trace("client_send()");
+    ssize_t ret;
+    for (;;) {
+        ret = send(client_sockfd(), buf, n, flags);
+        client_log_trace("send() returned %zi", ret);
+        if (ret == -1 && errno == EAGAIN)
+            client_yield();
+        else
+            return ret;
+    }
+}
+
+ssize_t client_recv_buf(void *buf, size_t size)
+{
+    client_log_trace("client_recv_buf(): size - %zu", size);
+    for (size_t recv_size = 0; recv_size < size; ) {
+        ssize_t ret = client_recv((char *) buf + recv_size, size - recv_size, 0);
+
+        if (ret == -1)
+            continue;
+            // return -1;
+
+        recv_size += ret;
+    }
+
+    return size;
+}
+
+ssize_t client_send_buf(void *buf, size_t size)
+{
+    client_log_trace("client_send_buf()");
+    for (size_t sent_size = 0; sent_size < size; ) {
+        ssize_t ret = client_send((char *) buf + sent_size, size - sent_size, 0);
+
+        if (ret == -1)
+            continue;
+            // return -1;
+
+        sent_size += ret;
+    }
+
+    return size;
 }
 
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
@@ -217,7 +286,7 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
     log_info("[%s] Closing connection...", client->description);
     
     ev_io_stop(client->server_p->loop, &client->io_watcher);
-    close(server_client_sockfd(client));
+    close(client_sockfd());
     list_unlink(&client->link);
     coro_stack_free(&client->stack);
     free(client->description);
