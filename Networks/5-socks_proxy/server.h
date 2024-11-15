@@ -3,11 +3,11 @@
 
 #include <ev.h>
 
+#include "dns.h"
 #include "coro.h"
 #include "list.h"
 #include "c.h"
 #include "log.h"
-#include <stdio.h>
 
 typedef struct server server_t;
 typedef struct client client_t;
@@ -24,6 +24,8 @@ struct server {
 
     list_t clients;
     client_routine_t client_routine;
+
+    dns_data_t dns;
 };
 
 struct client {
@@ -43,20 +45,28 @@ struct client {
 #define io_w_2_client(p) container_of(p, client_t, io_watcher)
 #define drop_w_2_client(p) container_of(p, client_t, drop_watcher)
 
-
-int server_create(server_t *s, uint16_t port, client_routine_t routine);
+int server_init(server_t *s, uint16_t port, client_routine_t routine);
 void server_run(server_t *s);
+void server_finalize(server_t *s);
 
 /* functions below should be called from the context of client coroutine */
 void client_drop(void);
 void client_yield(void);
 
-/* receive or send data with respect to other client coroutines,
- * returns -1 in case of error */
+/* receive or send data, but internally switch
+ * to other coroutines when no data is available. 
+ * RETURNS:
+ *      num of bytes read or sent, on success
+ *      0, on closed socket,
+ *      -1, on other error (sets errno) */
 ssize_t client_recv(void *buf, size_t n, int flags);
 ssize_t client_send(void *buf, size_t n, int flags);
 
-/* receive or send whole buffer of given size or return -1 */
+/* receive or send whole buffer of given size 
+ * RETURNS:
+ *      size, on success 
+ *      0, on closed socket,
+ *      -1, on other error (sets errno) */
 ssize_t client_recv_buf(void *buf, size_t size);
 ssize_t client_send_buf(void *buf, size_t size);
 

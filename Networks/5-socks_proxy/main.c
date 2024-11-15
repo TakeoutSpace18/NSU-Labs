@@ -54,7 +54,7 @@ main(int argc, char** argv)
 
     server_t server;
 
-    if (server_create(&server, port, socks5_main) == -1) {
+    if (server_init(&server, port, socks5_main) == -1) {
         return EXIT_FAILURE;
     }
 

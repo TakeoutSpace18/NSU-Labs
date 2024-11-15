@@ -48,4 +48,14 @@
 
 #define container_of(N, T, F) ((T *)((char *)(N) - __builtin_offsetof(T, F)))
 
+/* libev helpers */
+#define error_event(events)     \
+    ((events) & EV_ERROR)
+
+#define read_available(events)  \
+    ((events) & EV_READ)
+
+#define write_available(events)  \
+    ((events) & EV_READ)
+
 #endif /* C_H */

@@ -3,7 +3,6 @@
 
 #include "server.h"
 #include "c.h"
-#include <stdint.h>
 
 #define SOCKS_VERSION5 0x05
     
@@ -11,12 +10,12 @@ struct auth_method_selection_request {
     uint8_t ver;
     uint8_t nmethods;
     uint8_t methods[256];
-};
+} attribute_packed();
 
 struct auth_method_selection_response {
     uint8_t ver;
     uint8_t method;
-};
+} attribute_packed();
 
 enum auth_method {
     NOAUTH = 0x00,
@@ -60,7 +59,7 @@ struct cmd_request {
         uint8_t ipv6[16];
     } dst_addr;
     uint16_t dst_port;
-};
+} attribute_packed();
 
 struct cmd_response {
     uint8_t ver;
