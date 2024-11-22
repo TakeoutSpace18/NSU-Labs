@@ -109,7 +109,7 @@ ste_upper_bound(ste_t ste, ste_t *table, size_t st_size)
 
     size_t pos = st_size;
 
-    while (begin <= end)
+    while (begin < end)
     {
         size_t mid = (begin + end) / 2;
 

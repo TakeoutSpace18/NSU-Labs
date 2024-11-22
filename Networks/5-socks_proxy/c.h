@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -19,8 +20,11 @@
 #include <unistd.h>
 
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
+
+#include <ev.h>
 
 /* only GCC supports the unused attribute */
 #ifdef __GNUC__

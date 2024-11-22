@@ -1,13 +1,16 @@
 #include "dns.h"
 
+#include "server.h"
 #include <ares.h>
+#include <ev.h>
 
 #include "c.h"
 #include "log.h"
+#include <stdbool.h>
 
 /* is always called from server context */
-static void io_cb (EV_P_ ev_io *w, int revents) {
-    dns_data_t *d = io_w_2_dns_data(w);
+static void io_cb(EV_P_ ev_io *w, int revents) {
+    dns_resolver_t *d = io_w_2_dns_resolver(w);
 
     ares_socket_t rfd, wfd;
     rfd = wfd = ARES_SOCKET_BAD;
@@ -24,7 +27,7 @@ static void io_cb (EV_P_ ev_io *w, int revents) {
 static void sock_state_change_cb(void *data_voidp, ares_socket_t sockfd,
                                int readable, int writeable) {
     
-    dns_data_t *d = (dns_data_t *) data_voidp;
+    dns_resolver_t *d = (dns_resolver_t *) data_voidp;
 
     if (ev_is_active(&d->io_watcher) &&  d->io_watcher.fd != sockfd) {
         log_warn("c-ares socket change requested for active io_watcher");
@@ -46,7 +49,7 @@ static void sock_state_change_cb(void *data_voidp, ares_socket_t sockfd,
     }
 }
 
-int dns_init(dns_data_t *d, struct ev_loop *loop)
+int dns_init(dns_resolver_t *d, struct ev_loop *loop)
 {
     int ret;
 
@@ -56,10 +59,10 @@ int dns_init(dns_data_t *d, struct ev_loop *loop)
         return -1;
     }
 
-    memset(d, 0, sizeof(dns_data_t));
+    memset(d, 0, sizeof(dns_resolver_t));
     d->loop = loop;
+
     ev_init(&d->io_watcher, io_cb);
-    ev_init(&d->timeout_watcher, io_cb);
 
     struct ares_options options;
     memset(&options, 0, sizeof(options));
@@ -75,7 +78,7 @@ int dns_init(dns_data_t *d, struct ev_loop *loop)
     return 0;
 }
 
-void dns_finalize(struct dns_data *d)
+void dns_finalize(dns_resolver_t *d)
 {
     ares_destroy(d->channel);
     ares_library_cleanup();
@@ -84,16 +87,48 @@ void dns_finalize(struct dns_data *d)
 
 /* is called from server context */
 static void
-on_getaddrinfo_finish_cb(void *arg, int status, int timeouts, struct hostent *host)
+on_getaddrinfo_finish_cb(void *arg, int status, int timeouts,
+                         struct ares_addrinfo *result)
 {
-    /* switch to client context if needed */
+    log_trace("Received ares_getaddrinfo result");
+    dns_resolve_request_t *req = (dns_resolve_request_t *) arg;
+
+    req->status = status;
+    req->result = result;
+    req->timeouts = timeouts;
+
+    req->done = true;
+
+    /* return control to client that issued the request */
+    server_switch_to_client(req->source_client);
 }
 
-/* may be called from both server and client contexts */
-int dns_resolve(uint32_t *ipv4, const char *name)
+/* should be called from client context */
+struct ares_addrinfo *client_dns_resolve(const char *node, const char *service,
+                                  const struct ares_addrinfo_hints *hints)
 {
-    /* call ares_getaddrinfo() */
-    /* switch to server context if in client */
-}
+    client_t *c = g_running_client;
+    dns_resolver_t *r = &c->server_p->dns;
 
-int dns_resolve_rev(char *name, uint32_t ipv4);
+    dns_resolve_request_t req = { 0 };
+    req.source_client = c;
+    req.done = false;
+
+    client_log_trace("DNS Resolving %s:%s...", node, service);
+
+    ares_getaddrinfo(r->channel, node, service, hints, on_getaddrinfo_finish_cb, &req);
+
+    while (!req.done) {
+        client_yield();
+    }
+
+    if (req.status != ARES_SUCCESS) {
+        client_log_info("DNS %s:%s resolve failed: %s", node, service,
+                        ares_strerror(req.status));
+        return NULL;
+    }
+    else {
+        client_log_info("DNS %s:%s resolve succeded", node, service);
+        return req.result;
+    }
+}

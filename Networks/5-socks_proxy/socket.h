@@ -2,6 +2,7 @@
 #define SOCKET_H
 
 #include "c.h"
+#include <fcntl.h>
 
 #define SOCKADDR2STR_MAX_BUFSIZE (NI_MAXHOST + NI_MAXSERV + 2)
 
@@ -52,6 +53,11 @@ static inline ssize_t send_buf(int sockfd, const void *buf, size_t size)
     return size;
 }
 
+static inline int set_nonblock(int fd)
+{
+    int flags = fcntl(fd, F_GETFL);
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
 
 #endif /* SOCKET_H */
 

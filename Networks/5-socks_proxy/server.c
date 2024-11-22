@@ -12,6 +12,7 @@
 
 #define BACKLOG 128
 
+
 void server_coroutine_main(void *arg);
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents);
 static void on_client_wakeup_cb(EV_P_ struct ev_io *w, int revents);
@@ -19,7 +20,9 @@ static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
 client_t *g_running_client = NULL;
 
-int server_create_listening_socket(uint16_t port, int *sockfd) {
+#define IN_CLIENT_CONTEXT (g_running_client != NULL)
+
+static int server_create_listening_socket(uint16_t port, int *sockfd) {
     struct sockaddr_in sa;
     *sockfd = -1;
 
@@ -51,11 +54,64 @@ fail:
     return -1;
 }
 
+static void add_io_watcher(client_t *c, int fd)
+{
+    if (c->nr_io_watchers == MAX_CLIENT_IO_WATCHERS) {
+        if (IN_CLIENT_CONTEXT) {
+            client_log_fatal("Per client io watchers limit exceeded");
+            client_drop();
+        } else {
+            log_fatal("Per client io watchers limit exceeded");
+            /* this situation should never happen */
+            abort();
+        }
+    }
+
+    size_t i = c->nr_io_watchers;
+    c->io_watchers[i].data = c;
+    ev_io_init(&c->io_watchers[i], on_client_wakeup_cb, fd, EV_READ | EV_WRITE);
+    ev_io_start(c->server_p->loop, &c->io_watchers[i]);
+
+
+    c->nr_io_watchers++;
+}
+
+/* returns 0 on success, -1 on watcher not found */
+static int remove_io_watcher(client_t *c, int fd)
+{
+    size_t i = 0;
+    while (i < c->nr_io_watchers && c->io_watchers[i].fd != fd)
+        i++;
+
+    if (i == c->nr_io_watchers) {
+        return -1;
+    }
+
+    ev_io_stop(c->server_p->loop, &c->io_watchers[i]);
+
+    memmove(&c->io_watchers[i], &c->io_watchers[i + 1],
+            (c->nr_io_watchers - i - 1) * sizeof(c->io_watchers[0]));
+
+    c->nr_io_watchers--;
+
+    return 0;
+}
+
+static inline void ignore_sigpipe(void)
+{
+    struct sigaction sa = { 0 };
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &sa, NULL);
+}
+
 int server_init(server_t *s, uint16_t port, client_routine_t routine) {
     int sockfd;
 
     s->client_routine = routine;
     list_init(&s->clients);
+
+    /* to avoid terminating whole server on SIGPIPE caused by some send */
+    ignore_sigpipe();
 
     if (server_create_listening_socket(port, &sockfd) == -1) {
         goto fail;
@@ -106,8 +162,9 @@ static client_t *server_client_add(server_t *server, int sockfd, const char *des
     coro_create(&c->context, (coro_func) server->client_routine, c,
                 c->stack.sptr, c->stack.ssze);
 
-    ev_io_init(&c->io_watcher, on_client_wakeup_cb, sockfd, EV_READ);
-    ev_io_start(server->loop, &c->io_watcher);
+
+    c->nr_io_watchers = 0;
+    add_io_watcher(c, sockfd);
 
     ev_async_init(&c->drop_watcher, on_client_drop_cb);
     ev_async_start(server->loop, &c->drop_watcher);
@@ -125,7 +182,7 @@ fail:
     return NULL;
 }
 
-void switch_to_client(client_t *client)
+void server_switch_to_client(client_t *client)
 {
     assert(g_running_client == NULL);
 
@@ -138,7 +195,7 @@ void switch_to_client(client_t *client)
     coro_transfer(server_ctx, client_ctx);
 }
 
-void switch_to_server(client_t *client)
+static void server_switch_to_server(client_t *client)
 {
     assert(g_running_client != NULL);
 
@@ -155,7 +212,7 @@ void client_yield(void)
 {
     client_t *c = g_running_client;
 
-    switch_to_server(c);
+    server_switch_to_server(c);
 }
 
 void attribute_noreturn() client_drop(void)
@@ -172,31 +229,15 @@ void attribute_noreturn() client_drop(void)
 
     /* loop in case client coroutine will wake up again, but it shouldn't */
     for (;;) {
-        switch_to_server(c);
+        server_switch_to_server(c);
     }
 }
 
-ssize_t client_recv(void *buf, size_t n, int flags)
-{
-    if (n == 0) assert(0);
-    ssize_t ret;
-    for (;;) {
-        ret = recv(client_sockfd(), buf, n, flags);
-
-        if (ret == -1 && errno == EAGAIN) {
-            client_yield();
-        }
-        else
-            return ret;
-
-    }
-}
-
-ssize_t client_send(void *buf, size_t n, int flags)
+ssize_t client_recv(int fd, void *buf, size_t n, int flags)
 {
     ssize_t ret;
     for (;;) {
-        ret = send(client_sockfd(), buf, n, flags);
+        ret = recv(fd, buf, n, flags);
         if (ret == -1 && errno == EAGAIN)
             client_yield();
         else
@@ -204,10 +245,22 @@ ssize_t client_send(void *buf, size_t n, int flags)
     }
 }
 
-ssize_t client_recv_buf(void *buf, size_t size)
+ssize_t client_send(int fd, void *buf, size_t n, int flags)
+{
+    ssize_t ret;
+    for (;;) {
+        ret = send(fd, buf, n, flags);
+        if (ret == -1 && errno == EAGAIN)
+            client_yield();
+        else
+            return ret;
+    }
+}
+
+ssize_t client_recv_buf(int fd, void *buf, size_t size)
 {
     for (size_t recv_size = 0; recv_size < size; ) {
-        ssize_t ret = client_recv((char *) buf + recv_size, size - recv_size, 0);
+        ssize_t ret = client_recv(fd, (char *) buf + recv_size, size - recv_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -218,10 +271,10 @@ ssize_t client_recv_buf(void *buf, size_t size)
     return size;
 }
 
-ssize_t client_send_buf(void *buf, size_t size)
+ssize_t client_send_buf(int fd, void *buf, size_t size)
 {
     for (size_t sent_size = 0; sent_size < size; ) {
-        ssize_t ret = client_send((char *) buf + sent_size, size - sent_size, 0);
+        ssize_t ret = client_send(fd, (char *) buf + sent_size, size - sent_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -232,13 +285,56 @@ ssize_t client_send_buf(void *buf, size_t size)
     return size;
 }
 
+ssize_t client_recv_nonblock(int fd, void *buf, size_t n, int flags)
+{
+    ssize_t ret;
+
+    ret = recv(fd, buf, n, flags);
+    if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        return NODATA;
+    else
+        return ret;
+}
+
+ssize_t client_send_nonblock(int fd, void *buf, size_t n, int flags)
+{
+    ssize_t ret;
+
+    ret = send(fd, buf, n, flags);
+    if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        return NODATA;
+    else
+        return ret;
+}
+
+void client_watch_fd(int fd)
+{
+    client_t *c = g_running_client;
+
+    if (set_nonblock(fd) != 0) {
+        client_log_error("client_watch_fd(): Failed to set fd to nonblocking mode, %s", 
+                         strerror(errno));
+        client_drop();
+    }
+
+    add_io_watcher(c, fd);
+}
+
+void client_unwatch_fd(int fd)
+{
+    client_t *c = g_running_client;
+    int ret = remove_io_watcher(c, fd);
+    if (ret != 0)
+        client_log_warn("client_unwatch_fd(): watcher not found");
+}
+
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
 {
-    server_t *server = (server_t *) w;
+    server_t *server = (server_t *) accept_w_2_server(w);
 
     int sockfd;
     struct sockaddr_in sa;
-    socklen_t sa_len;
+    socklen_t sa_len = sizeof(sa);
 
     if (!read_available(revents)) {
         log_warn("accept watcher called without available read");
@@ -250,6 +346,7 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
             return;
         }
 
+        log_info("sa_len: %i", sa_len);
         log_error("accept4() failed: %s", strerror(errno));
         return;
     }
@@ -262,13 +359,14 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
         return;
     }
 
-    switch_to_client(new_client);
+    server_switch_to_client(new_client);
 }
+
 
 static void on_client_wakeup_cb(EV_P_ ev_io *w, int revents)
 {
-    client_t *client = (client_t *) io_w_2_client(w);
-    switch_to_client(client);
+    client_t *client = (client_t *) w->data;
+    server_switch_to_client(client);
 }
 
 static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
@@ -276,9 +374,15 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
     client_t *client = (client_t *) drop_w_2_client(w);
 
     log_info("[%s] Closing connection...", client->description);
+
+    int client_sfd = client->io_watchers[0].fd;
+    close(client_sfd);
     
-    ev_io_stop(client->server_p->loop, &client->io_watcher);
-    close(client->io_watcher.fd);
+    for (size_t i = 0; i < client->nr_io_watchers; ++i) {
+        ev_io_stop(client->server_p->loop, &client->io_watchers[i]);
+    }
+
+    remove_io_watcher(client, client_sfd);
     list_unlink(&client->link);
     coro_stack_free(&client->stack);
     free(client->description);

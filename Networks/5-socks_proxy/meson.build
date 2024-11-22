@@ -4,6 +4,7 @@ project('socks_proxy', 'c',
 )
 
 add_project_arguments('-DLOG_USE_COLOR', language : 'c')
+# add_project_arguments('-DCORO_DEBUG', language : 'c')
 
 inc = include_directories('.', 'third-party/')
 

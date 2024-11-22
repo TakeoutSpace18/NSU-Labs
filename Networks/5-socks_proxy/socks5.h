@@ -71,8 +71,8 @@ struct cmd_response {
         char *domain_name;
         uint8_t ipv6[16];
     } bnd_addr;
-    uint8_t bnd_port;
-};
+    uint16_t bnd_port;
+} attribute_packed();
 
 void socks5_main(void);
 
