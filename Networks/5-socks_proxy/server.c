@@ -54,7 +54,7 @@ fail:
     return -1;
 }
 
-static void add_io_watcher(client_t *c, int fd)
+static fdwatcher_t add_io_watcher(client_t *c, int fd, int revents)
 {
     if (c->nr_io_watchers == MAX_CLIENT_IO_WATCHERS) {
         if (IN_CLIENT_CONTEXT) {
@@ -67,12 +67,15 @@ static void add_io_watcher(client_t *c, int fd)
         }
     }
 
-    size_t i = c->nr_io_watchers;
-    c->io_watchers[i].data = c;
-    ev_io_init(&c->io_watchers[i], on_client_wakeup_cb, fd, EV_READ | EV_WRITE);
-    ev_io_start(c->server_p->loop, &c->io_watchers[i]);
+    ev_io *watcher = &c->io_watchers[c->nr_io_watchers];
+
+    watcher->data = c;
+    ev_io_init(watcher, on_client_wakeup_cb, fd, revents);
+    ev_io_start(c->server_p->loop, watcher);
 
     c->nr_io_watchers++;
+
+    return watcher;
 }
 
 /* returns 0 on success, -1 on watcher not found */
@@ -163,7 +166,7 @@ static client_t *server_client_add(server_t *server, int sockfd, const char *des
 
 
     c->nr_io_watchers = 0;
-    add_io_watcher(c, sockfd);
+    add_io_watcher(c, sockfd, EV_READ | EV_WRITE);
 
     ev_async_init(&c->drop_watcher, on_client_drop_cb);
     ev_async_start(server->loop, &c->drop_watcher);
@@ -229,11 +232,12 @@ void attribute_noreturn() client_drop(void)
     }
 }
 
-ssize_t client_recv(int fd, void *buf, size_t n, int flags)
+ssize_t client_recv(fdwatcher_t w, void *buf, size_t n, int flags)
 {
+    ev_io *watcher = w;
     ssize_t ret;
     for (;;) {
-        ret = recv(fd, buf, n, flags);
+        ret = recv(watcher->fd, buf, n, flags);
         if (ret == -1 && errno == EAGAIN)
             client_yield();
         else
@@ -241,11 +245,12 @@ ssize_t client_recv(int fd, void *buf, size_t n, int flags)
     }
 }
 
-ssize_t client_send(int fd, void *buf, size_t n, int flags)
+ssize_t client_send(fdwatcher_t w, void *buf, size_t n, int flags)
 {
+    ev_io *watcher = w;
     ssize_t ret;
     for (;;) {
-        ret = send(fd, buf, n, flags);
+        ret = send(watcher->fd, buf, n, flags);
         if (ret == -1 && errno == EAGAIN)
             client_yield();
         else
@@ -253,10 +258,13 @@ ssize_t client_send(int fd, void *buf, size_t n, int flags)
     }
 }
 
-ssize_t client_recv_buf(int fd, void *buf, size_t size)
+ssize_t client_recv_buf(fdwatcher_t w, void *buf, size_t size)
 {
+    int old_events = client_fd_getevents(w);
+    client_fd_setevents(w, EV_READ);
+
     for (size_t recv_size = 0; recv_size < size; ) {
-        ssize_t ret = client_recv(fd, (char *) buf + recv_size, size - recv_size, 0);
+        ssize_t ret = client_recv(w, (char *) buf + recv_size, size - recv_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -264,13 +272,17 @@ ssize_t client_recv_buf(int fd, void *buf, size_t size)
         recv_size += ret;
     }
 
+    client_fd_setevents(w, old_events);
     return size;
 }
 
-ssize_t client_send_buf(int fd, void *buf, size_t size)
+ssize_t client_send_buf(fdwatcher_t w, void *buf, size_t size)
 {
+    int old_events = client_fd_getevents(w);
+    client_fd_setevents(w, EV_WRITE);
+
     for (size_t sent_size = 0; sent_size < size; ) {
-        ssize_t ret = client_send(fd, (char *) buf + sent_size, size - sent_size, 0);
+        ssize_t ret = client_send(w, (char *) buf + sent_size, size - sent_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -278,32 +290,35 @@ ssize_t client_send_buf(int fd, void *buf, size_t size)
         sent_size += ret;
     }
 
+    client_fd_setevents(w, old_events);
     return size;
 }
 
-ssize_t client_recv_nonblock(int fd, void *buf, size_t n, int flags)
+ssize_t client_recv_nonblock(fdwatcher_t w, void *buf, size_t n, int flags)
 {
+    ev_io *watcher = w;
     ssize_t ret;
 
-    ret = recv(fd, buf, n, flags);
+    ret = recv(watcher->fd, buf, n, flags);
     if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
         return NODATA;
     else
         return ret;
 }
 
-ssize_t client_send_nonblock(int fd, void *buf, size_t n, int flags)
+ssize_t client_send_nonblock(fdwatcher_t w, void *buf, size_t n, int flags)
 {
+    ev_io *watcher = w;
     ssize_t ret;
 
-    ret = send(fd, buf, n, flags);
+    ret = send(watcher->fd, buf, n, flags);
     if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
         return NODATA;
     else
         return ret;
 }
 
-void client_watch_fd(int fd)
+fdwatcher_t client_fd_watch(int fd, int revents)
 {
     client_t *c = g_running_client;
 
@@ -313,13 +328,15 @@ void client_watch_fd(int fd)
         client_drop();
     }
 
-    add_io_watcher(c, fd);
+    return add_io_watcher(c, fd, revents);
 }
 
-void client_unwatch_fd(int fd)
+void client_fd_unwatch(fdwatcher_t w)
 {
+    ev_io *watcher = w;
     client_t *c = g_running_client;
-    int ret = remove_io_watcher(c, fd);
+
+    int ret = remove_io_watcher(c, watcher->fd);
     if (ret != 0)
         client_log_warn("client_unwatch_fd(): watcher not found");
 }

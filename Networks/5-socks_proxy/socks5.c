@@ -7,6 +7,7 @@
 #include "log.h"
 #include "server.h"
 #include <arpa/inet.h>
+#include <ev.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -39,24 +40,24 @@ static void send_cmd_response(struct cmd_response *response)
     size_t domain_name_len;
 
     size = offsetof(struct cmd_response, bnd_addr);
-    ret = client_send_buf(client_sfd(), response, size);
+    ret = client_send_buf(client_fdwatcher(), response, size);
     if (ret == -1 || ret == 0)
         io_error(ret);
 
     if (response->atyp == IPV4) {
-        ret = client_send_buf(client_sfd(), &response->bnd_addr.ipv4, 4);
+        ret = client_send_buf(client_fdwatcher(), &response->bnd_addr.ipv4, 4);
         if (ret == -1 || ret == 0)
             io_error(ret);
     }
     else if (response->atyp == DOMAINNAME) {
         domain_name_len = strlen(response->bnd_addr.domain_name);
-        ret = client_send_buf(client_sfd(), &response->bnd_addr.domain_name,
+        ret = client_send_buf(client_fdwatcher(), &response->bnd_addr.domain_name,
                               domain_name_len);
         if (ret == -1 || ret == 0)
             io_error(ret);
     }
     else if (response->atyp == IPV6) {
-        ret = client_send_buf(client_sfd(), &response->bnd_addr.ipv6, 16);
+        ret = client_send_buf(client_fdwatcher(), &response->bnd_addr.ipv6, 16);
         if (ret == -1 || ret == 0)
             io_error(ret);
     }
@@ -65,7 +66,8 @@ static void send_cmd_response(struct cmd_response *response)
         client_drop();
     }
 
-    ret = client_send_buf(client_sfd(), &response->bnd_port, sizeof(response->bnd_port));
+    ret = client_send_buf(client_fdwatcher(),
+                          &response->bnd_port, sizeof(response->bnd_port));
     if (ret == -1 || ret == 0)
         io_error(ret);
 }
@@ -91,11 +93,11 @@ static void negotiate_auth_method(void)
     size_t size;
     
     size = offsetof(struct auth_method_selection_request, methods);
-    ret = client_recv_buf(client_sfd(), &request, size);
+    ret = client_recv_buf(client_fdwatcher(), &request, size);
     if (ret == -1 || ret == 0)
         io_error(ret);
 
-    ret = client_recv_buf(client_sfd(), &request.methods, request.nmethods);
+    ret = client_recv_buf(client_fdwatcher(), &request.methods, request.nmethods);
     if (ret == -1 || ret == 0)
         io_error(ret);
 
@@ -120,7 +122,7 @@ static void negotiate_auth_method(void)
         client_drop();
     }
 
-    ret = client_send_buf(client_sfd(), &response, sizeof(response));
+    ret = client_send_buf(client_fdwatcher(), &response, sizeof(response));
     if (ret == -1 || ret == 0)
         io_error(ret);
 
@@ -134,7 +136,7 @@ static char *receive_domain_name(void)
     uint8_t len;
     char *name = NULL;
 
-    ret = client_recv_buf(client_sfd(), &len, sizeof(len));
+    ret = client_recv_buf(client_fdwatcher(), &len, sizeof(len));
     if (ret == -1 || ret == 0)
         goto io_fail;
 
@@ -144,7 +146,7 @@ static char *receive_domain_name(void)
         client_drop();
     }
 
-    ret = client_recv_buf(client_sfd(), name, len);
+    ret = client_recv_buf(client_fdwatcher(), name, len);
     if (ret == -1 || ret == 0)
         goto io_fail;
 
@@ -167,7 +169,7 @@ static void receive_cmd_request(struct cmd_request *request)
     memset(request, 0, sizeof(*request));
 
     size = offsetof(struct cmd_request, dst_addr);
-    ret = client_recv_buf(client_sfd(), request, size);
+    ret = client_recv_buf(client_fdwatcher(), request, size);
     if (ret == -1 || ret == 0)
         goto io_fail;
 
@@ -179,7 +181,7 @@ static void receive_cmd_request(struct cmd_request *request)
     }
 
     if (request->atyp == IPV4) {
-        ret = client_recv_buf(client_sfd(), &request->dst_addr.ipv4, 4);
+        ret = client_recv_buf(client_fdwatcher(), &request->dst_addr.ipv4, 4);
         if (ret == -1 || ret == 0)
             goto io_fail;
         
@@ -191,7 +193,7 @@ static void receive_cmd_request(struct cmd_request *request)
         client_log_trace("Received domain name address");
     }
     else if (request->atyp == IPV6) {
-        ret = client_recv_buf(client_sfd(), &request->dst_addr.ipv6, 6);
+        ret = client_recv_buf(client_fdwatcher(), &request->dst_addr.ipv6, 6);
         if (ret == -1 || ret == 0)
             goto io_fail;
 
@@ -202,7 +204,7 @@ static void receive_cmd_request(struct cmd_request *request)
         command_error(ADDRESS_TYPE_NOT_SUPPORTED);
     }
 
-    ret = client_recv_buf(client_sfd(), &request->dst_port, sizeof(request->dst_port));
+    ret = client_recv_buf(client_fdwatcher(), &request->dst_port, sizeof(request->dst_port));
     if (ret == -1 || ret == 0)
         goto io_fail;
 
@@ -354,16 +356,22 @@ void attribute_noreturn() socks5_main(void)
     char client_buf[BUFSIZE];
     char host_buf[BUFSIZE];
     ssize_t client_read, host_read;
+    fdwatcher_t host_watcher, client_watcher;
 
-    client_watch_fd(host_sfd);
+    client_watcher = client_fdwatcher();
+    host_watcher = client_fd_watch(host_sfd, EV_READ | EV_WRITE);
+
     for (;;) {
-        client_read = client_recv_nonblock(client_sfd(), client_buf, BUFSIZE, 0);
+        client_fd_setevents(host_watcher, EV_READ);
+        client_fd_setevents(client_watcher, EV_READ);
+
+        client_read = client_recv_nonblock(client_watcher, client_buf, BUFSIZE, 0);
         if (client_read == -1) {
             client_log_error("Failed to read client socket");
             io_error(-1);
         }
 
-        host_read = client_recv_nonblock(host_sfd, host_buf, BUFSIZE, 0);
+        host_read = client_recv_nonblock(host_watcher, host_buf, BUFSIZE, 0);
         if (host_read == -1) {
             client_log_error("Failed to read host socket");
             io_error(-1);
@@ -371,12 +379,12 @@ void attribute_noreturn() socks5_main(void)
 
         if (client_read > 0) {
             client_log_trace("Read %zi bytes from client", client_read);
-            client_send_buf(host_sfd, client_buf, client_read);
+            client_send_buf(host_watcher, client_buf, client_read);
         }
 
         if (host_read > 0) {
             client_log_trace("Read %zi bytes from host", host_read);
-            client_send_buf(client_sfd(), host_buf, host_read);
+            client_send_buf(client_watcher, host_buf, host_read);
         }
 
         if (client_read == 0 || host_read == 0) {
