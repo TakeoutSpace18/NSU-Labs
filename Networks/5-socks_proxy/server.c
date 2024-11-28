@@ -72,7 +72,6 @@ static void add_io_watcher(client_t *c, int fd)
     ev_io_init(&c->io_watchers[i], on_client_wakeup_cb, fd, EV_READ | EV_WRITE);
     ev_io_start(c->server_p->loop, &c->io_watchers[i]);
 
-
     c->nr_io_watchers++;
 }
 
@@ -224,9 +223,6 @@ void attribute_noreturn() client_drop(void)
      * from itself */
     ev_async_send(c->server_p->loop, &c->drop_watcher);
 
-    coro_context *client_context = &c->context;
-    coro_context *server_context = &c->server_p->context;
-
     /* loop in case client coroutine will wake up again, but it shouldn't */
     for (;;) {
         server_switch_to_server(c);
@@ -372,17 +368,17 @@ static void on_client_wakeup_cb(EV_P_ ev_io *w, int revents)
 static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
 {
     client_t *client = (client_t *) drop_w_2_client(w);
-
     log_info("[%s] Closing connection...", client->description);
-
-    int client_sfd = client->io_watchers[0].fd;
-    close(client_sfd);
     
     for (size_t i = 0; i < client->nr_io_watchers; ++i) {
         ev_io_stop(client->server_p->loop, &client->io_watchers[i]);
     }
 
-    remove_io_watcher(client, client_sfd);
+    ev_async_stop(client->server_p->loop, &client->drop_watcher);
+
+    int client_sfd = client->io_watchers[0].fd;
+    close(client_sfd);
+
     list_unlink(&client->link);
     coro_stack_free(&client->stack);
     free(client->description);
