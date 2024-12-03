@@ -33,7 +33,7 @@ put_errno_to_error_descr(void)
 struct mycoro_descriptor
 {
     void *stackaddr;
-    void *(*start_routine)(void *);
+    start_routine_t start_routine;
     void *coroutine_arg;
     ucontext_t ctx;
 };
@@ -63,6 +63,10 @@ allocate_stack(void **stackaddr, struct mycoro_descriptor **mcd)
     return MYCORO_OK;
 }
 
+static void *stack_bottom(void *stacktop) {
+    return (char *) stacktop - STACK_SIZE + 1;
+}
+
 static FORCEINLINE void
 destroy_stack(void *stackaddr)
 {
@@ -76,13 +80,13 @@ coroutine_start(uintptr_t arg)
 {
     struct mycoro_descriptor *mcd = (struct mycoro_descriptor *) arg;
 
-    mcd->ret = mcd->start_routine(mcd->coroutine_arg);
+    mcd->start_routine(mcd->coroutine_arg);
 
     fprintf(stderr, "FATAL: coroutine finished execution\n");
     abort();
 }
 
-int mycoro_create(mycoro_t *coro, void *(*start_routine)(void *), void *arg)
+int mycoro_create(mycoro_t *coro, start_routine_t func, void *arg)
 {
     void                     *stacktop = NULL;
     struct mycoro_descriptor *mcd      = NULL;
@@ -91,12 +95,13 @@ int mycoro_create(mycoro_t *coro, void *(*start_routine)(void *), void *arg)
     if (status != MYCORO_OK)
         return status;
 
+    memset(mcd, 0, sizeof(*mcd));
     mcd->stackaddr     = stacktop;
-    mcd->start_routine = start_routine;
+    mcd->start_routine = func;
     mcd->coroutine_arg = arg;
 
     mcd->ctx.uc_link = NULL;
-    mcd->ctx.uc_stack.ss_sp = stacktop;
+    mcd->ctx.uc_stack.ss_sp = stack_bottom(stacktop);
     mcd->ctx.uc_stack.ss_size = STACK_SIZE;
 
     getcontext(&mcd->ctx);
@@ -116,6 +121,8 @@ int mycoro_init(mycoro_t *main)
 
     memset(mcd, 0, sizeof(*mcd));
     *main = (mycoro_t) mcd;
+
+    return MYCORO_OK;
 }
 
 void mycoro_destroy(mycoro_t coro)

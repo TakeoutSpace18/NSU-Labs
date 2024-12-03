@@ -5,10 +5,11 @@
 #define MYCORO_OK 0
 
 typedef unsigned long long mycoro_t;
+typedef void (*start_routine_t)(void *);
 
 int mycoro_init(mycoro_t *main);
 
-int mycoro_create(mycoro_t *coro, void *(*start_routine)(void *), void *arg);
+int mycoro_create(mycoro_t *coro, start_routine_t func, void *arg);
 void mycoro_destroy(mycoro_t coro);
 
 void mycoro_switch(mycoro_t from, mycoro_t to);
