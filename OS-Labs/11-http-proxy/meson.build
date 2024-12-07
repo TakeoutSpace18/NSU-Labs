@@ -14,6 +14,8 @@ libcares_dep = dependency('libcares')
 executable('http-proxy', [
     'main.c',
     'server.c',
+    'client_context.c',
+    'worker_thread.c',
     'dns.c',
     'proxy.c',
     'third-party/coro.c',

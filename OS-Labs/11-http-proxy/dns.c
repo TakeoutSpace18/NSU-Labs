@@ -1,12 +1,29 @@
 #include "dns.h"
 
-#include "server.h"
 #include <ares.h>
 #include <ev.h>
 
+#include "client_context.h"
+#include "worker_thread.h"
+#include "server.h"
 #include "c.h"
 #include "log.h"
-#include <stdbool.h>
+
+int dns_init(void)
+{
+    int ret = ares_library_init(ARES_LIB_INIT_ALL);
+    if (ret != ARES_SUCCESS) {
+        log_error("Failed to init c-ares library: %s", ares_strerror(ret));
+        return -1;
+    }
+
+    return OK;
+}
+
+void dns_finalize(void)
+{
+    ares_library_cleanup();
+}
 
 /* is always called from server context */
 static void io_cb(EV_P_ ev_io *w, int revents) {
@@ -49,16 +66,8 @@ static void sock_state_change_cb(void *data_voidp, ares_socket_t sockfd,
     }
 }
 
-int dns_init(dns_resolver_t *d, struct ev_loop *loop)
+int dns_resolver_create(dns_resolver_t *d, struct ev_loop *loop)
 {
-    int ret;
-
-    ret = ares_library_init(ARES_LIB_INIT_ALL);
-    if (ret != ARES_SUCCESS) {
-        log_error("Failed to init c-ares library: %s", ares_strerror(ret));
-        return -1;
-    }
-
     memset(d, 0, sizeof(dns_resolver_t));
     d->loop = loop;
 
@@ -69,7 +78,7 @@ int dns_init(dns_resolver_t *d, struct ev_loop *loop)
     options.sock_state_cb_data = d;
     options.sock_state_cb = sock_state_change_cb;
 
-    ret = ares_init_options(&d->channel, &options, ARES_OPT_SOCK_STATE_CB);
+    int ret = ares_init_options(&d->channel, &options, ARES_OPT_SOCK_STATE_CB);
     if (ret != ARES_SUCCESS) {
         log_error("Failed to init c-ares channel: %s", ares_strerror(ret));
         return -1;
@@ -78,10 +87,9 @@ int dns_init(dns_resolver_t *d, struct ev_loop *loop)
     return 0;
 }
 
-void dns_finalize(dns_resolver_t *d)
+void dns_resolver_destroy(dns_resolver_t *d)
 {
     ares_destroy(d->channel);
-    ares_library_cleanup();
 }
 
 
@@ -100,18 +108,18 @@ on_getaddrinfo_finish_cb(void *arg, int status, int timeouts,
     req->done = true;
 
     /* return control to client that issued the request */
-    server_switch_to_client(req->source_client);
+    loop_switch_to_client(req->source_client);
 }
 
 /* should be called from client context */
 struct ares_addrinfo *client_dns_resolve(const char *node, const char *service,
                                   const struct ares_addrinfo_hints *hints)
 {
-    client_t *c = g_running_client;
-    dns_resolver_t *r = &c->server_p->dns;
+    client_context_t *cc = RUNNING_CLIENT;
+    dns_resolver_t *r = worker_thread_get_dns_resolver(cc->worker_p);
 
     dns_resolve_request_t req = { 0 };
-    req.source_client = c;
+    req.source_client = cc;
     req.done = false;
 
     client_log_trace("DNS Resolving %s:%s...", node, service);

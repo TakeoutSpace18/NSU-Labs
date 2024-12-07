@@ -10,21 +10,16 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stddef.h>
-
 #include <assert.h>
 #include <string.h>
-
 #include <errno.h>
 #include <signal.h>
-
 #include <unistd.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
-
-#include <ev.h>
 
 /* only GCC supports the unused attribute */
 #ifdef __GNUC__
@@ -61,5 +56,8 @@
 
 #define write_available(events)  \
     ((events) & EV_READ)
+
+#define OK 0
+#define ERROR -1
 
 #endif /* C_H */

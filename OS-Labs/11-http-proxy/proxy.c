@@ -1,6 +1,5 @@
 #include "proxy.h"
 
-#include "server.h"
 #include <stdio.h>
 
 #define BUFSIZE 512
@@ -23,9 +22,7 @@ void attribute_noreturn() proxy_main(void)
             client_log_error("client_recv() failed: %s", strerror(errno));
             client_drop();
         }
-        fprintf(stdout, "----\n");
         fwrite(client_buf, 1, ret, stdout);
-        fprintf(stdout, "----\n");
         fflush(stdout);
     }
 
