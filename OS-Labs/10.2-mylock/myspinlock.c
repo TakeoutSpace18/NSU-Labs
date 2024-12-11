@@ -17,7 +17,7 @@ void myspinlock_lock(myspinlock_t *myspinlock)
 {
     for (;;) {
         int unlocked = UNLOCKED;
-        if (atomic_compare_exchange_strong(myspinlock, &unlocked, LOCKED)) {
+        if (atomic_compare_exchange_weak(myspinlock, &unlocked, LOCKED)) {
             break;
         }
     }

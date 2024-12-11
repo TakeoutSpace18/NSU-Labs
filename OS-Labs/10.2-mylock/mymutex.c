@@ -30,7 +30,7 @@ void mymutex_lock(mymutex_t *mymutex)
 {
     for (;;) {
         int unlocked = UNLOCKED;
-        if (atomic_compare_exchange_strong(mymutex, &unlocked, LOCKED)) {
+        if (atomic_compare_exchange_weak(mymutex, &unlocked, LOCKED)) {
             break;
         }
 
