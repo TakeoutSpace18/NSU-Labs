@@ -125,6 +125,7 @@ static void schedule_next(coroutine_t *current)
     while (next->state != ACTIVE) {
         if (next->state == FINISHED) {
             free(next->stack);
+            next->stack = NULL;
         }
         next = next->next;
     }
@@ -151,6 +152,10 @@ void mycoro_join(mycoro_t coro, void **ret)
 
     if (ret != NULL) {
         *ret = mcd->ret;
+    }
+
+    if (mcd->stack) {
+        free(mcd->stack);
     }
 
     free(mcd);
