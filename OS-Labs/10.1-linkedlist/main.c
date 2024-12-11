@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "storage.h"
+#include "lock.h"
 
 #define ASC_COUNTER_CPU 0
 #define DESC_COUNTER_CPU 2
@@ -16,7 +17,7 @@
 #define SWAPPER2_CPU 8
 #define SWAPPER3_CPU 10
 
-#define RUNTIME_SECONDS 3
+#define RUNTIME_SECONDS 6
 
 struct stats {
     size_t asc_counter_iters;
@@ -79,15 +80,15 @@ static void counter(storage_t *storage, comparator_t cmp, size_t *nr_counts,
                     size_t *nr_iters)
 {
     for (;;) {
-        // rlock_node(storage->lock);
+        read_lock(storage->lock);
         node_t *cur = storage->first;
         if (cur == NULL) {
-            // unlock_node(storage->lock);
+            unlock(storage->lock);
             continue;
         }
 
         rlock_node(cur);
-        // unlock_node(storage->lock);
+        unlock(storage->lock);
 
         node_t *next = cur->next;
         while (next != NULL) {
@@ -136,14 +137,40 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
         node_t *cur, *next, *next_next;
         cur = next = next_next = NULL;
 
-        for (;;) {
-            if (cur == NULL) {
-                next = storage->first;
-            }
-            else {
-                next = cur->next;
-            }
+        write_lock(storage->lock);
+        next = storage->first;
 
+        if (next == NULL) {
+            unlock(storage->lock);
+            continue;
+        }
+        wlock_node(next);
+
+        next_next = next->next;
+        if (next_next == NULL) {
+            unlock_node(next);
+            unlock(storage->lock);
+            continue;
+        }
+        wlock_node(next_next);
+
+        if (rand() % 2) {
+            storage->first = next_next;
+            next->next = next_next->next;
+            next_next->next = next;
+
+            *nr_swaps += 1;
+        }
+
+        unlock_node(next_next);
+        unlock_node(next);
+        unlock(storage->lock);
+
+        cur = next;
+        wlock_node(cur);
+
+        for (;;) {
+            next = cur->next;
             if (next == NULL) {
                 unlock_node(cur);
                 break;
@@ -159,9 +186,7 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
             wlock_node(next_next);
 
             if (rand() % 2) {
-                if (cur != NULL) {
-                    cur->next = next_next;
-                }
+                cur->next = next_next;
                 next->next = next_next->next;
                 next_next->next = next;
 
@@ -265,9 +290,9 @@ int main(int argc, char *argv[]) {
     storage_t storage = generate_storage(list_size);
 
     pthread_t asc_counter_thread, desc_counter_thread, eq_counter_thread;
+    create_thread(&eq_counter_thread, eq_counter, &storage);
     create_thread(&asc_counter_thread, asc_counter, &storage);
     create_thread(&desc_counter_thread, desc_counter, &storage);
-    create_thread(&eq_counter_thread, eq_counter, &storage);
 
 
     pthread_t swapper1_thread, swapper2_thread, swapper3_thread;
