@@ -18,7 +18,7 @@ create_coroutine(mycoro_t *coro, start_routine_t func, void *arg)
     }
 }
 
-void *coro_func(void *arg)
+static void *coro_func(void *arg)
 {
     int64_t id = (int64_t) arg;
 
@@ -33,8 +33,7 @@ void *coro_func(void *arg)
     return NULL;
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     printf("pid: %i\n", getpid());
 

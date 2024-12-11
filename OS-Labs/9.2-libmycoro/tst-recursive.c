@@ -23,7 +23,7 @@ typedef struct {
     uint64_t current_depth;
 } coro_arg_t;
 
-void *coro_func(void *arg)
+static void *coro_func(void *arg)
 {
     coro_arg_t *coro_arg = (coro_arg_t *) arg;
 
@@ -45,8 +45,7 @@ void *coro_func(void *arg)
     return (void *) coro_arg->current_depth;
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     printf("pid: %i\n", getpid());
 
