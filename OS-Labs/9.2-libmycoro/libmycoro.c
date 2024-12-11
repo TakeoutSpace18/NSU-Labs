@@ -9,12 +9,8 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sched.h>
-#include <linux/sched.h>
-#include <linux/futex.h>
 #include <sys/syscall.h>
 #include <sys/mman.h>
-#include <asm/prctl.h>
 #include <ucontext.h>
 
 #define FORCEINLINE __attribute__((always_inline)) inline
@@ -30,78 +26,71 @@ put_errno_to_error_descr(void)
     strncpy(__mycoro_error_descr, strerror(errno), ERROR_DESCR_BUFSIZE);
 }
 
-struct mycoro_descriptor
+typedef enum state {
+    ACTIVE,
+    FINISHED
+} state_t;
+
+typedef struct coroutine coroutine_t;
+
+struct coroutine
 {
-    void *stackaddr;
-    start_routine_t start_routine;
-    void *coroutine_arg;
+    void *stack;
     ucontext_t ctx;
+    state_t state;
+
+    start_routine_t routine;
+    void *arg;
+    void *ret;
+
+    coroutine_t *next;
+    coroutine_t *prev;
 };
 
-static int
-allocate_stack(void **stackaddr, struct mycoro_descriptor **mcd)
-{
-    /* Stack grows down and memory for coroutine descriptor is allocated 
-     * above the stack top */
-
-    int flags   = MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK; // | MAP_GROWSDOWN;
-    int prot    = PROT_READ | PROT_WRITE;
-
-    size_t size = STACK_SIZE + sizeof(struct mycoro_descriptor);
-
-    void *mapped = mmap(NULL, size, prot, flags, -1, 0);
-    if (mapped == MAP_FAILED) {
-        *stackaddr = NULL;
-        *mcd = NULL;
-        put_errno_to_error_descr();
-        return MYCORO_ERROR;
-    }
-
-    *stackaddr = (char *) mapped + STACK_SIZE - 1;
-    *mcd       = (struct mycoro_descriptor *)((char *) mapped + STACK_SIZE);
-
-    return MYCORO_OK;
-}
-
-static void *stack_bottom(void *stacktop) {
-    return (char *) stacktop - STACK_SIZE + 1;
-}
-
-static FORCEINLINE void
-destroy_stack(void *stackaddr)
-{
-    void *mapped = (char *) stackaddr - STACK_SIZE + 1;
-    size_t size = STACK_SIZE + sizeof(struct mycoro_descriptor);
-    munmap(mapped, size);
-}
+coroutine_t *__currently_running = NULL;
 
 static void
 coroutine_start(uintptr_t arg)
 {
-    struct mycoro_descriptor *mcd = (struct mycoro_descriptor *) arg;
+    coroutine_t *mcd = (coroutine_t *) arg;
 
-    mcd->start_routine(mcd->coroutine_arg);
+    mcd->ret = mcd->routine(mcd->arg);
 
-    fprintf(stderr, "FATAL: coroutine finished execution\n");
+    mcd->state = FINISHED;
+    mycoro_yield();
+
+    /* this should never happen */
     abort();
 }
 
 int mycoro_create(mycoro_t *coro, start_routine_t func, void *arg)
 {
-    void                     *stacktop = NULL;
-    struct mycoro_descriptor *mcd      = NULL;
-
-    int status = allocate_stack(&stacktop, &mcd);
-    if (status != MYCORO_OK)
-        return status;
+    coroutine_t *mcd = malloc(sizeof(*mcd));
+    if (!mcd) {
+        put_errno_to_error_descr();
+        return MYCORO_ERROR;
+    }
 
     memset(mcd, 0, sizeof(*mcd));
-    mcd->stackaddr     = stacktop;
-    mcd->start_routine = func;
-    mcd->coroutine_arg = arg;
+    mcd->stack = malloc(STACK_SIZE);
+    if (!mcd->stack) {
+        free(mcd);
+        put_errno_to_error_descr();
+        return MYCORO_ERROR;
+    }
+
+    mcd->routine = func;
+    mcd->arg = arg;
+    mcd->state = ACTIVE;
+
+    /* add new coroutine to the end of the cyclic list */
+    __currently_running->prev->next = mcd;
+    mcd->prev = __currently_running->prev;
+    __currently_running->prev = mcd;
+    mcd->next = __currently_running;
 
     mcd->ctx.uc_link = NULL;
-    mcd->ctx.uc_stack.ss_sp = stack_bottom(stacktop);
+    mcd->ctx.uc_stack.ss_sp = mcd->stack;
     mcd->ctx.uc_stack.ss_size = STACK_SIZE;
 
     getcontext(&mcd->ctx);
@@ -111,37 +100,61 @@ int mycoro_create(mycoro_t *coro, start_routine_t func, void *arg)
     return MYCORO_OK;
 }
 
-int mycoro_init(mycoro_t *main)
+int mycoro_init(void)
 {
-    struct mycoro_descriptor *mcd = malloc(sizeof(*mcd));
+    coroutine_t *mcd = malloc(sizeof(*mcd));
     if (!mcd) {
         put_errno_to_error_descr();
         return MYCORO_ERROR;
     }
 
     memset(mcd, 0, sizeof(*mcd));
-    *main = (mycoro_t) mcd;
+    mcd->next = mcd;
+    mcd->prev = mcd;
+    __currently_running = mcd;
 
     return MYCORO_OK;
 }
 
-void mycoro_destroy(mycoro_t coro)
+static void mycoro_switch(coroutine_t *from, coroutine_t *to)
 {
-    struct mycoro_descriptor *mcd = (struct mycoro_descriptor *) coro;
-
-    /* NULL stackaddr means descriptor is from *main* coroutine */
-    if (mcd->stackaddr == NULL) {
-        free(mcd);
-    }
-    else {
-        destroy_stack(mcd->stackaddr);
-    }
+    __currently_running = to;
+    swapcontext(&from->ctx, &to->ctx);
 }
 
-void mycoro_switch(mycoro_t from, mycoro_t to)
+static void schedule_next(coroutine_t *current)
 {
-    struct mycoro_descriptor *mcd_from = (struct mycoro_descriptor *) from;
-    struct mycoro_descriptor *mcd_to = (struct mycoro_descriptor *) to;
+    coroutine_t *next = current->next;
+    while (next->state != ACTIVE) {
+        if (next->state == FINISHED) {
+            free(next->stack);
+        }
+        next = next->next;
+    }
 
-    swapcontext(&mcd_from->ctx, &mcd_to->ctx);
+    mycoro_switch(current, next);
+    
+}
+
+void mycoro_yield(void)
+{
+    schedule_next(__currently_running);
+}
+
+void mycoro_join(mycoro_t coro, void **ret)
+{
+    coroutine_t *mcd = (coroutine_t *) coro;
+    while (mcd->state != FINISHED) {
+        mycoro_yield();
+    }
+
+    /* exclude from cyclic list */
+    mcd->next->prev = mcd->prev;
+    mcd->prev->next = mcd->next;
+
+    if (ret != NULL) {
+        *ret = mcd->ret;
+    }
+
+    free(mcd);
 }

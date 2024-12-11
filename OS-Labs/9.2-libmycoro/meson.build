@@ -11,9 +11,16 @@ libmycoro = library(
   libmycoro_src
 )
 
-test('tst-many-coros', 
-  executable('tst-many-coros',
-    ['tst-many-coros.c'],
+test('tst-recursive', 
+  executable('tst-recursive',
+    ['tst-recursive.c'],
+    link_with: libmycoro
+  )
+)
+
+test('tst-normal', 
+  executable('tst-normal',
+    ['tst-normal.c'],
     link_with: libmycoro
   )
 )
