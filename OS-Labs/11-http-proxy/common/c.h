@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 
 /* only GCC supports the unused attribute */
 #ifdef __GNUC__

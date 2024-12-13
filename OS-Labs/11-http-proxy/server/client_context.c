@@ -17,8 +17,6 @@ static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
 client_context_t thread_local *g_running_client = NULL;
 
-#define IN_CLIENT_CONTEXT (g_running_client != NULL)
-
 static fdwatcher_t add_io_watcher(client_context_t *c, int fd, int revents)
 {
     if (c->nr_io_watchers == MAX_CLIENT_IO_WATCHERS) {
@@ -115,7 +113,7 @@ void async_client_wakeup(client_context_t *cc)
     ev_async_send(worker_thread_get_loop(cc->worker_p), &cc->wakeup_watcher);
 }
 
-static void client_switch_to_loop(client_context_t *cc)
+void client_switch_to_loop(client_context_t *cc)
 {
     assert(g_running_client != NULL);
 
@@ -276,13 +274,16 @@ static void on_client_io_available_cb(EV_P_ ev_io *w, int revents)
 static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
 {
     client_context_t *cc = (client_context_t *) drop_w_2_client(w);
-    log_info("[%s] Closing connection...", cc->description);
+
+    size_t worker_id = worker_thread_get_id(cc->worker_p);
+    log_info("[%s, worker: %zu] Closing connection...", cc->description, worker_id);
 
     for (size_t i = 0; i < cc->nr_io_watchers; ++i) {
         ev_io_stop(loop, &cc->io_watchers[i]);
     }
 
     ev_async_stop(loop, &cc->drop_watcher);
+    ev_async_stop(loop, &cc->wakeup_watcher);
 
     int client_sfd = cc->io_watchers[0].fd;
     close(client_sfd);

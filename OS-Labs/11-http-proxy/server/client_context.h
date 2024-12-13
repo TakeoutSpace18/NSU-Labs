@@ -37,6 +37,7 @@ typedef struct client_context {
 extern thread_local client_context_t *g_running_client;
 
 #define RUNNING_CLIENT g_running_client
+#define IN_CLIENT_CONTEXT (g_running_client != NULL)
 
 /* access holder structure from watcher pointer */
 #define io_w_2_client(p) container_of(p, client_context_t, io_watcher)
@@ -47,8 +48,8 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
                           int sockfd, const char *descr,
                           worker_thread_t *worker);
 
-/* used to give control to client in from loop context of it's worker */
 void loop_switch_to_client(client_context_t *cc);
+void client_switch_to_loop(client_context_t *cc);
 
 /* used to give control to client from another thread */
 void async_client_wakeup(client_context_t *cc);
@@ -144,10 +145,11 @@ __attribute__ ((format (printf, 4, 5)))
 static inline void
 client_log(int level, const char *file, int line, const char *fmt, ...)
 {
-    client_context_t *c = RUNNING_CLIENT;
+    client_context_t *cc = RUNNING_CLIENT;
 
     static char extended_fmt[512] = { 0 };
-    snprintf(extended_fmt, 512, "[%s] %s", c->description, fmt);
+    snprintf(extended_fmt, 512, "[%s, worker: %zu] %s",
+             cc->description, worker_thread_get_id(cc->worker_p), fmt);
 
     va_list ap;
     va_start(ap, fmt);

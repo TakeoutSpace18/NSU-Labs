@@ -28,7 +28,7 @@ void worker_thread_stop(worker_thread_t *wt);
 void worker_thread_destroy(worker_thread_t *wt);
 
 /* all ev_loop modifications from another thread context 
- * should happen between these 2 calls:*/
+ * should happen between these 2 calls */
 static inline void
 worker_thread_begin_async_modify(worker_thread_t *wt)
 {

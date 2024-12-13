@@ -3,25 +3,22 @@ project('http-proxy', 'c',
   default_options: ['warning_level=3']
 )
 
+toplevel_include = include_directories('.')
+
+libcares = dependency('libcares')
+
 add_project_arguments('-DLOG_USE_COLOR', language : 'c')
 # add_project_arguments('-DCORO_DEBUG', language : 'c')
 
-inc = include_directories('.', 'third-party/')
-
-# libev_dep = dependency('libev')
-libcares_dep = dependency('libcares')
+subdir('third-party')
+subdir('common')
+subdir('server')
 
 executable('http-proxy', [
     'main.c',
-    'server.c',
-    'client_context.c',
-    'worker_thread.c',
-    'dns.c',
     'proxy.c',
-    'third-party/coro.c',
-    'third-party/log.c',
+    'http_request.c',
   ],
-  include_directories : inc,
-  link_args: '-lev',
-  dependencies : [libcares_dep]
+  include_directories : toplevel_include,
+  dependencies : [libcares, common, server, log_c]
 )

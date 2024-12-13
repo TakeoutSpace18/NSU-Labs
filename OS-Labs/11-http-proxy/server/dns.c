@@ -1,12 +1,13 @@
+#define _GNU_SOURCE
 #include "dns.h"
 
 #include <ares.h>
 #include <ev.h>
 
+#include "c.h"
 #include "client_context.h"
 #include "worker_thread.h"
 #include "server.h"
-#include "c.h"
 #include "log.h"
 
 int dns_init(void)
@@ -108,7 +109,12 @@ on_getaddrinfo_finish_cb(void *arg, int status, int timeouts,
     req->done = true;
 
     /* return control to client that issued the request */
-    loop_switch_to_client(req->source_client);
+    if (IN_CLIENT_CONTEXT) {
+        client_switch_to_loop(req->source_client);
+    }
+    else {
+        loop_switch_to_client(req->source_client);
+    }
 }
 
 /* should be called from client context */
@@ -123,7 +129,6 @@ struct ares_addrinfo *client_dns_resolve(const char *node, const char *service,
     req.done = false;
 
     client_log_trace("DNS Resolving %s:%s...", node, service);
-
     ares_getaddrinfo(r->channel, node, service, hints, on_getaddrinfo_finish_cb, &req);
 
     while (!req.done) {
