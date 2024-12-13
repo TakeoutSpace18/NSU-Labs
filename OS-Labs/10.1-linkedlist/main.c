@@ -168,7 +168,7 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
         }
         wlock_node(next_next);
 
-        if (need_to_swap() % 2) {
+        if (need_to_swap()) {
             storage->first = next_next;
             next->next = next_next->next;
             next_next->next = next;
@@ -199,7 +199,7 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
             }
             wlock_node(next_next);
 
-            if (need_to_swap() % 2) {
+            if (need_to_swap()) {
                 cur->next = next_next;
                 next->next = next_next->next;
                 next_next->next = next;
