@@ -44,6 +44,20 @@ void print_usage(const char *prog_name) {
     printf("  -h, --help             Show this help message and exit\n");
 }
 
+unsigned short lfsr = 0xACE1u;
+unsigned bit;
+
+static unsigned fastrand(void)
+{
+    bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
+    return lfsr =  (lfsr >> 1) | (bit << 15);
+}
+
+static bool need_to_swap(void)
+{
+    return fastrand() % 2;
+}
+
 void set_cpu(int n) {
 	int err;
 	cpu_set_t cpuset;
@@ -154,7 +168,7 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
         }
         wlock_node(next_next);
 
-        if (rand() % 2) {
+        if (need_to_swap() % 2) {
             storage->first = next_next;
             next->next = next_next->next;
             next_next->next = next;
@@ -185,7 +199,7 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
             }
             wlock_node(next_next);
 
-            if (rand() % 2) {
+            if (need_to_swap() % 2) {
                 cur->next = next_next;
                 next->next = next_next->next;
                 next_next->next = next;
