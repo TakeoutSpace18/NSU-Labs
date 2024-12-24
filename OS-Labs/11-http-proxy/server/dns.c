@@ -7,8 +7,7 @@
 #include "c.h"
 #include "client_context.h"
 #include "worker_thread.h"
-#include "server.h"
-#include "log.h"
+#include "coroutine.h"
 
 int dns_init(void)
 {
@@ -109,12 +108,13 @@ on_getaddrinfo_finish_cb(void *arg, int status, int timeouts,
     req->done = true;
 
     /* return control to client that issued the request */
-    if (IN_CLIENT_CONTEXT) {
-        client_switch_to_loop(req->source_client);
-    }
-    else {
+    // if (IN_CLIENT_CONTEXT) {
+    //     assert(0);
+    //     client_switch_to_loop(req->source_client);
+    // }
+    // else {
         loop_switch_to_client(req->source_client);
-    }
+    // }
 }
 
 /* should be called from client context */
@@ -128,7 +128,7 @@ struct ares_addrinfo *client_dns_resolve(const char *node, const char *service,
     req.source_client = cc;
     req.done = false;
 
-    client_log_trace("DNS Resolving %s:%s...", node, service);
+    coroutine_log_trace("DNS Resolving %s:%s...", node, service);
     ares_getaddrinfo(r->channel, node, service, hints, on_getaddrinfo_finish_cb, &req);
 
     while (!req.done) {
@@ -136,12 +136,12 @@ struct ares_addrinfo *client_dns_resolve(const char *node, const char *service,
     }
 
     if (req.status != ARES_SUCCESS) {
-        client_log_info("DNS %s:%s resolve failed: %s", node, service,
+        coroutine_log_info("DNS %s:%s resolve failed: %s", node, service,
                         ares_strerror(req.status));
         return NULL;
     }
     else {
-        client_log_info("DNS %s:%s resolve succeded", node, service);
+        coroutine_log_info("DNS %s:%s resolve succeded", node, service);
         return req.result;
     }
 }

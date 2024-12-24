@@ -5,6 +5,7 @@
 
 #include "c.h"
 #include "worker_thread.h"
+#include "list.h"
 #include "client_context.h"
 
 typedef struct server {

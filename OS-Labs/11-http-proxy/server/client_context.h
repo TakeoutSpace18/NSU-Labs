@@ -7,20 +7,31 @@
 #include "c.h"
 #include "dns.h"
 #include "list.h"
-#include "log.h"
 #include "coroutine.h"
 #include "worker_thread.h"
 
-#define MAX_CLIENT_IO_WATCHERS 5
+#define MAX_CLIENT_FDWATCHERS 5
+#define FDWATCHER_DEFAULT_BUFFER_SZ 512
 
-typedef struct client_io_watcher client_io_watcher_t;
 typedef void (*client_routine_t)(void);
+
+typedef struct fdwatcher {
+    struct ev_io io;
+
+    /* buffer is used for recv_until request for saving
+     * received data after the demimeter string */
+
+    /* TODO: replace with buffer from buffer.h */
+    char *buffer;
+    size_t buffer_size;
+    size_t nr_buffered;
+} fdwatcher_t;
 
 typedef struct client_context {
     /* fds, that are watched by libev 
-     * io_watchers[0] is always accepted client socket */
-    size_t nr_io_watchers;
-    ev_io io_watchers[MAX_CLIENT_IO_WATCHERS];
+     * fdwatchers[0] is always the accepted client socket */
+    size_t nr_fdwatchers;
+    fdwatcher_t fdwatchers[MAX_CLIENT_FDWATCHERS];
 
     ev_async drop_watcher;
     ev_async wakeup_watcher;
@@ -29,14 +40,10 @@ typedef struct client_context {
 
     list_t link;
 
-    char *description;
-
     worker_thread_t *worker_p;
 } client_context_t;
 
-extern thread_local client_context_t *g_running_client;
-
-#define RUNNING_CLIENT g_running_client
+#define RUNNING_CLIENT (client_context_t *) coroutine_get_current()->data
 #define IN_CLIENT_CONTEXT (g_running_client != NULL)
 
 /* access holder structure from watcher pointer */
@@ -62,14 +69,12 @@ void client_drop(void);
 /* Return control to the server coroutine */
 void client_yield(void);
 
-typedef struct ev_io * fdwatcher_t;
-
 /* Make file descriptor to be watched by libev backend.
- * Events are passed to libev, can be either EV_READ or EV_WRITE.
+ * Events are passed to libev, can be either EV_READ, EV_WRITE or both.
  * Client coroutine will be woken up when any of specified events
  * happen on fd */
-fdwatcher_t client_fd_watch(int fd, int revents);
-void client_fd_unwatch(fdwatcher_t w);
+fdwatcher_t *client_fdwatcher_create(int fd, int events);
+void client_fdwatcher_destroy(fdwatcher_t *fdw);
 
 /* Receive or send data, but internally switch
  * to other coroutines when no data is available. 
@@ -81,8 +86,8 @@ void client_fd_unwatch(fdwatcher_t w);
  *      num of bytes read or sent, on success
  *      0, on closed socket,
  *      -1, on other error (sets errno) */
-ssize_t client_recv(fdwatcher_t w, void *buf, size_t n, int flags);
-ssize_t client_send(fdwatcher_t w, void *buf, size_t n, int flags);
+ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags);
+ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags);
 
 /* Receive or send buffer of given size.
  * Client blocks and waits until whole buffer is tramsmitted.
@@ -93,8 +98,8 @@ ssize_t client_send(fdwatcher_t w, void *buf, size_t n, int flags);
  *      size, on success 
  *      0, on closed socket,
  *      -1, on other error (sets errno) */
-ssize_t client_recv_buf(fdwatcher_t w, void *buf, size_t size);
-ssize_t client_send_buf(fdwatcher_t w, void *buf, size_t size);
+ssize_t client_recv_buf(fdwatcher_t *fdw, void *buf, size_t size);
+ssize_t client_send_buf(fdwatcher_t *fdw, void *buf, size_t size);
 
 #define NODATA (-2)
 
@@ -108,60 +113,39 @@ ssize_t client_send_buf(fdwatcher_t w, void *buf, size_t size);
  *      0, on closed socket,
  *      -1, on other error (sets errno)
  *      NODATA, if the call would block */
-ssize_t client_recv_nonblock(fdwatcher_t w, void *buf, size_t n, int flags);
-ssize_t client_send_nonblock(fdwatcher_t w, void *buf, size_t n, int flags);
+ssize_t client_recv_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags);
+ssize_t client_send_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags);
+
+/* Receive data until delimeter is found
+ * RETURNS:
+ *      num of bytes read, on success
+ *      0, on closed socket,
+ *      -1, on other error (sets errno)
+ *      NODATA, if delimeter does not fit in supplied buffer */
+ssize_t client_recv_until(fdwatcher_t *fdw, void *buf, size_t size,
+                          const void *delim, size_t delim_size);
 
 /* set events on which client coroutine will be woken up */
-static inline void client_fd_setevents(fdwatcher_t w, int events)
+static inline void client_fd_setevents(fdwatcher_t *fdw, int events)
 {
-    ev_io *watcher = w;
-    client_context_t *c = watcher->data;
+    client_context_t *c = fdw->io.data;
+    struct ev_loop *loop = worker_thread_get_loop(c->worker_p);
 
-    ev_io_stop(worker_thread_get_loop(c->worker_p), watcher);
-    ev_io_set(watcher, watcher->fd, events);
-    ev_io_start(worker_thread_get_loop(c->worker_p), watcher);
+    ev_io_stop(loop, &fdw->io);
+    ev_io_set(&fdw->io, fdw->io.fd, events);
+    ev_io_start(loop, &fdw->io);
 }
 
-static inline int client_fd_getevents(fdwatcher_t w)
+static inline int client_fd_getevents(fdwatcher_t *fdw)
 {
-    ev_io *watcher = w;
-    return watcher->events;
+    return fdw->io.events;
 }
 
-/* client socket fd */
-static inline int client_sfd(void)
+static inline fdwatcher_t *client_fdwatcher(void)
 {
     client_context_t *c = RUNNING_CLIENT;
-    return c->io_watchers[0].fd;
+    return &c->fdwatchers[0];
 }
 
-static inline fdwatcher_t client_fdwatcher(void)
-{
-    client_context_t *c = RUNNING_CLIENT;
-    return &c->io_watchers[0];
-}
-
-__attribute__ ((format (printf, 4, 5)))
-static inline void
-client_log(int level, const char *file, int line, const char *fmt, ...)
-{
-    client_context_t *cc = RUNNING_CLIENT;
-
-    static char extended_fmt[512] = { 0 };
-    snprintf(extended_fmt, 512, "[%s, worker: %zu] %s",
-             cc->description, worker_thread_get_id(cc->worker_p), fmt);
-
-    va_list ap;
-    va_start(ap, fmt);
-    vlog_log(level, file, line, extended_fmt, ap);
-    va_end(ap);
-}
-
-#define client_log_trace(...) client_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define client_log_debug(...) client_log(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define client_log_info(...)  client_log(LOG_INFO,  __FILE__, __LINE__, __VA_ARGS__)
-#define client_log_warn(...)  client_log(LOG_WARN,  __FILE__, __LINE__, __VA_ARGS__)
-#define client_log_error(...) client_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define client_log_fatal(...) client_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 #endif /* CLIENT_CONTEXT_H */

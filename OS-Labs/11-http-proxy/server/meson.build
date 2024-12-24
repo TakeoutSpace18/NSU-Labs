@@ -2,6 +2,7 @@ server_source = files(
   'server.c',
   'worker_thread.c',
   'client_context.c',
+  'coroutine.c',
   'dns.c'
 )
 

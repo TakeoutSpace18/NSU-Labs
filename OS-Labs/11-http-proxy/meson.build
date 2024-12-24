@@ -17,7 +17,7 @@ subdir('server')
 executable('http-proxy', [
     'main.c',
     'proxy.c',
-    'http_request.c',
+    'http.c',
   ],
   include_directories : toplevel_include,
   dependencies : [libcares, common, server, log_c]

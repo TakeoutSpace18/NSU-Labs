@@ -74,6 +74,10 @@ static void *worker_thread_main(void *arg)
 
     coroutine_create_initial(&wt->loop_coro);
 
+    char name[64];
+    snprintf(name, 64, "worker %zu :: loop", worker_thread_get_id(wt));
+    coroutine_set_name(&wt->loop_coro, name);
+
     log_info("[worker %zu] Started, TID: %i", worker_thread_get_id(wt), gettid());
     ev_run(wt->loop, 0);
 

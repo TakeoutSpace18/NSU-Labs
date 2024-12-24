@@ -15,51 +15,56 @@ static void on_client_async_wakeup_cb(EV_P_ struct ev_async *w, int revents);
 static void on_client_io_available_cb(EV_P_ struct ev_io *w, int revents);
 static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
-client_context_t thread_local *g_running_client = NULL;
-
-static fdwatcher_t add_io_watcher(client_context_t *c, int fd, int revents)
+static fdwatcher_t *fdwatcher_create_internal(client_context_t *cc, int fd, int events)
 {
-    if (c->nr_io_watchers == MAX_CLIENT_IO_WATCHERS) {
-        if (IN_CLIENT_CONTEXT) {
-            client_log_fatal("Per client io watchers limit exceeded");
-            client_drop();
-        } else {
-            log_fatal("Per client io watchers limit exceeded");
-            /* this situation should never happen */
-            abort();
-        }
+    if (cc->nr_fdwatchers >= MAX_CLIENT_FDWATCHERS) {
+        /* this situation should never happen */
+        coroutine_log_fatal("fdwatchers limit reached for the client");
+        abort();
     }
 
-    ev_io *watcher = &c->io_watchers[c->nr_io_watchers];
+    fdwatcher_t *fdw = &cc->fdwatchers[cc->nr_fdwatchers];
 
-    watcher->data = c;
-    ev_io_init(watcher, on_client_io_available_cb, fd, revents);
-    ev_io_start(worker_thread_get_loop(c->worker_p), watcher);
+    fdw->buffer = malloc(FDWATCHER_DEFAULT_BUFFER_SZ);
+    if (!fdw->buffer) {
+        coroutine_log_fatal("out of memory");
+        exit(EXIT_FAILURE);
+    }
+    fdw->buffer_size = FDWATCHER_DEFAULT_BUFFER_SZ;
+    fdw->nr_buffered = 0;
 
-    c->nr_io_watchers++;
+    ev_io_init(&fdw->io, on_client_io_available_cb, fd, events);
+    ev_io_start(worker_thread_get_loop(cc->worker_p), &fdw->io);
+    fdw->io.data = cc;
 
-    return watcher;
+    cc->nr_fdwatchers++;
+
+    return fdw;
 }
 
-/* returns 0 on success, -1 on watcher not found */
-static int remove_io_watcher(client_context_t *c, int fd)
+static void fdwatcher_destroy(client_context_t *cc, fdwatcher_t *fdw)
+{
+    ev_io_stop(worker_thread_get_loop(cc->worker_p), &fdw->io);
+    free(fdw->buffer);
+}
+
+static void remove_fdwatcher(client_context_t *cc, fdwatcher_t *fdw)
 {
     size_t i = 0;
-    while (i < c->nr_io_watchers && c->io_watchers[i].fd != fd)
+    while (i < cc->nr_fdwatchers && &cc->fdwatchers[i] != fdw)
         i++;
 
-    if (i == c->nr_io_watchers) {
-        return -1;
+    if (i == cc->nr_fdwatchers) {
+        coroutine_log_fatal("remove_fdwatcher(): watcher not found");
+        abort();
     }
 
-    ev_io_stop(worker_thread_get_loop(c->worker_p), &c->io_watchers[i]);
+    fdwatcher_destroy(cc, fdw);
 
-    memmove(&c->io_watchers[i], &c->io_watchers[i + 1],
-            (c->nr_io_watchers - i - 1) * sizeof(c->io_watchers[0]));
+    memmove(&cc->fdwatchers[i], &cc->fdwatchers[i + 1],
+            (cc->nr_fdwatchers - i - 1) * sizeof(cc->fdwatchers[0]));
 
-    c->nr_io_watchers--;
-
-    return 0;
+    cc->nr_fdwatchers--;
 }
 
 int client_context_create(client_context_t *cc, client_routine_t routine,
@@ -67,17 +72,24 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
                           worker_thread_t *worker)
 {
     cc->worker_p = worker;
-    cc->description = strdup(descr);
 
     if (coroutine_create(&cc->coroutine, (coroutine_func_t) routine, NULL) != OK) {
         log_error("Failed to create coroutine");
         return ERROR;
     }
 
+    /* Make client_context struct be accessible from coroutine context.
+     * This is used by RUNNING_CLIENT macro */
+    cc->coroutine.data = cc;
+
+    char name[256];
+    snprintf(name, 256, "worker %zu :: %s", worker_thread_get_id(worker), descr);
+    coroutine_set_name(&cc->coroutine, name);
+
     worker_thread_begin_async_modify(worker);
 
-    cc->nr_io_watchers = 0;
-    add_io_watcher(cc, sockfd, EV_READ | EV_WRITE);
+    cc->nr_fdwatchers = 0;
+    fdwatcher_create_internal(cc, sockfd, EV_READ | EV_WRITE);
 
     ev_async_init(&cc->drop_watcher, on_client_drop_cb);
     ev_async_start(worker_thread_get_loop(cc->worker_p), &cc->drop_watcher);
@@ -88,44 +100,30 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
     worker_thread_end_async_modify(worker);
 
     size_t worker_id = worker_thread_get_id(cc->worker_p);
-    log_info("[%s, worker: %zu] New client connected", descr, worker_id);
+    log_info("[worker %zu :: %s] New client connected", worker_id, descr);
 
     return OK;
 }
 
 void loop_switch_to_client(client_context_t *cc)
 {
-    assert(g_running_client == NULL);
-
     coroutine_t *client_coro = &cc->coroutine;
     coroutine_t *loop_coro = worker_thread_get_loop_coro(cc->worker_p);
 
-    g_running_client = cc;
-
-    size_t worker_id = worker_thread_get_id(cc->worker_p);
-    log_trace("[worker: %zu] context switch: loop --> client(%s)",
-              worker_id, cc->description);
     coroutine_switch(loop_coro, client_coro);
+}
+
+void client_switch_to_loop(client_context_t *cc)
+{
+    coroutine_t *client_coro = &cc->coroutine;
+    coroutine_t *loop_coro = worker_thread_get_loop_coro(cc->worker_p);
+
+    coroutine_switch(client_coro, loop_coro);
 }
 
 void async_client_wakeup(client_context_t *cc)
 {
     ev_async_send(worker_thread_get_loop(cc->worker_p), &cc->wakeup_watcher);
-}
-
-void client_switch_to_loop(client_context_t *cc)
-{
-    assert(g_running_client != NULL);
-
-    coroutine_t *client_coro = &cc->coroutine;
-    coroutine_t *loop_coro = worker_thread_get_loop_coro(cc->worker_p);
-
-    g_running_client = NULL;
-
-    size_t worker_id = worker_thread_get_id(cc->worker_p);
-    log_trace("[worker: %zu] context switch: client(%s) --> loop",
-              worker_id, cc->description);
-    coroutine_switch(client_coro, loop_coro);
 }
 
 void client_yield(void)
@@ -139,6 +137,8 @@ void attribute_noreturn() client_drop(void)
 {
     client_context_t *cc = RUNNING_CLIENT;
 
+    coroutine_log_info("Closing connection...");
+
     /* releasing client resources happens in loop coroutine, 
      * because we can't destroy stack of currently running client coroutine
      * from itself */
@@ -150,12 +150,23 @@ void attribute_noreturn() client_drop(void)
     }
 }
 
-ssize_t client_recv(fdwatcher_t w, void *buf, size_t n, int flags)
+ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags)
 {
-    ev_io *watcher = w;
     ssize_t ret;
     for (;;) {
-        ret = recv(watcher->fd, buf, n, flags);
+        ret = client_recv_nonblock(fdw, buf, size, flags);
+        if (ret == NODATA)
+            client_yield();
+        else
+            return ret;
+    }
+}
+
+ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags)
+{
+    ssize_t ret;
+    for (;;) {
+        ret = send(fdw->io.fd, buf, size, flags);
         if (ret == -1 && errno == EAGAIN)
             client_yield();
         else
@@ -163,26 +174,13 @@ ssize_t client_recv(fdwatcher_t w, void *buf, size_t n, int flags)
     }
 }
 
-ssize_t client_send(fdwatcher_t w, void *buf, size_t n, int flags)
+ssize_t client_recv_buf(fdwatcher_t *fdw, void *buf, size_t size)
 {
-    ev_io *watcher = w;
-    ssize_t ret;
-    for (;;) {
-        ret = send(watcher->fd, buf, n, flags);
-        if (ret == -1 && errno == EAGAIN)
-            client_yield();
-        else
-            return ret;
-    }
-}
-
-ssize_t client_recv_buf(fdwatcher_t w, void *buf, size_t size)
-{
-    int old_events = client_fd_getevents(w);
-    client_fd_setevents(w, EV_READ);
+    int old_events = client_fd_getevents(fdw);
+    client_fd_setevents(fdw, EV_READ);
 
     for (size_t recv_size = 0; recv_size < size; ) {
-        ssize_t ret = client_recv(w, (char *) buf + recv_size, size - recv_size, 0);
+        ssize_t ret = client_recv(fdw, (char *) buf + recv_size, size - recv_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -190,17 +188,17 @@ ssize_t client_recv_buf(fdwatcher_t w, void *buf, size_t size)
         recv_size += ret;
     }
 
-    client_fd_setevents(w, old_events);
+    client_fd_setevents(fdw, old_events);
     return size;
 }
 
-ssize_t client_send_buf(fdwatcher_t w, void *buf, size_t size)
+ssize_t client_send_buf(fdwatcher_t *fdw, void *buf, size_t size)
 {
-    int old_events = client_fd_getevents(w);
-    client_fd_setevents(w, EV_WRITE);
+    int old_events = client_fd_getevents(fdw);
+    client_fd_setevents(fdw, EV_WRITE);
 
     for (size_t sent_size = 0; sent_size < size; ) {
-        ssize_t ret = client_send(w, (char *) buf + sent_size, size - sent_size, 0);
+        ssize_t ret = client_send(fdw, (char *) buf + sent_size, size - sent_size, 0);
 
         if (ret == -1 || ret == 0)
             return ret;
@@ -208,55 +206,127 @@ ssize_t client_send_buf(fdwatcher_t w, void *buf, size_t size)
         sent_size += ret;
     }
 
-    client_fd_setevents(w, old_events);
+    client_fd_setevents(fdw, old_events);
     return size;
 }
 
-ssize_t client_recv_nonblock(fdwatcher_t w, void *buf, size_t n, int flags)
+ssize_t client_recv_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags)
 {
-    ev_io *watcher = w;
+    /* if buffered data is enough to fulfill the request */
+    if (fdw->nr_buffered >= size) {
+        memcpy(buf, fdw->buffer, size);
+        fdw->nr_buffered -= size;
+        memmove(fdw->buffer, fdw->buffer + size, fdw->nr_buffered);
+
+        return size;
+    }
+
+    /* firstly give away the buffered data */
+    if (fdw->nr_buffered > 0) {
+        memcpy(buf, fdw->buffer, fdw->nr_buffered);
+        size -= fdw->nr_buffered;
+        buf = (char *) buf + fdw->nr_buffered;
+        fdw->nr_buffered = 0;
+    }
+
+    ssize_t ret;
+    for (;;) {
+        ret = recv(fdw->io.fd, buf, size, flags);
+        if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            return NODATA;
+        else
+            return ret;
+    }
+}
+
+ssize_t client_send_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags)
+{
     ssize_t ret;
 
-    ret = recv(watcher->fd, buf, n, flags);
+    ret = send(fdw->io.fd, buf, size, flags);
     if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
         return NODATA;
     else
         return ret;
 }
 
-ssize_t client_send_nonblock(fdwatcher_t w, void *buf, size_t n, int flags)
-{
-    ev_io *watcher = w;
-    ssize_t ret;
+static void *realloc_check_err(void *ptr, size_t size) {
+    void *new_ptr = realloc(ptr, size);
+    if (!new_ptr) {
+        coroutine_log_fatal("out of memory");
+        exit(EXIT_FAILURE);
+    }
 
-    ret = send(watcher->fd, buf, n, flags);
-    if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-        return NODATA;
-    else
-        return ret;
+    return new_ptr;
 }
 
-fdwatcher_t client_fd_watch(int fd, int revents)
+static ssize_t recv_blocking(int sockfd, void *buf, size_t len, int flags)
+{
+    ssize_t ret;
+
+    for (;;) {
+        ret = recv(sockfd, buf, len, flags);
+        if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            client_yield();
+        }
+        else {
+            break;
+        }
+    }
+
+    return ret;
+}
+
+ssize_t client_recv_until(fdwatcher_t *fdw, void *buf, size_t size,
+                          const void *delim, size_t delim_size)
+{
+    if (size > fdw->buffer_size) {
+        fdw->buffer = realloc_check_err(fdw->buffer, size);
+        fdw->buffer_size = size;
+    }
+
+    void *delim_location = NULL;
+    while ((delim_location = memmem(fdw->buffer, fdw->nr_buffered, delim, delim_size)) == NULL) {
+        if (fdw->nr_buffered >= size) {
+            return NODATA;
+        }
+        
+        ssize_t rcvd = recv_blocking(fdw->io.fd, fdw->buffer + fdw->nr_buffered,
+                                     size - fdw->nr_buffered, 0);
+
+        if (rcvd == -1 || rcvd == 0) {
+            return rcvd;
+        }
+
+        fdw->nr_buffered += rcvd;
+    }
+
+    size_t ret_size = (char *) delim_location + delim_size - fdw->buffer;
+    memcpy(buf, fdw->buffer, ret_size);
+    fdw->nr_buffered -= ret_size;
+    memmove(fdw->buffer, fdw->buffer + ret_size, fdw->nr_buffered);
+
+    return ret_size;
+}
+
+fdwatcher_t *client_fdwatcher_create(int fd, int revents)
 {
     client_context_t *c = RUNNING_CLIENT;
 
     if (set_nonblock(fd) != 0) {
-        client_log_error("client_watch_fd(): Failed to set fd to nonblocking mode, %s", 
-                         strerror(errno));
-        client_drop();
+        coroutine_log_error("client_fdwatcher_create(): "
+                            "Failed to set fd to nonblocking mode, %s", 
+                             strerror(errno));
+        return NULL;
     }
 
-    return add_io_watcher(c, fd, revents);
+    return fdwatcher_create_internal(c, fd, revents);
 }
 
-void client_fd_unwatch(fdwatcher_t w)
+void client_fdwatcher_destroy(fdwatcher_t *fdw)
 {
-    ev_io *watcher = w;
     client_context_t *c = RUNNING_CLIENT;
-
-    int ret = remove_io_watcher(c, watcher->fd);
-    if (ret != 0)
-        client_log_warn("client_unwatch_fd(): watcher not found");
+    remove_fdwatcher(c, fdw);
 }
 
 static void on_client_async_wakeup_cb(EV_P_ ev_async *w, int revents)
@@ -275,21 +345,17 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
 {
     client_context_t *cc = (client_context_t *) drop_w_2_client(w);
 
-    size_t worker_id = worker_thread_get_id(cc->worker_p);
-    log_info("[%s, worker: %zu] Closing connection...", cc->description, worker_id);
+    int client_sfd = cc->fdwatchers[0].io.fd;
+    close(client_sfd);
 
-    for (size_t i = 0; i < cc->nr_io_watchers; ++i) {
-        ev_io_stop(loop, &cc->io_watchers[i]);
+    for (size_t i = 0; i < cc->nr_fdwatchers; ++i) {
+        fdwatcher_destroy(cc, &cc->fdwatchers[i]);
     }
 
     ev_async_stop(loop, &cc->drop_watcher);
     ev_async_stop(loop, &cc->wakeup_watcher);
 
-    int client_sfd = cc->io_watchers[0].fd;
-    close(client_sfd);
-
     list_unlink(&cc->link);
     coroutine_destroy(&cc->coroutine);
-    free(cc->description);
     free(cc);
 }

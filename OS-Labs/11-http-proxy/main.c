@@ -4,6 +4,7 @@
 #include "proxy.h"
 #include "server.h"
 #include "log.h"
+#include "log_setup.h"
 
 #define PORT_DEFAULT 8080
 #define NR_WORKERS_DEFAULT 4
@@ -22,6 +23,8 @@ do_help(void)
 int
 main(int argc, char** argv)
 {
+    logger_setup();
+
     log_debug("Process PID: %i", getpid());
 
     static struct option long_options[] = {

@@ -1,5 +1,6 @@
-#include <stdlib.h>
-#include <string.h>
+#include "buffer.h"
+#include "coroutine.h"
+#include <stdio.h>
 #define _GNU_SOURCE
 #include "proxy.h"
 
@@ -7,7 +8,7 @@
 
 #include "c.h"
 #include "client_context.h"
-#include "http_request.h"
+#include "http.h"
 
 static int connect_to_domain_name(const char *domain, uint16_t port) {
     struct ares_addrinfo *result = NULL;
@@ -23,7 +24,7 @@ static int connect_to_domain_name(const char *domain, uint16_t port) {
 
     result = client_dns_resolve(domain, port_str, &hints);
     if (!result) {
-        client_log_error("Domain name resolution failed");
+        coroutine_log_error("Domain name resolution failed");
         return ERROR;
     }
 
@@ -31,7 +32,7 @@ static int connect_to_domain_name(const char *domain, uint16_t port) {
     struct ares_addrinfo_node *node;
     for (node = result->nodes; node != NULL; node = node->ai_next) {
         if ((sfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            client_log_error("Failed to create host socket: %s", strerror(errno));
+            coroutine_log_error("Failed to create host socket: %s", strerror(errno));
             ares_freeaddrinfo(result);
             return ERROR;
         }
@@ -44,7 +45,7 @@ static int connect_to_domain_name(const char *domain, uint16_t port) {
     }
 
     if (node == NULL) {
-        client_log_error("Failed to connect to host %s", domain);
+        coroutine_log_error("Failed to connect to host %s", domain);
         ares_freeaddrinfo(result);
         return ERROR;
     }
@@ -71,7 +72,7 @@ static char *extract_domain_name(const char *target)
 
     char *domain = malloc(end - begin + 1);
     if (!domain) {
-        client_log_error("out of memory");
+        coroutine_log_error("out of memory");
         return NULL;
     }
 
@@ -84,7 +85,7 @@ static char *extract_domain_name(const char *target)
 
 void attribute_noreturn() proxy_main(void)
 {
-    fdwatcher_t client_watcher;
+    fdwatcher_t *client_watcher;
 
     client_watcher = client_fdwatcher();
 
@@ -100,7 +101,7 @@ void attribute_noreturn() proxy_main(void)
     fflush(stdout);
 
     if (strcmp(http_request_get_method(&request), "CONNECT") == 0) {
-        client_log_info("CONNECT method is not supported");
+        coroutine_log_info("CONNECT method is not supported");
         client_drop();
     }
 
@@ -110,14 +111,38 @@ void attribute_noreturn() proxy_main(void)
         client_drop();
     }
 
-
     int host_sfd = connect_to_domain_name(domain, 80);
     if (host_sfd < 0) {
         client_drop();
     }
+    coroutine_log_info("Connected!");
 
-    client_log_info("Connected!");
+    fdwatcher_t *host_watcher = client_fdwatcher_create(host_sfd, 0);
+
+    if (http_request_send(&request, host_watcher) != OK) {
+        coroutine_log_error("Failed to send request to host");
+        goto error;
+    }
+
+    http_response_t response;
+    if (http_response_read(&response, host_watcher) != OK) {
+        coroutine_log_error("Failed to read host response");
+        goto error;
+    }
+
+    // fwrite(response.raw.start, buffer_used(&response.raw), 1, stdout);
+    // fflush(stdout);
+
+    if (http_response_send(&response, client_watcher) != OK) {
+        coroutine_log_error("Failed to send response to client");
+        goto error;
+    }
 
     client_drop();
     unreachable();
+
+error:
+    http_request_destroy(&request);
+    http_response_destroy(&response);
+    client_drop();
 }
