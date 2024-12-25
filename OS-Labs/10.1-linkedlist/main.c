@@ -240,7 +240,10 @@ static void *swapper3(void *arg)
 
 static void create_thread(pthread_t *thread, void *(*routine)(void*), void *arg)
 {
-    if (pthread_create(thread, NULL, routine, arg) != 0) {
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if (pthread_create(thread, &attr, routine, arg) != 0) {
         perror("pthread_create()");
         abort();
     }
