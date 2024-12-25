@@ -176,12 +176,12 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
             *nr_swaps += 1;
         }
 
+        // next is locked
         unlock_node(next_next);
-        unlock_node(next);
         unlock(storage->lock);
 
+        // cur is locked
         cur = next;
-        wlock_node(cur);
 
         for (;;) {
             next = cur->next;
@@ -206,13 +206,11 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
 
                 *nr_swaps += 1;
             }
-
+            // next locked
             unlock_node(next_next);
-            unlock_node(next);
             unlock_node(cur);
 
             cur = next;
-            wlock_node(cur);
         }
     }
 }
