@@ -106,6 +106,8 @@ static void counter(storage_t *storage, comparator_t cmp, size_t *nr_counts,
 
         node_t *next = cur->next;
         while (next != NULL) {
+            pthread_testcancel();
+
             if (cmp(cur, cur->next)) {
                 *nr_counts += 1;
             }
@@ -184,6 +186,8 @@ static void swapper(storage_t *storage, size_t *nr_swaps)
         cur = next;
 
         for (;;) {
+            pthread_testcancel();
+
             next = cur->next;
             if (next == NULL) {
                 unlock_node(cur);
@@ -316,6 +320,14 @@ int main(int argc, char *argv[]) {
     create_thread(&swapper3_thread, swapper3, &storage);
 
     sleep(RUNTIME_SECONDS);
+
+    pthread_cancel(asc_counter_thread);
+    pthread_cancel(eq_counter_thread);
+    pthread_cancel(desc_counter_thread);
+    pthread_cancel(swapper1_thread);
+    pthread_cancel(swapper2_thread);
+    pthread_cancel(swapper3_thread);
+
 
     print_stats(&g_stats);
 
