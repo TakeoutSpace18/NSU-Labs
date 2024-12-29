@@ -1,165 +1,114 @@
 #include "http.h"
 
-#include "buffer.h"
-#include "c.h"
-#include "client_context.h"
 #include "coroutine.h"
+#include "utils.h"
 
-static int read_header(buffer_t *buf, fdwatcher_t *source)
+int http_parse_request(http_request_t *r, const char *buf_start,
+                       size_t len, size_t last_len)
 {
-    size_t size = 512;
-    buffer_ensure(buf, size);
 
-    const char *delim = "\r\n\r\n";
-    for (;;) {
-        ssize_t ret = client_recv_until(source, buf->start, buffer_unused(buf),
-                                        delim, strlen(delim));
-
-        if (ret > 0) {
-            buffer_advance(buf, ret);
-            break;
-        }
-
-        if (ret == 0) {
-            coroutine_log_error("Failed to read header: socket closed");
-            return ERROR;
-        }
-
-        if (ret == -1) {
-            coroutine_log_error("Failed to read header: %s", strerror(errno));
-            return ERROR;
-        }
-
-        if (ret == NODATA) {
-            size *= 2;
-            buffer_ensure(buf, size);
-        }
-    }
-
-    return OK;
+    r->num_headers = sizeof(r->headers) / sizeof(r->headers[0]);
+    return phr_parse_request(buf_start, len,
+                             &r->method, &r->method_len,
+                             &r->path, &r->path_len,
+                             &r->minor_version,
+                             r->headers, &r->num_headers,
+                             last_len);
 }
 
-static int read_till_socket_close(buffer_t *buf, fdwatcher_t *source) {
-    size_t size = 512;
-    for (;;) {
-        if (buffer_unused(buf) <= 0) {
-            size *= 2;
-            buffer_ensure(buf, size);
-        }
-
-        ssize_t ret = client_recv(source, buf->pos, buffer_unused(buf), 0);
-
-        if (ret > 0) {
-            buffer_advance(buf, ret);
-        }
-        else if (ret == 0) {
-            return OK;
-        }
-        else if (ret == -1) {
-            coroutine_log_error("Failed to read till socket close: %s", strerror(errno));
-            return ERROR;
-        }
-    }
-}
-
-int http_request_read(http_request_t *request, fdwatcher_t *source)
+int http_parse_response(http_response_t *r, const char *buf_start,
+                        size_t len, size_t last_len)
 {
-    memset(request, 0, sizeof(*request));
-
-    int err = read_header(&request->raw, source);
-    if (err != OK) {
-        http_request_destroy(request);
-        return ERROR;
-    }
-
-    /* to treat header as a string */
-    buffer_add(&request->raw, "\0", 1);
-
-    /* Parse first line of the request: 
-     * <method> <target> <version> */
-    char *method_begin = request->raw.start;
-    char *method_end = strchr(request->raw.start, ' ');
-    memset(request->method, 0, sizeof(request->method));
-    memcpy(request->method, method_begin, method_end - method_begin);
-
-    char *target_begin = method_end + 1;
-    char *target_end = strchr(target_begin, ' ');
-    request->target = calloc(1, target_end - target_begin + 1);
-    if (!request->target) {
-        coroutine_log_error("out of memory");
-        http_request_destroy(request);
-        return ERROR;
-    }
-    memcpy(request->target, target_begin, target_end - target_begin);
-
-    char *version_begin = target_end + 1;
-    char *version_end = strstr(version_begin, "\r\n");
-    memset(request->version, 0, sizeof(request->version));
-    memcpy(request->version, version_begin, version_end - version_begin);
-
-    return OK;
+    r->num_headers = sizeof(r->headers) / sizeof(r->headers[0]);
+    return phr_parse_response(buf_start, len,
+                              &r->minor_version, &r->status,
+                              &r->msg, &r->msg_len,
+                              r->headers, &r->num_headers,
+                              last_len);
 }
 
-void http_request_destroy(http_request_t *request)
+void http_request_print(http_request_t *d)
 {
-    buffer_free(&request->raw);
-    free(request->target);
+    printf("%.*s %.*s HTTP/1.%d\n",
+           (int)d->method_len, d->method,
+           (int)d->path_len, d->path,
+           d->minor_version);
+
+    for (size_t i = 0; i < d->num_headers; i++) {
+        printf("%.*s: %.*s\n",
+               (int)d->headers[i].name_len, d->headers[i].name,
+               (int)d->headers[i].value_len, d->headers[i].value);
+    }
+
+    printf("\n");
 }
 
-int http_request_send(const http_request_t *request, fdwatcher_t *target)
+void http_response_print(http_response_t *d)
 {
-    ssize_t err = client_send_buf(target, request->raw.start, buffer_used(&request->raw));
-    if (err == 0) {
-        coroutine_log_error("Failed to send request: socket closed");
-        return ERROR;
-    }
-    if (err == -1) {
-        coroutine_log_error("Falied to send request: %s", strerror(errno));
-        return ERROR;
+    printf("HTTP/1.%d %d %.*s\n", 
+           d->minor_version, 
+           d->status, 
+           (int)d->msg_len, 
+           d->msg);
+
+    for (size_t i = 0; i < d->num_headers; i++) {
+        printf("%.*s: %.*s\n", 
+               (int)d->headers[i].name_len, d->headers[i].name,
+               (int)d->headers[i].value_len, d->headers[i].value);
     }
 
-    return OK;
+    printf("\n");
 }
 
-int http_response_read(http_response_t *response, fdwatcher_t *source)
+struct phr_header *http_find_header(struct phr_header *headers,
+                                    size_t num_headers, const char *name) {
+    for (size_t i = 0; i < num_headers; ++i) {
+        if (memcmp(headers[i].name, name, headers[i].name_len) == 0) {
+            return &headers[i];
+        }
+    }
+
+    return NULL;
+}
+
+ bool http_response_is_chunked(http_response_t *response)
 {
-    int err;
-
-    err = read_header(&response->raw, source);
-    if (err != OK) {
-        http_response_destroy(response);
-        return ERROR;
+    struct phr_header *hdr = http_find_header(response->headers,
+                                         response->num_headers,
+                                         "Transfer-Encoding");
+    if (!hdr) {
+        return false;
     }
 
-    err = read_till_socket_close(&response->raw, source);
-    if (err != OK) {
-        http_response_destroy(response);
-        return ERROR;
-    }
-
-    /* treat response as a string */
-    buffer_add(&response->raw, "\0", 1);
-
-    return OK;
+    return memcmp(hdr->value, "chunked", hdr->value_len) == 0;
 }
 
-int http_response_send(const http_response_t *response, fdwatcher_t *target)
+bool http_get_content_length(struct phr_header *headers, size_t num_headers,
+                             size_t *value)
 {
-    ssize_t err = client_send_buf(target, response->raw.start, buffer_used(&response->raw));
-    if (err == 0) {
-        coroutine_log_error("Failed to send response: socket closed");
-        return ERROR;
-    }
-    if (err == -1) {
-        coroutine_log_error("Falied to send response: %s", strerror(errno));
-        return ERROR;
+    struct phr_header *hdr = http_find_header(headers, num_headers,
+                                              "Content-Length");
+    if (!hdr) {
+        return false;
     }
 
-    return OK;
+    *value = strtoull_n(hdr->value, hdr->value_len);
+    return true;
 }
 
-void http_response_destroy(http_response_t *response)
+const char *http_request_get_host(http_request_t *request)
 {
-    buffer_free(&response->raw);
-}
+    struct phr_header *host_hdr = http_find_header(request->headers,
+                                              request->num_headers, "Host");
 
+    /* Host header is mandatory in HTTP 1.1 */
+    assert(host_hdr);
+
+    const char *dup = strndup(host_hdr->value, host_hdr->value_len);
+    if (!dup) {
+        coroutine_log_fatal("out of memory");
+        abort();
+    }
+
+    return dup;
+}

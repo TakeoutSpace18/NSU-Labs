@@ -4,7 +4,7 @@
 #include "server.h"
 #include "c.h"
 
-void proxy_main(void);
+void proxy_main(void *arg);
 
 #endif /* !SOCKS5_H */
 

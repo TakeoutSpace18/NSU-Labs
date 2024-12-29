@@ -17,8 +17,11 @@ subdir('server')
 executable('http-proxy', [
     'main.c',
     'proxy.c',
+    'cache.c',
     'http.c',
+    'connection.c',
+    'utils.c',
   ],
   include_directories : toplevel_include,
-  dependencies : [libcares, common, server, log_c]
+  dependencies : [libcares, common, server, log_c, picohttpparser]
 )

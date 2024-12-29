@@ -41,7 +41,7 @@ void coroutine_log(int level, const char *file, int line, const char *fmt, ...)
 {
     coroutine_t *current = __current_coroutine;
 
-    static char extended_fmt[512] = { 0 };
+    char extended_fmt[512];
     snprintf(extended_fmt, 512, "[%s] %s", current->name ? current->name : "???", fmt);
 
     va_list ap;

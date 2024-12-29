@@ -7,7 +7,7 @@ static void hashmap_bucket_init(hashmap_bucket_t *bucket) {
     dynarray_create(&bucket->entries, sizeof(hashmap_entry_t));
 }
 
-static inline void *hashmap_locate_bucket(const hashmap_t *hm, void *key)
+static inline void *hashmap_locate_bucket(const hashmap_t *hm, const void *key)
 {
     size_t bucket_index = hm->hashfunc(key) % dynarray_size(&hm->buckets);
     return dynarray_at(&hm->buckets, bucket_index);
@@ -81,7 +81,7 @@ int hashmap_insert(hashmap_t *hm, void *key, void *value)
     return OK;
 }
 
-void *hashmap_find(hashmap_t *hm, void *key)
+void *hashmap_find(const hashmap_t *hm, const void *key)
 {
     hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, key);
     pthread_mutex_lock(&bucket->lock);
@@ -98,7 +98,7 @@ void *hashmap_find(hashmap_t *hm, void *key)
     return NULL;
 }
 
-int hashmap_remove(hashmap_t *hm, void *key)
+int hashmap_remove(hashmap_t *hm, const void *key)
 {
     hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, key);
     pthread_mutex_lock(&bucket->lock);

@@ -108,13 +108,9 @@ on_getaddrinfo_finish_cb(void *arg, int status, int timeouts,
     req->done = true;
 
     /* return control to client that issued the request */
-    // if (IN_CLIENT_CONTEXT) {
-    //     assert(0);
-    //     client_switch_to_loop(req->source_client);
-    // }
-    // else {
+    if (!IN_CLIENT_CONTEXT) {
         loop_switch_to_client(req->source_client);
-    // }
+    }
 }
 
 /* should be called from client context */

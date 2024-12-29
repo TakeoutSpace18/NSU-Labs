@@ -59,7 +59,7 @@ static inline int buffer_ensure(buffer_t *buf, int size)
 	char *p;
 	p = realloc(buf->start, sz);
 	if (p == NULL)
-		return ERROR;
+		return ENOMEM;
 
 	buf->pos = p + (buf->pos - buf->start);
 	buf->end = p + sz;

@@ -2,41 +2,54 @@
 #define HTTP_H
 
 #include "c.h"
-#include "client_context.h"
-#include "buffer.h"
+#include "picohttpparser.h"
+
+#define MAX_HEADERS 100
 
 typedef struct http_request {
-    buffer_t raw;
-    char method[16];
-    char version[16];
-    char *target;
+    const char *method;
+    size_t method_len;
+    const char *path;
+    size_t path_len;
+    int minor_version;
+    struct phr_header headers[MAX_HEADERS];
+    size_t num_headers;
 } http_request_t;
 
-int http_request_read(http_request_t *request, fdwatcher_t *source);
-int http_request_send(const http_request_t *request, fdwatcher_t *target);
-void http_request_destroy(http_request_t *request);
-
-static inline char *http_request_get_method(http_request_t *request)
-{
-    return request->method;
-}
-
-static inline char *http_request_get_target(http_request_t *request)
-{
-    return request->target;
-}
-
-static inline char *http_request_get_get_version(http_request_t *request)
-{
-    return request->version;
-}
-
 typedef struct http_response {
-    buffer_t raw;
+    int minor_version;
+    int status;
+    const char *msg;
+    size_t msg_len;
+    struct phr_header headers[MAX_HEADERS];
+    size_t num_headers;
 } http_response_t;
 
-int http_response_read(http_response_t *response, fdwatcher_t *source);
-int http_response_send(const http_response_t *response, fdwatcher_t *target);
-void http_response_destroy(http_response_t *response);
+
+int http_parse_chunk(void *buf, size_t len);
+
+/* returns number of bytes consumed if successful, -2 if request is partial,
+ * -1 if failed */
+int http_parse_request(http_request_t *request, const char *buf_start,
+                       size_t len, size_t last_len);
+
+/* returns number of bytes consumed if successful, -2 if response is partial,
+ * -1 if failed */
+int http_parse_response(http_response_t *response, const char *buf_start,
+                        size_t len, size_t last_len);
+
+struct phr_header *http_find_header(struct phr_header *headers,
+                                    size_t num_headers, const char *name);
+
+bool http_response_is_chunked(http_response_t *parsed);
+  
+bool http_get_content_length(struct phr_header *headers, size_t num_headers,
+                             size_t *value);
+
+/* returns malloced string */
+const char *http_request_get_host(http_request_t *parsed);
+
+void http_request_print(http_request_t *request);
+void http_response_print(http_response_t *request);
 
 #endif /* HTTP_H */

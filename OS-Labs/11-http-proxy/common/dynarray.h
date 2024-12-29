@@ -10,7 +10,7 @@ typedef struct dynarray {
     size_t elem_size;
     size_t size;
     size_t capacity;
-    void **data;
+    char *data;
 } dynarray_t;
 
 #define dynarray_foreach(obj, array) \
@@ -34,7 +34,7 @@ dynarray_reserve(dynarray_t *ar, size_t capacity)
         return OK;
     }
 
-    void **p = realloc(ar->data, capacity * ar->elem_size);
+    char *p = realloc(ar->data, capacity * ar->elem_size);
     if (!p) {
         return ENOMEM;
     }
@@ -105,7 +105,7 @@ dynarray_emplace_back(dynarray_t *ar)
         }
     }
 
-    void *obj = &ar[ar->size * ar->elem_size];
+    void *obj = &ar->data[ar->size * ar->elem_size];
     ar->size++;
 
     return obj;

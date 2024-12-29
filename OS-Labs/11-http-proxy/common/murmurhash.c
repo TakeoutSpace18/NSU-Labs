@@ -8,7 +8,7 @@
 static
 const hash_t seed = 0xdeadbeef;
 
-hash_t murmurhash1(const void * data, int len) {
+hash_t murmurhash1(const void *ptr, int len) {
     const unsigned int m = 0xc6a4a793;
 
     const int r = 16;
@@ -17,7 +17,7 @@ hash_t murmurhash1(const void * data, int len) {
 
     //----------
 
-    const unsigned char * data = (const unsigned char * ) key;
+    const unsigned char * data = (const unsigned char * ) ptr;
 
     while (len >= 4) {
         unsigned int k = * (unsigned int * ) data;

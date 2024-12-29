@@ -15,12 +15,12 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
-
+#include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/socket.h>
-#include <fcntl.h>
+#include <sys/ioctl.h>
 
 /* only GCC supports the unused attribute */
 #ifdef __GNUC__

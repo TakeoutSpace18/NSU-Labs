@@ -13,9 +13,9 @@
 #define MAX_CLIENT_FDWATCHERS 5
 #define FDWATCHER_DEFAULT_BUFFER_SZ 512
 
-typedef void (*client_routine_t)(void);
+typedef void (*client_routine_t)(void *);
 
-typedef struct fdwatcher {
+typedef struct client_fdwatcher {
     struct ev_io io;
 
     /* buffer is used for recv_until request for saving
@@ -44,7 +44,7 @@ typedef struct client_context {
 } client_context_t;
 
 #define RUNNING_CLIENT (client_context_t *) coroutine_get_current()->data
-#define IN_CLIENT_CONTEXT (g_running_client != NULL)
+#define IN_CLIENT_CONTEXT (coroutine_get_current()->data != NULL)
 
 /* access holder structure from watcher pointer */
 #define io_w_2_client(p) container_of(p, client_context_t, io_watcher)
@@ -52,6 +52,7 @@ typedef struct client_context {
 #define wakeup_w_2_client(p) container_of(p, client_context_t, wakeup_watcher)
 
 int client_context_create(client_context_t *cc, client_routine_t routine,
+                          void *routine_arg,
                           int sockfd, const char *descr,
                           worker_thread_t *worker);
 
@@ -98,8 +99,8 @@ ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags);
  *      size, on success 
  *      0, on closed socket,
  *      -1, on other error (sets errno) */
-ssize_t client_recv_buf(fdwatcher_t *fdw, void *buf, size_t size);
-ssize_t client_send_buf(fdwatcher_t *fdw, void *buf, size_t size);
+ssize_t client_recv_all(fdwatcher_t *fdw, void *buf, size_t size);
+ssize_t client_send_all(fdwatcher_t *fdw, void *buf, size_t size);
 
 #define NODATA (-2)
 
@@ -136,6 +137,8 @@ static inline void client_fd_setevents(fdwatcher_t *fdw, int events)
     ev_io_start(loop, &fdw->io);
 }
 
+bool fdwatcher_read_pending(fdwatcher_t *fdw);
+
 static inline int client_fd_getevents(fdwatcher_t *fdw)
 {
     return fdw->io.events;
@@ -146,6 +149,5 @@ static inline fdwatcher_t *client_fdwatcher(void)
     client_context_t *c = RUNNING_CLIENT;
     return &c->fdwatchers[0];
 }
-
 
 #endif /* CLIENT_CONTEXT_H */

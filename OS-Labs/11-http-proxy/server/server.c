@@ -80,12 +80,13 @@ fail:
 }
 
 int server_create(server_t *s, uint16_t port, client_routine_t routine,
-                size_t nr_workers)
+                  void *routine_arg, size_t nr_workers)
 {
     /* to avoid terminating whole server on SIGPIPE caused by some send */
     ignore_sigpipe();
 
     s->client_routine = routine;
+    s->client_routine_arg = routine_arg;
 
     int sockfd;
     if (create_listening_socket(port, &sockfd) == -1) {
@@ -168,6 +169,7 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
     }
 
     int err = client_context_create(new_client, server->client_routine,
+                                    server->client_routine_arg,
                                     sockfd, descr_buf, worker);
     if (err != OK) {
         free(new_client);

@@ -68,12 +68,13 @@ static void remove_fdwatcher(client_context_t *cc, fdwatcher_t *fdw)
 }
 
 int client_context_create(client_context_t *cc, client_routine_t routine,
+                          void *routine_arg,
                           int sockfd, const char *descr,
                           worker_thread_t *worker)
 {
     cc->worker_p = worker;
 
-    if (coroutine_create(&cc->coroutine, (coroutine_func_t) routine, NULL) != OK) {
+    if (coroutine_create(&cc->coroutine, (coroutine_func_t) routine, routine_arg) != OK) {
         log_error("Failed to create coroutine");
         return ERROR;
     }
@@ -89,7 +90,7 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
     worker_thread_begin_async_modify(worker);
 
     cc->nr_fdwatchers = 0;
-    fdwatcher_create_internal(cc, sockfd, EV_READ | EV_WRITE);
+    fdwatcher_create_internal(cc, sockfd, 0);
 
     ev_async_init(&cc->drop_watcher, on_client_drop_cb);
     ev_async_start(worker_thread_get_loop(cc->worker_p), &cc->drop_watcher);
@@ -152,61 +153,67 @@ void attribute_noreturn() client_drop(void)
 
 ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags)
 {
+    int old_events = client_fd_getevents(fdw);
+    client_fd_setevents(fdw, EV_READ);
+
     ssize_t ret;
     for (;;) {
         ret = client_recv_nonblock(fdw, buf, size, flags);
-        if (ret == NODATA)
+        if (ret == NODATA) {
             client_yield();
-        else
+        }
+        else {
+            client_fd_setevents(fdw, old_events);
             return ret;
+        }
     }
+
 }
 
 ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags)
 {
+    int old_events = client_fd_getevents(fdw);
+    client_fd_setevents(fdw, EV_WRITE);
+
     ssize_t ret;
     for (;;) {
         ret = send(fdw->io.fd, buf, size, flags);
-        if (ret == -1 && errno == EAGAIN)
+        if (ret == -1 && errno == EAGAIN) {
             client_yield();
-        else
+        }
+        else {
+            client_fd_setevents(fdw, old_events);
             return ret;
+        }
     }
 }
 
-ssize_t client_recv_buf(fdwatcher_t *fdw, void *buf, size_t size)
+ssize_t client_recv_all(fdwatcher_t *fdw, void *buf, size_t size)
 {
-    int old_events = client_fd_getevents(fdw);
-    client_fd_setevents(fdw, EV_READ);
-
     for (size_t recv_size = 0; recv_size < size; ) {
         ssize_t ret = client_recv(fdw, (char *) buf + recv_size, size - recv_size, 0);
 
-        if (ret == -1 || ret == 0)
+        if (ret == -1 || ret == 0) {
             return ret;
+        }
 
         recv_size += ret;
     }
 
-    client_fd_setevents(fdw, old_events);
     return size;
 }
 
-ssize_t client_send_buf(fdwatcher_t *fdw, void *buf, size_t size)
+ssize_t client_send_all(fdwatcher_t *fdw, void *buf, size_t size)
 {
-    int old_events = client_fd_getevents(fdw);
-    client_fd_setevents(fdw, EV_WRITE);
-
     for (size_t sent_size = 0; sent_size < size; ) {
         ssize_t ret = client_send(fdw, (char *) buf + sent_size, size - sent_size, 0);
 
-        if (ret == -1 || ret == 0)
+        if (ret == -1 || ret == 0) {
             return ret;
+        }
 
         sent_size += ret;
     }
-
-    client_fd_setevents(fdw, old_events);
     return size;
 }
 
@@ -309,7 +316,7 @@ ssize_t client_recv_until(fdwatcher_t *fdw, void *buf, size_t size,
     return ret_size;
 }
 
-fdwatcher_t *client_fdwatcher_create(int fd, int revents)
+fdwatcher_t *client_fdwatcher_create(int fd, int events)
 {
     client_context_t *c = RUNNING_CLIENT;
 
@@ -320,13 +327,24 @@ fdwatcher_t *client_fdwatcher_create(int fd, int revents)
         return NULL;
     }
 
-    return fdwatcher_create_internal(c, fd, revents);
+    return fdwatcher_create_internal(c, fd, events);
 }
 
 void client_fdwatcher_destroy(fdwatcher_t *fdw)
 {
     client_context_t *c = RUNNING_CLIENT;
     remove_fdwatcher(c, fdw);
+}
+
+bool fdwatcher_read_pending(fdwatcher_t *fdw)
+{
+    size_t bytes_pending;
+	int ret = ioctl(fdw->io.fd, FIONREAD, &bytes_pending);
+	if (ret == -1) {
+		return -1;
+	}
+
+	return bytes_pending > 0;
 }
 
 static void on_client_async_wakeup_cb(EV_P_ ev_async *w, int revents)

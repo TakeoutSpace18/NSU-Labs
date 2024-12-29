@@ -8,7 +8,7 @@ typedef uint32_t hash_t;
 
 typedef void (*hashmap_destructor_t)(void *data);
 typedef hash_t (*hashmap_hashfunc_t)(const void *key);
-typedef hash_t (*hashmap_key_comparator_t)(const void *lhs, const void *rhs);
+typedef int (*hashmap_key_comparator_t)(const void *lhs, const void *rhs);
 
 typedef struct hashmap_entry {
     void *key;
@@ -37,10 +37,10 @@ void hashmap_destroy(hashmap_t *hm);
 int hashmap_insert(hashmap_t *hm, void *key, void *value);
 
 /* thread-safe */
-int hashmap_remove(hashmap_t *hm, void *key);
+int hashmap_remove(hashmap_t *hm, const void *key);
 
 /* thread-safe */
-void *hashmap_find(hashmap_t *hm, void *key);
+void *hashmap_find(const hashmap_t *hm, const void *key);
 
 static inline void
 hashmap_set_key_destructor(hashmap_t *hm, hashmap_destructor_t d)
