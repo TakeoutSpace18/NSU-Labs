@@ -1,6 +1,5 @@
 common_sources = files(
   'hashmap.c',
-  'buffer.c',
   'murmurhash.c'
 )
 

@@ -25,8 +25,10 @@ typedef struct http_response {
     size_t num_headers;
 } http_response_t;
 
-
-int http_parse_chunk(void *buf, size_t len);
+typedef struct http_chunk {
+    size_t len;
+    const char *data;
+} http_chunk_t;
 
 /* returns number of bytes consumed if successful, -2 if request is partial,
  * -1 if failed */
@@ -37,6 +39,10 @@ int http_parse_request(http_request_t *request, const char *buf_start,
  * -1 if failed */
 int http_parse_response(http_response_t *response, const char *buf_start,
                         size_t len, size_t last_len);
+
+/* returns number of bytes consumed if successful, -1 if failed */
+int http_parse_chunks(http_chunk_t *chunks, size_t max_chunks,
+                      size_t *num_chunks, const char *buf, size_t len);
 
 struct phr_header *http_find_header(struct phr_header *headers,
                                     size_t num_headers, const char *name);

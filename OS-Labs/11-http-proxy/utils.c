@@ -1,7 +1,7 @@
 #include "utils.h"
 #include "c.h"
 
-size_t strtoull_n(const char *str, size_t n) {
+size_t strtoull_n(const char *str, size_t n, size_t base) {
     if (str == NULL || n == 0) {
         return 0;
     }
@@ -12,5 +12,5 @@ size_t strtoull_n(const char *str, size_t n) {
     memcpy(temp, str, n);
     temp[n] = '\0';
 
-    return strtoull(temp, NULL, 10);
+    return strtoull(temp, NULL, base);
 }

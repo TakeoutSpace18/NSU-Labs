@@ -27,6 +27,36 @@ int http_parse_response(http_response_t *r, const char *buf_start,
                               last_len);
 }
 
+int http_parse_chunks(http_chunk_t *chunks, size_t max_chunks,
+                      size_t *num_chunks, const char *buf, size_t len)
+{
+    *num_chunks = 0;
+    size_t bytes_consumed = 0;
+    const char *pos = buf;
+    while (true) {
+        if (*num_chunks == max_chunks) {
+            break;
+        }
+
+        const char *crlf = strstr(pos, "\r\n");
+        if (crlf == NULL) {
+            break;
+        }
+        chunks[*num_chunks].len = strtoull_n(pos, crlf - pos, 16);
+        chunks[*num_chunks].data = crlf + 2;
+
+        if (crlf + 2 + chunks[*num_chunks].len + 2 > buf + len) {
+            break;
+        }
+
+        bytes_consumed += crlf - pos + 2 + chunks[*num_chunks].len + 2;
+        pos = chunks[*num_chunks].data + chunks[*num_chunks].len + 2;
+        *num_chunks += 1;
+    }
+
+    return bytes_consumed;
+}
+
 void http_request_print(http_request_t *d)
 {
     printf("%.*s %.*s HTTP/1.%d\n",
@@ -92,7 +122,7 @@ bool http_get_content_length(struct phr_header *headers, size_t num_headers,
         return false;
     }
 
-    *value = strtoull_n(hdr->value, hdr->value_len);
+    *value = strtoull_n(hdr->value, hdr->value_len, 10);
     return true;
 }
 

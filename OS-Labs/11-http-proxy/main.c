@@ -18,12 +18,12 @@ typedef struct proxy_globals {
 static void
 do_help(void)
 {
-    printf("HTTP Proxy");
+    printf("HTTP Proxy\n");
     printf("Options:\n");
-    printf("\t-p, --port\tproxy server port (8080 by default)\n");
-    printf("\t-l, --log-level\tlogging level (0 - TRACE, 5 - FATAL)\n");
-    printf("\t-j, --jobs\t number of worker threads\n");
-    printf("\t-c, --cache-size\t max size of in-memory cache (MB)\n");
+    printf("\t-p, --port\t\tproxy server port (8080 by default)\n");
+    printf("\t-l, --log-level\t\tlogging level (0 - TRACE, 5 - FATAL)\n");
+    printf("\t-j, --jobs\t\tnumber of worker threads\n");
+    printf("\t-c, --cache-size\tmax size of in-memory cache (MB)\n");
     printf("\t-h, --help\n");
 }
 
@@ -72,6 +72,11 @@ main(int argc, char** argv)
                 /* getopt_long already issued a suitable error message */
                 exit(EXIT_FAILURE);
         }
+    }
+
+    if (nr_workers == 0) {
+        log_error("--jobs should not be zero");
+        return EXIT_FAILURE;
     }
 
     cache_t cache;

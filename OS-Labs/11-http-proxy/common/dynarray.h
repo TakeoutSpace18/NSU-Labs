@@ -15,7 +15,7 @@ typedef struct dynarray {
 
 #define dynarray_foreach(obj, array) \
 for ((obj) = (void *)(array)->data; \
-     (void **)(obj) < (array)->data + ((array)->size * (array)->elem_size); \
+     (char *)(obj) < (array)->data + ((array)->size * (array)->elem_size); \
      (obj) = (void *)((char *)(obj) + (array)->elem_size))
 
 static inline size_t __dynarray_grow(size_t n) {

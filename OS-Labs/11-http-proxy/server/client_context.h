@@ -88,7 +88,7 @@ void client_fdwatcher_destroy(fdwatcher_t *fdw);
  *      0, on closed socket,
  *      -1, on other error (sets errno) */
 ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags);
-ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags);
+ssize_t client_send(fdwatcher_t *fdw, const void *buf, size_t size, int flags);
 
 /* Receive or send buffer of given size.
  * Client blocks and waits until whole buffer is tramsmitted.
@@ -100,9 +100,7 @@ ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags);
  *      0, on closed socket,
  *      -1, on other error (sets errno) */
 ssize_t client_recv_all(fdwatcher_t *fdw, void *buf, size_t size);
-ssize_t client_send_all(fdwatcher_t *fdw, void *buf, size_t size);
-
-#define NODATA (-2)
+ssize_t client_send_all(fdwatcher_t *fdw, const void *buf, size_t size);
 
 /* Receive or send data, returns NODATA if it would block. 
  * Clients can use client_yield() to implement custom logic
@@ -113,9 +111,11 @@ ssize_t client_send_all(fdwatcher_t *fdw, void *buf, size_t size);
  *      num of bytes read or sent, on success
  *      0, on closed socket,
  *      -1, on other error (sets errno)
- *      NODATA, if the call would block */
+ *      -EAGAIN, if the call would block */
 ssize_t client_recv_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags);
-ssize_t client_send_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags);
+ssize_t client_send_nonblock(fdwatcher_t *fdw, const void *buf, size_t size, int flags);
+
+#define NODATA -2
 
 /* Receive data until delimeter is found
  * RETURNS:

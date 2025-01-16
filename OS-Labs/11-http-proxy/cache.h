@@ -2,6 +2,7 @@
 #define CACHE_H
 
 #include <pthread.h>
+#include <stdatomic.h>
 
 #include "client_cond.h"
 #include "hashmap.h"
@@ -16,38 +17,33 @@ typedef struct cache {
 typedef struct cache_entry {
     client_cond_t data_available;
     buffer_t data;
+    _Atomic bool is_finished;
     cache_t *cache_p;
     pthread_rwlock_t lock;
+    atomic_int ref_count;
 } cache_entry_t;
 
 int cache_create(cache_t *cache, size_t max_size_bytes);
 void cache_destroy(cache_t *cache);
 
-int cache_add_entry(cache_t *cache, buffer_t *key, cache_entry_t *entry);
+/* methods for adding data to cache */
 
-static inline cache_entry_t *
-cache_get_entry(const cache_t *cache, const buffer_t *key)
-{
-    assert(cache);
-    return hashmap_find(&cache->entries, key);
-}
-
-/* TODO: lock cache entry for reading, 
- * add state: FINISHED or IN_PROGRESS,
- * invalidate cache entry on broken pipe*/
-
-cache_entry_t *cache_entry_create(cache_t *cache);
-void cache_entry_destroy(cache_entry_t **entry);
-
+cache_entry_t *cache_add_entry(cache_t *cache, buffer_t *key);
 void cache_entry_append_data(cache_entry_t *entry, void *p, size_t len);
+void cache_entry_finished(cache_entry_t *entry);
 
-/* wait for more data to become available */
-void cache_entry_data_wait(cache_entry_t *entry);
+int cache_remove_entry(cache_t *cache, buffer_t *key);
 
-static inline size_t cache_entry_size(const cache_entry_t *entry)
-{
-    assert(entry);
-    return buffer_used(&entry->data);
-}
+/* methods for reading data from cache */
+
+cache_entry_t *cache_get_entry(const cache_t *cache, const buffer_t *key);
+void cache_entry_put(cache_entry_t *entry);
+const buffer_t *cache_entry_read_begin(cache_entry_t *entry);
+void cache_entry_read_end(cache_entry_t *entry);
+
+/* Wait for more data to become available.
+ * Returns OK if new data is available,
+ * ERROR if cache entry is full and no more data will be appended. */
+int cache_entry_wait(cache_entry_t *entry);
 
 #endif /* !CACHE_H */

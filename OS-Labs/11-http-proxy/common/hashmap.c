@@ -108,6 +108,13 @@ int hashmap_remove(hashmap_t *hm, const void *key)
         if (hm->key_cmp(entry->key, key) == 0) {
             dynarray_remove(&bucket->entries, i);
             pthread_mutex_unlock(&bucket->lock);
+
+            if (hm->key_destructor) {
+                hm->key_destructor(entry->key);
+            }
+            if (hm->value_destructor) {
+                hm->value_destructor(entry->value);
+            }
             return OK;
         }
     }

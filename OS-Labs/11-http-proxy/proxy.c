@@ -21,8 +21,6 @@ static inline void out_of_memory(void) {
 
 static bool proxy_request_is_cacheable(http_request_t *r)
 {
-    return false;
-
     return memcmp(r->method, "GET", r->method_len) == 0
         || memcmp(r->method, "HEAD", r->method_len) == 0;
 }
@@ -62,6 +60,8 @@ static int proxy_recv_request_header(buffer_t *buf, http_request_t *parsed,
 
         if (pret > 0) {
             /* request is complete, set it's final length */
+            /* Some part of request body may be also received to buf,
+             * but proxying request bodies is not implemented in this version. */
             buffer_set_used(buf, pret);
             return OK;
         }
@@ -168,7 +168,7 @@ static ssize_t proxy_send(fdwatcher_t *target, void *p, size_t len)
     return rret;
 }
 
-static ssize_t proxy_send_all(fdwatcher_t *target, void *p, size_t len)
+static ssize_t proxy_send_all(fdwatcher_t *target, const void *p, size_t len)
 {
     ssize_t rret = client_send_all(target, p, len);
 
@@ -199,7 +199,78 @@ static int proxy_forward_chunked(buffer_t *buf, size_t header_len,
                                  fdwatcher_t *host, fdwatcher_t *client,
                                  cache_entry_t *cache_entry)
 {
-    coroutine_log_error("Chunked encoding is not supported");
+    if (proxy_send_buffer(buf, client) != OK) {
+        goto error;
+    }
+
+    if (cache_entry) {
+        cache_entry_append_data(cache_entry, buf->start, buffer_used(buf));
+    }
+
+    size_t nread = 16384;
+    http_chunk_t chunks[32];
+    size_t n_parsed = header_len;
+
+    while (true) {
+        size_t num_chunks;
+        ssize_t pret = http_parse_chunks(chunks, 32, &num_chunks,
+                                         buf->start + n_parsed,
+                                         buffer_used(buf) - n_parsed);
+
+        if (pret == -1) {
+            coroutine_log_error("Failed to forward: can't parse chunked encoding");
+            goto error;
+        }
+        else {
+            n_parsed += pret;
+        }
+
+        /* finish on zero chunk */
+        if (num_chunks >= 1 && chunks[num_chunks - 1].len == 0) {
+            break;
+        }
+
+
+        if (buffer_ensure(buf, nread) == ENOMEM) {
+            out_of_memory();
+        }
+        ssize_t rret = proxy_recv(host, buf->pos, buffer_unused(buf));
+
+        if (rret == 0) {
+            coroutine_log_error("Failed to forward: host closed socket");
+            goto error;
+        }
+        else if (rret == -1) {
+            goto error;
+        }
+
+        assert(rret > 0);
+
+        ssize_t sret = proxy_send_all(client, buf->pos, rret);
+        if (sret == 0) {
+            coroutine_log_error("Failed to forward: client closed socket");
+            goto error;
+        }
+        else if (sret != rret) {
+            goto error;
+        }
+
+        if (cache_entry) {
+            cache_entry_append_data(cache_entry, buf->pos, rret);
+        }
+
+        buffer_advance(buf, rret);
+    }
+
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
+    return OK;
+
+error:
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
     return ERROR;
 }
 
@@ -208,7 +279,7 @@ static int proxy_forward_fixed_len(buffer_t *buf, size_t len,
                                  cache_entry_t *cache_entry)
 {
     if (proxy_send_buffer(buf, client) != OK) {
-        return ERROR;
+        goto error;
     }
 
     if (cache_entry) {
@@ -226,22 +297,22 @@ static int proxy_forward_fixed_len(buffer_t *buf, size_t len,
         ssize_t rret = proxy_recv(host, buf->start, FORWARD_BUFFER_SIZE);
 
         if (rret == 0) {
-            coroutine_log_error("Failed to forward: socket closed");
-            return ERROR;
+            coroutine_log_error("Failed to forward: host socket closed");
+            goto error;
         }
         else if (rret == -1) {
-            return ERROR;
+            goto error;
         }
 
         assert(rret > 0);
 
         ssize_t sret = proxy_send_all(client, buf->start, rret);
         if (sret == 0) {
-            coroutine_log_error("Failed to forward: client closed socket");
-            return ERROR;
+            coroutine_log_error("Failed to forward: client socket closed");
+            goto error;
         }
         else if (sret != rret) {
-            return ERROR;
+            goto error;
         }
 
         if (cache_entry) {
@@ -251,7 +322,16 @@ static int proxy_forward_fixed_len(buffer_t *buf, size_t len,
         total_size += rret;
     }
 
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
     return OK;
+
+error:
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
+    return ERROR;
 }
 
 static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
@@ -259,7 +339,7 @@ static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
                                          cache_entry_t *cache_entry)
 {
     if (proxy_send_buffer(buf, client) != OK) {
-        return ERROR;
+        goto error;
     }
 
     if (cache_entry) {
@@ -275,10 +355,10 @@ static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
         ssize_t rret = proxy_recv(host, buf->start, FORWARD_BUFFER_SIZE);
 
         if (rret == 0) {
-            return OK;
+            goto finish;
         }
         else if (rret == -1) {
-            return ERROR;
+            goto error;
         }
 
         assert(rret > 0);
@@ -286,10 +366,10 @@ static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
         ssize_t sret = proxy_send_all(client, buf->start, rret);
         if (sret == 0) {
             coroutine_log_error("Failed to forward: client closed socket");
-            return ERROR;
+            goto error;
         }
         else if (sret != rret) {
-            return ERROR;
+            goto error;
         }
 
         if (cache_entry) {
@@ -297,14 +377,69 @@ static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
         }
     }
 
+finish:
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
     return OK;
+
+error:
+    if (cache_entry) {
+        cache_entry_finished(cache_entry);
+    }
+    return ERROR;
 }
 
 static int proxy_send_response_from_cache(cache_entry_t *cache_entry,
                                           fdwatcher_t *client)
 {
-    /* not implemented yet */
+    size_t sent_total = 0;
+    for (;;) {
+        const buffer_t *buf = cache_entry_read_begin(cache_entry);
 
+        const char *chunk = buf->start + sent_total;
+        ssize_t chunk_size = buffer_used(buf) - sent_total;
+
+        client_fd_setevents(client, EV_WRITE);
+        ssize_t sret = client_send_nonblock(client, chunk, chunk_size, 0);
+        cache_entry_read_end(cache_entry);
+
+
+        if (sret == -EAGAIN) {
+            client_yield();
+        }
+        else if (sret == 0) {
+            coroutine_log_error("Failed to send response from cache: "
+                                "client socket closed");
+            goto error;
+        }
+        else if (sret == -1) {
+            coroutine_log_error("Failed to send response from cache: %s",
+                                strerror(errno));
+            goto error;
+        }
+        else {
+            sent_total += sret;
+            coroutine_log_trace("Sent %zi cached bytes", sret);
+            if (sent_total == buffer_used(buf)) {
+                /* wait for more data to appear in cache entry */
+                client_fd_setevents(client, 0);
+                if (cache_entry_wait(cache_entry) != OK) {
+                    /* check again if new data appeared before entry was finished */
+                    if (sent_total == buffer_used(buf)) {
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+    
+    client_fd_setevents(client, 0);
+    return OK;
+
+error:
+    client_fd_setevents(client, 0);
     return ERROR;
 }
 
@@ -379,17 +514,19 @@ void attribute_noreturn() proxy_main(void *arg)
 
     if (cache_entry) {
         /* request is present in cache */
-        proxy_send_response_from_cache(cache_entry, client_fdwatcher());
+        coroutine_log_debug("Request found in cache");
+        err = proxy_send_response_from_cache(cache_entry, client_fdwatcher());
+        cache_entry_put(cache_entry);
+
+        if (err != OK) {
+            goto finish;
+        }
     }
     else {
         if (proxy_request_is_cacheable(&request)) {
-            cache_entry = cache_entry_create(cache);
+            coroutine_log_debug("Adding cache entry");
+            cache_entry = cache_add_entry(cache, buf);
             if (!cache_entry) {
-                goto finish;
-            }
-
-            err = cache_add_entry(cache, buf, cache_entry);
-            if (err != OK) {
                 goto finish;
             }
 
@@ -409,7 +546,11 @@ void attribute_noreturn() proxy_main(void *arg)
             goto finish;
         }
 
-        proxy_send_response_from_host(cache_entry, host.watcher, client_fdwatcher());
+        err = proxy_send_response_from_host(cache_entry, host.watcher, client_fdwatcher());
+        if (err != OK && cache_entry != NULL) {
+            cache_remove_entry(cache, buf);
+            coroutine_log_debug("Removed entry from cache");
+        }
         disconnect(&host);
     }
 

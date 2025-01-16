@@ -159,7 +159,7 @@ ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags)
     ssize_t ret;
     for (;;) {
         ret = client_recv_nonblock(fdw, buf, size, flags);
-        if (ret == NODATA) {
+        if (ret == -EAGAIN) {
             client_yield();
         }
         else {
@@ -170,15 +170,15 @@ ssize_t client_recv(fdwatcher_t *fdw, void *buf, size_t size, int flags)
 
 }
 
-ssize_t client_send(fdwatcher_t *fdw, void *buf, size_t size, int flags)
+ssize_t client_send(fdwatcher_t *fdw, const void *buf, size_t size, int flags)
 {
     int old_events = client_fd_getevents(fdw);
     client_fd_setevents(fdw, EV_WRITE);
 
     ssize_t ret;
     for (;;) {
-        ret = send(fdw->io.fd, buf, size, flags);
-        if (ret == -1 && errno == EAGAIN) {
+        ret = client_send_nonblock(fdw, buf, size, flags);
+        if (ret == -EAGAIN) {
             client_yield();
         }
         else {
@@ -203,7 +203,7 @@ ssize_t client_recv_all(fdwatcher_t *fdw, void *buf, size_t size)
     return size;
 }
 
-ssize_t client_send_all(fdwatcher_t *fdw, void *buf, size_t size)
+ssize_t client_send_all(fdwatcher_t *fdw, const void *buf, size_t size)
 {
     for (size_t sent_size = 0; sent_size < size; ) {
         ssize_t ret = client_send(fdw, (char *) buf + sent_size, size - sent_size, 0);
@@ -240,19 +240,19 @@ ssize_t client_recv_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags
     for (;;) {
         ret = recv(fdw->io.fd, buf, size, flags);
         if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-            return NODATA;
+            return -EAGAIN;
         else
             return ret;
     }
 }
 
-ssize_t client_send_nonblock(fdwatcher_t *fdw, void *buf, size_t size, int flags)
+ssize_t client_send_nonblock(fdwatcher_t *fdw, const void *buf, size_t size, int flags)
 {
     ssize_t ret;
 
     ret = send(fdw->io.fd, buf, size, flags);
     if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-        return NODATA;
+        return -EAGAIN;
     else
         return ret;
 }

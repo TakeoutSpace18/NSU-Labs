@@ -36,6 +36,11 @@ static inline size_t buffer_used(const buffer_t *buf)
 	return buf->pos - buf->start;
 }
 
+static inline void buffer_set_used(buffer_t *buf, size_t used)
+{
+    buf->pos = buf->start + used;
+}
+
 static inline size_t buffer_unused(const buffer_t *buf)
 {
 	return buf->end - buf->pos;

@@ -4,6 +4,66 @@
 #include "client_context.h"
 #include "coroutine.h"
 
+#include <ares.h>
+#include <ev.h>
+
+static int wait_for_connection(connection_t *conn)
+{
+    /* connection in progress, return control to other coroutines */
+    client_fd_setevents(conn->watcher, EV_WRITE);
+    for (;;) {
+        client_yield();
+
+        int err;
+        socklen_t optlen = sizeof(err);
+        getsockopt(conn->sockfd, SOL_SOCKET, SO_ERROR, &err, &optlen);
+
+        if (err == EINPROGRESS) {
+            continue;
+        }
+        else if (err == 0) {
+            client_fd_setevents(conn->watcher, 0);
+            return OK;
+        }
+        else {
+            client_fd_setevents(conn->watcher, 0);
+            return ERROR;
+        }
+    }
+}
+
+static int try_connect_node(connection_t *conn, struct ares_addrinfo_node *node)
+{
+    int type = SOCK_STREAM | SOCK_NONBLOCK;
+    if ((conn->sockfd = socket(AF_INET, type, 0)) < 0) {
+        coroutine_log_error("Failed to create host socket: %s", strerror(errno));
+        return ERROR;
+    }
+
+    int cret = connect(conn->sockfd, node->ai_addr, node->ai_addrlen);
+    conn->watcher = client_fdwatcher_create(conn->sockfd, 0);
+    if (!conn->watcher) {
+        close(conn->sockfd);
+        return ERROR;
+    }
+
+    if (cret == 0) {
+        /* connected successfully */
+        return OK;
+    }
+    else if (cret == -1 && errno == EINPROGRESS) {
+        /* connection in progress */
+        return wait_for_connection(conn);
+    }
+    else {
+        /* connection failed */
+        client_fdwatcher_destroy(conn->watcher);
+        close(conn->sockfd);
+    }
+
+    return ERROR;
+}
+
 int connect_domain_name(connection_t *conn, const char *domain, uint16_t port) {
     struct ares_addrinfo *result = NULL;
 
@@ -25,17 +85,9 @@ int connect_domain_name(connection_t *conn, const char *domain, uint16_t port) {
     conn->sockfd = -1;
     struct ares_addrinfo_node *node;
     for (node = result->nodes; node != NULL; node = node->ai_next) {
-        if ((conn->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            coroutine_log_error("Failed to create host socket: %s", strerror(errno));
-            ares_freeaddrinfo(result);
-            return ERROR;
-        }
-
-        if (connect(conn->sockfd, node->ai_addr, node->ai_addrlen) == 0) {
+        if (try_connect_node(conn, node) == OK) {
             break;
         }
-
-        close(conn->sockfd);
     }
 
     if (node == NULL) {
@@ -45,12 +97,6 @@ int connect_domain_name(connection_t *conn, const char *domain, uint16_t port) {
     }
 
     ares_freeaddrinfo(result);
-
-    conn->watcher = client_fdwatcher_create(conn->sockfd, 0);
-    if (!conn->watcher) {
-        close(conn->sockfd);
-        return ERROR;
-    }
 
     coroutine_log_info("Connected to %s:%u", domain, port);
     return OK;
