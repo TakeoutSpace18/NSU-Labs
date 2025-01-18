@@ -1,3 +1,4 @@
+#include "dynarray.h"
 #define _GNU_SOURCE
 #include "server.h"
 
@@ -53,29 +54,29 @@ static inline void ignore_sigpipe(void)
 
 static int create_workers(server_t *s, size_t nr_workers)
 {
-    s->workers = malloc(nr_workers * sizeof(*s->workers));
-    if (!s->workers) {
+    dynarray_create(&s->workers, sizeof(worker_thread_t));
+    if (dynarray_reserve(&s->workers, nr_workers) != OK) {
         log_error("out of memory");
         return ERROR;
     }
 
     size_t created;
     for (size_t i = 0; i < nr_workers; ++i) {
-        if (worker_thread_create(&s->workers[i], i) != OK) {
+        worker_thread_t *worker = dynarray_emplace_back(&s->workers);
+        if (worker_thread_create(worker, i) != OK) {
             created = i;
             goto fail;
         }
     }
 
-    s->nr_workers = nr_workers;
     return OK;
 
 fail:
     for (size_t i = 0; i < created; i++) {
-        worker_thread_destroy(&s->workers[i]);
+        worker_thread_destroy(dynarray_at(&s->workers, i));
     }
 
-    free(s->workers);
+    dynarray_destroy(&s->workers);
     return ERROR;
 }
 
@@ -126,13 +127,13 @@ void server_run(server_t *s) {
     ev_run(s->loop, 0);
 }
 
-static worker_thread_t *choose_worker(worker_thread_t *workers, size_t nr_workers)
+static worker_thread_t *choose_worker(dynarray_t *workers)
 {
     static size_t last_chosen = 0;
 
-    size_t i = (last_chosen + 1) % nr_workers;
+    size_t i = (last_chosen + 1) % dynarray_size(workers);
     last_chosen = i;
-    return &workers[i];
+    return dynarray_at(workers, i);
 }
 
 static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
@@ -160,7 +161,7 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
     char descr_buf[SOCKADDR2STR_MAX_BUFSIZE];
     sockaddr2str((struct sockaddr *) &sa, sa_len, descr_buf);
 
-    worker_thread_t *worker = choose_worker(server->workers, server->nr_workers);
+    worker_thread_t *worker = choose_worker(&server->workers);
 
     client_context_t *new_client = malloc(sizeof(*new_client));
     if (!new_client) {

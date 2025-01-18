@@ -4,6 +4,7 @@
 #include <ev.h>
 
 #include "c.h"
+#include "dynarray.h"
 #include "worker_thread.h"
 #include "list.h"
 #include "client_context.h"
@@ -15,8 +16,7 @@ typedef struct server {
     struct ev_loop *loop;
     ev_io accept_watcher;
 
-    worker_thread_t *workers;
-    size_t nr_workers;
+    dynarray_t workers;
 
     list_t clients;
     size_t nr_clients;
