@@ -13,8 +13,8 @@ typedef struct dynarray {
     char *data;
 } dynarray_t;
 
-#define dynarray_foreach(obj, array) \
-for ((obj) = (void *)(array)->data; \
+#define dynarray_foreach(obj, array)                                       \
+for ((obj) = (void *)(array)->data;                                        \
      (char *)(obj) < (array)->data + ((array)->size * (array)->elem_size); \
      (obj) = (void *)((char *)(obj) + (array)->elem_size))
 

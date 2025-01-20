@@ -3,6 +3,7 @@
 #include "c.h"
 #include "client_context.h"
 #include "coroutine.h"
+#include "utils.h"
 
 #include <ares.h>
 #include <ev.h>
@@ -105,5 +106,5 @@ int connect_domain_name(connection_t *conn, const char *domain, uint16_t port) {
 void disconnect(connection_t *conn)
 {
     client_fdwatcher_destroy(conn->watcher);
-    close(conn->sockfd);
+    proper_socket_close(conn->sockfd);
 }

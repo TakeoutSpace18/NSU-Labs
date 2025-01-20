@@ -178,7 +178,7 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
         return;
     }
 
-    list_push(&server->clients, &new_client->link);
+    list_push_back(&server->clients, &new_client->link);
     server->nr_clients++;
 
     async_client_wakeup(new_client);

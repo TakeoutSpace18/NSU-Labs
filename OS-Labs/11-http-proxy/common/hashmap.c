@@ -1,15 +1,15 @@
 #include "hashmap.h"
+#include "dynarray.h"
 
-#include <pthread.h>
 
 static void hashmap_bucket_init(hashmap_bucket_t *bucket) {
-    pthread_mutex_init(&bucket->lock, NULL);
     dynarray_create(&bucket->entries, sizeof(hashmap_entry_t));
 }
 
-static inline void *hashmap_locate_bucket(const hashmap_t *hm, const void *key)
+static inline hashmap_bucket_t *
+hashmap_locate_bucket(const hashmap_t *hm, const hash_t hash)
 {
-    size_t bucket_index = hm->hashfunc(key) % dynarray_size(&hm->buckets);
+    size_t bucket_index = hash % dynarray_size(&hm->buckets);
     return dynarray_at(&hm->buckets, bucket_index);
 }
 
@@ -34,8 +34,6 @@ int hashmap_create(hashmap_t *hm, hashmap_hashfunc_t hashfunc,
 
     hm->hashfunc = hashfunc;
     hm->key_cmp = key_comparator;
-    hm->value_destructor = NULL;
-    hm->key_destructor = NULL;
 
     return OK;
 }
@@ -44,81 +42,87 @@ void hashmap_destroy(hashmap_t *hm)
 {
     hashmap_bucket_t *bucket;
     dynarray_foreach(bucket, &hm->buckets) {
-        hashmap_entry_t *entry;
-        dynarray_foreach(entry, &bucket->entries) {
-            if (hm->key_destructor) {
-                hm->key_destructor(entry->key);
-            }
-            if (hm->value_destructor) {
-                hm->value_destructor(entry->value);
-            }
-        }
-
         dynarray_destroy(&bucket->entries);
-        pthread_mutex_destroy(&bucket->lock);
     }
-    dynarray_destroy(&hm->buckets);
 
+    dynarray_destroy(&hm->buckets);
     memset(hm, 0, sizeof(*hm));
 }
 
-int hashmap_insert(hashmap_t *hm, void *key, void *value)
+int hashmap_insert(hashmap_t *hm, void *key, void *value, void **old_value)
 {
-    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, key);
-    pthread_mutex_lock(&bucket->lock);
+    hash_t hash = hm->hashfunc(key);
+    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, hash);
+
+
+    /* check if element already inserted */
+    hashmap_entry_t *entry;
+    dynarray_foreach(entry, &bucket->entries) {
+        if (entry->hash != hash) {
+            continue;
+        }
+
+        if (hm->key_cmp(entry->key, key) == 0) {
+            if (old_value) {
+                *old_value = entry->value;
+            }
+            return EEXIST;
+        }
+    }
 
     int err = dynarray_push_back(&bucket->entries, &(hashmap_entry_t) {
+        .hash = hash,
         .key = key,
         .value = value
     });
 
     if (err != OK) {
-        pthread_mutex_unlock(&bucket->lock);
         return err;
     }
 
-    pthread_mutex_unlock(&bucket->lock);
     return OK;
 }
 
-void *hashmap_find(const hashmap_t *hm, const void *key)
+int hashmap_find(const hashmap_t *hm, const void *key, hashmap_entry_t *entry_ret)
 {
-    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, key);
-    pthread_mutex_lock(&bucket->lock);
+    hash_t hash = hm->hashfunc(key);
+    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, hash);
 
     hashmap_entry_t *entry;
     dynarray_foreach(entry, &bucket->entries) {
-        if (hm->key_cmp(entry->key, key) == 0) {
-            pthread_mutex_unlock(&bucket->lock);
-            return entry->value;
+        if (entry->hash != hash) {
+            continue;
         }
-    }
 
-    pthread_mutex_unlock(&bucket->lock);
-    return NULL;
-}
-
-int hashmap_remove(hashmap_t *hm, const void *key)
-{
-    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, key);
-    pthread_mutex_lock(&bucket->lock);
-
-    for (size_t i = 0; i < dynarray_size(&bucket->entries); ++i) {
-        hashmap_entry_t *entry = dynarray_at(&bucket->entries, i);
         if (hm->key_cmp(entry->key, key) == 0) {
-            dynarray_remove(&bucket->entries, i);
-            pthread_mutex_unlock(&bucket->lock);
-
-            if (hm->key_destructor) {
-                hm->key_destructor(entry->key);
-            }
-            if (hm->value_destructor) {
-                hm->value_destructor(entry->value);
-            }
+            *entry_ret = *entry;
             return OK;
         }
     }
 
-    pthread_mutex_unlock(&bucket->lock);
+    return ENOENT;
+}
+
+int hashmap_remove(hashmap_t *hm, const void *key, hashmap_entry_t *entry_ret)
+{
+    hash_t hash = hm->hashfunc(key);
+    hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, hash);
+
+    for (size_t i = 0; i < dynarray_size(&bucket->entries); ++i) {
+        hashmap_entry_t *entry = dynarray_at(&bucket->entries, i);
+        if (entry->hash != hash) {
+            continue;
+        }
+
+        if (hm->key_cmp(entry->key, key) == 0) {
+            if (entry_ret) {
+                *entry_ret = *entry;
+            }
+            dynarray_remove(&bucket->entries, i);
+
+            return OK;
+        }
+    }
+
     return ENOENT;
 }

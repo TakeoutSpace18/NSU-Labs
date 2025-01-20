@@ -1,3 +1,4 @@
+#include <signal.h>
 #define _GNU_SOURCE
 #include "client_context.h"
 
@@ -7,7 +8,9 @@
 #include "dns.h"
 #include "log.h"
 #include "list.h"
+#include "utils.h"
 #include "socket.h"
+#include "dynarray.h"
 #include "coroutine.h"
 #include "worker_thread.h"
 
@@ -17,18 +20,12 @@ static void on_client_drop_cb(EV_P_ struct ev_async *w, int revents);
 
 static fdwatcher_t *fdwatcher_create_internal(client_context_t *cc, int fd, int events)
 {
-    if (cc->nr_fdwatchers >= MAX_CLIENT_FDWATCHERS) {
-        /* this situation should never happen */
-        coroutine_log_fatal("fdwatchers limit reached for the client");
-        abort();
-    }
-
-    fdwatcher_t *fdw = &cc->fdwatchers[cc->nr_fdwatchers];
+    fdwatcher_t *fdw = dynarray_emplace_back(&cc->fdwatchers);
 
     fdw->buffer = malloc(FDWATCHER_DEFAULT_BUFFER_SZ);
     if (!fdw->buffer) {
         coroutine_log_fatal("out of memory");
-        exit(EXIT_FAILURE);
+        abort();
     }
     fdw->buffer_size = FDWATCHER_DEFAULT_BUFFER_SZ;
     fdw->nr_buffered = 0;
@@ -36,8 +33,6 @@ static fdwatcher_t *fdwatcher_create_internal(client_context_t *cc, int fd, int 
     ev_io_init(&fdw->io, on_client_io_available_cb, fd, events);
     ev_io_start(worker_thread_get_loop(cc->worker_p), &fdw->io);
     fdw->io.data = cc;
-
-    cc->nr_fdwatchers++;
 
     return fdw;
 }
@@ -50,21 +45,20 @@ static void fdwatcher_destroy(client_context_t *cc, fdwatcher_t *fdw)
 
 static void remove_fdwatcher(client_context_t *cc, fdwatcher_t *fdw)
 {
-    size_t i = 0;
-    while (i < cc->nr_fdwatchers && &cc->fdwatchers[i] != fdw)
-        i++;
+    size_t i;
+    for (i = 0; i < dynarray_size(&cc->fdwatchers); i++) {
+        if (dynarray_at(&cc->fdwatchers, i) == fdw) {
+            break;
+        }
+    }
 
-    if (i == cc->nr_fdwatchers) {
+    if (i == dynarray_size(&cc->fdwatchers)) {
         coroutine_log_fatal("remove_fdwatcher(): watcher not found");
         abort();
     }
 
     fdwatcher_destroy(cc, fdw);
-
-    memmove(&cc->fdwatchers[i], &cc->fdwatchers[i + 1],
-            (cc->nr_fdwatchers - i - 1) * sizeof(cc->fdwatchers[0]));
-
-    cc->nr_fdwatchers--;
+    dynarray_remove(&cc->fdwatchers, i);
 }
 
 int client_context_create(client_context_t *cc, client_routine_t routine,
@@ -89,7 +83,12 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
 
     worker_thread_begin_async_modify(worker);
 
-    cc->nr_fdwatchers = 0;
+    dynarray_create(&cc->fdwatchers, sizeof(fdwatcher_t));
+    if (dynarray_reserve(&cc->fdwatchers, 5) != OK) {
+        log_error("out of memory");
+        abort();
+    }
+
     fdwatcher_create_internal(cc, sockfd, 0);
 
     ev_async_init(&cc->drop_watcher, on_client_drop_cb);
@@ -363,11 +362,12 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
 {
     client_context_t *cc = (client_context_t *) drop_w_2_client(w);
 
-    int client_sfd = cc->fdwatchers[0].io.fd;
-    close(client_sfd);
+    fdwatcher_t *client_fdw = dynarray_at(&cc->fdwatchers, 0);
+    proper_socket_close(client_fdw->io.fd);
 
-    for (size_t i = 0; i < cc->nr_fdwatchers; ++i) {
-        fdwatcher_destroy(cc, &cc->fdwatchers[i]);
+    fdwatcher_t *fdw;
+    dynarray_foreach(fdw, &cc->fdwatchers) {
+        fdwatcher_destroy(cc, fdw);
     }
 
     ev_async_stop(loop, &cc->drop_watcher);
@@ -375,5 +375,6 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
 
     list_unlink(&cc->link);
     coroutine_destroy(&cc->coroutine);
+    dynarray_destroy(&cc->fdwatchers);
     free(cc);
 }

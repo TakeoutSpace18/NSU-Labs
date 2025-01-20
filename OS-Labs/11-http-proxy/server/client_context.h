@@ -8,6 +8,7 @@
 #include "dns.h"
 #include "list.h"
 #include "coroutine.h"
+#include "dynarray.h"
 #include "worker_thread.h"
 
 #define MAX_CLIENT_FDWATCHERS 5
@@ -30,8 +31,7 @@ typedef struct client_fdwatcher {
 typedef struct client_context {
     /* fds, that are watched by libev 
      * fdwatchers[0] is always the accepted client socket */
-    size_t nr_fdwatchers;
-    fdwatcher_t fdwatchers[MAX_CLIENT_FDWATCHERS];
+    dynarray_t fdwatchers;
 
     ev_async drop_watcher;
     ev_async wakeup_watcher;
@@ -146,8 +146,8 @@ static inline int client_fd_getevents(fdwatcher_t *fdw)
 
 static inline fdwatcher_t *client_fdwatcher(void)
 {
-    client_context_t *c = RUNNING_CLIENT;
-    return &c->fdwatchers[0];
+    client_context_t *cc = RUNNING_CLIENT;
+    return dynarray_at(&cc->fdwatchers, 0);
 }
 
 #endif /* CLIENT_CONTEXT_H */

@@ -395,40 +395,37 @@ static int proxy_send_response_from_cache(cache_entry_t *cache_entry,
 {
     size_t sent_total = 0;
     for (;;) {
-        const buffer_t *buf = cache_entry_read_begin(cache_entry);
+        char *data_start;
+        size_t total_data_len;
+        cache_entry_get_data(cache_entry, &data_start, &total_data_len);
 
-        const char *chunk = buf->start + sent_total;
-        ssize_t chunk_size = buffer_used(buf) - sent_total;
+        const char *chunk = data_start + sent_total;
+        ssize_t chunk_size = total_data_len - sent_total;
 
-        client_fd_setevents(client, EV_WRITE);
-        ssize_t sret = client_send_nonblock(client, chunk, chunk_size, 0);
-        cache_entry_read_end(cache_entry);
+        if (chunk_size != 0) {
+            client_fd_setevents(client, EV_WRITE);
+            ssize_t sret = proxy_send_all(client, chunk, chunk_size);
 
+            if (sret == 0) {
+                coroutine_log_error("Failed to send response from cache: "
+                                    "client socket closed");
+                goto error;
+            }
+            else if (sret == -1) {
+                goto error;
+            }
 
-        if (sret == -EAGAIN) {
-            client_yield();
-        }
-        else if (sret == 0) {
-            coroutine_log_error("Failed to send response from cache: "
-                                "client socket closed");
-            goto error;
-        }
-        else if (sret == -1) {
-            coroutine_log_error("Failed to send response from cache: %s",
-                                strerror(errno));
-            goto error;
-        }
-        else {
             sent_total += sret;
             coroutine_log_trace("Sent %zi cached bytes", sret);
-            if (sent_total == buffer_used(buf)) {
-                /* wait for more data to appear in cache entry */
-                client_fd_setevents(client, 0);
-                if (cache_entry_wait(cache_entry) != OK) {
-                    /* check again if new data appeared before entry was finished */
-                    if (sent_total == buffer_used(buf)) {
-                        break;
-                    }
+        }
+
+
+        if (sent_total == total_data_len){
+            /* wait for more data to appear in cache entry */
+            client_fd_setevents(client, 0);
+            if (cache_entry_wait(cache_entry, &total_data_len) != OK) {
+                if (sent_total == total_data_len) {
+                    break;
                 }
             }
         }
@@ -489,7 +486,7 @@ void attribute_noreturn() proxy_main(void *arg)
 
     cache_t     *cache = (cache_t *) arg;
     const char  *domain = NULL;
-    bool         request_cached = false;
+    bool         request_added_to_cache = false;
 
     buffer_t *buf = malloc(sizeof(*buf));
     if (!buf) {
@@ -510,9 +507,30 @@ void attribute_noreturn() proxy_main(void *arg)
         goto finish;
     }
 
-    cache_entry_t *cache_entry = cache_get_entry(cache, buf);
+    /* find request in cache or add new cache entry */
+    cache_entry_t *cache_entry;
+    bool is_in_cache = false;
+    if (proxy_request_is_cacheable(&request)) {
+        if ((cache_entry = cache_get_entry(cache, buf)) != NULL) {
+            is_in_cache = true;
+        }
+        else {
+            coroutine_log_debug("Adding cache entry");
+            int err;
+            cache_entry = cache_add_entry(cache, buf, &err);
+            if (err == EEXIST) {
+                is_in_cache = true;
+            }
+            else if (err == OK){
+                request_added_to_cache = true;
+            }
+            else {
+                goto finish;
+            }
+        }
+    }
 
-    if (cache_entry) {
+    if (is_in_cache) {
         /* request is present in cache */
         coroutine_log_debug("Request found in cache");
         err = proxy_send_response_from_cache(cache_entry, client_fdwatcher());
@@ -523,16 +541,6 @@ void attribute_noreturn() proxy_main(void *arg)
         }
     }
     else {
-        if (proxy_request_is_cacheable(&request)) {
-            coroutine_log_debug("Adding cache entry");
-            cache_entry = cache_add_entry(cache, buf);
-            if (!cache_entry) {
-                goto finish;
-            }
-
-            request_cached = true;
-        }
-
         connection_t host;
         domain = http_request_get_host(&request);
         err = connect_domain_name(&host, domain, 80);
@@ -556,7 +564,7 @@ void attribute_noreturn() proxy_main(void *arg)
 
 
 finish:
-    if (!request_cached) {
+    if (!request_added_to_cache) {
         buffer_free(buf);
         free(buf);
     }

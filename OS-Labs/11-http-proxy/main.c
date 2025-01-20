@@ -23,7 +23,7 @@ do_help(void)
     printf("\t-p, --port\t\tproxy server port (8080 by default)\n");
     printf("\t-l, --log-level\t\tlogging level (0 - TRACE, 5 - FATAL)\n");
     printf("\t-j, --jobs\t\tnumber of worker threads\n");
-    printf("\t-c, --cache-size\tmax size of in-memory cache (MB)\n");
+    printf("\t-c, --cache-size\tmax size of in-memory cache (MiB)\n");
     printf("\t-h, --help\n");
 }
 
