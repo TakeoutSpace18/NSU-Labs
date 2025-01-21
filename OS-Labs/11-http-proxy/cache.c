@@ -101,11 +101,15 @@ int cache_create(cache_t *cache, size_t max_size_bytes)
 
 void cache_destroy(cache_t *cache)
 {
-    list_t *it;
-    list_foreach(&cache->lru, it) {
+    pthread_mutex_lock(&cache->lock);
+
+    list_t *it, *safe;
+    list_foreach_safe(&cache->lru, it, safe) {
         cache_entry_t *entry = container_of(it, cache_entry_t, link);
         cache_entry_destroy(&entry);
     }
+
+    pthread_mutex_unlock(&cache->lock);
 
     hashmap_destroy(&cache->map);
     pthread_mutex_destroy(&cache->lock);
@@ -135,11 +139,16 @@ static int cache_free_memory(cache_t *cache, size_t size)
 }
 
 static int cache_ensure_memory(cache_t *cache, size_t size) {
+    pthread_mutex_lock(&cache->lock);
+
     if (cache->total_size + size > cache->total_size_max) {
         size_t needed_memory = cache->total_size + size - cache->total_size_max;
-        return cache_free_memory(cache, needed_memory);
+        int err = cache_free_memory(cache, needed_memory);
+        pthread_mutex_unlock(&cache->lock);
+        return err;
     }
 
+    pthread_mutex_unlock(&cache->lock);
     return OK;
 }
 
@@ -228,7 +237,6 @@ cache_entry_t *cache_get_entry(cache_t *cache, const buffer_t *key)
     cache_entry_t *cache_entry = hm_entry.value;
 
     pthread_rwlock_wrlock(&cache_entry->lock);
-    pthread_mutex_unlock(&cache->lock);
 
     cache_entry->ref_count++;
 
@@ -237,6 +245,7 @@ cache_entry_t *cache_get_entry(cache_t *cache, const buffer_t *key)
     list_push_front(&cache->lru, &cache_entry->link);
 
     pthread_rwlock_unlock(&cache_entry->lock);
+    pthread_mutex_unlock(&cache->lock);
     return cache_entry;
 }
 
@@ -316,6 +325,16 @@ int cache_entry_wait(cache_entry_t *entry, size_t *data_len)
     *data_len = buffer_used(&entry->data);
     pthread_rwlock_unlock(&entry->lock);
     return OK;
+}
+
+void cache_entry_read_begin(cache_entry_t *entry)
+{
+    pthread_rwlock_rdlock(&entry->lock);
+}
+
+void cache_entry_read_end(cache_entry_t *entry)
+{
+    pthread_rwlock_unlock(&entry->lock);
 }
 
 void cache_entry_get_data(cache_entry_t *entry, char **start, size_t *len)

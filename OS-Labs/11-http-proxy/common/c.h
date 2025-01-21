@@ -61,4 +61,4 @@
 #define OK 0
 #define ERROR -1
 
-#endif /* C_H */
+#endif /* !C_H */

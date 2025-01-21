@@ -14,18 +14,22 @@ typedef struct cache {
     list_t lru;
 
     pthread_mutex_t lock;
+
     size_t total_size_max;
-    atomic_size_t total_size;
+    size_t total_size;
 } cache_t;
 
 typedef struct cache_entry {
-    client_cond_t data_available;
     buffer_t data;
     buffer_t *key;
-    _Atomic bool is_finished;
-    cache_t *cache_p;
+
+    client_cond_t data_available;
+    bool is_finished;
+
     pthread_rwlock_t lock;
-    atomic_int ref_count;
+    size_t ref_count;
+
+    cache_t *cache_p;
 
     list_t link;
 } cache_entry_t;
@@ -51,6 +55,9 @@ int cache_remove_entry(cache_t *cache, buffer_t *key);
 cache_entry_t *cache_get_entry(cache_t *cache, const buffer_t *key);
 
 void cache_entry_put(cache_entry_t *entry);
+
+void cache_entry_read_begin(cache_entry_t *entry);
+void cache_entry_read_end(cache_entry_t *entry);
 
 void cache_entry_get_data(cache_entry_t *entry, char **start, size_t *len);
 

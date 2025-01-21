@@ -48,4 +48,5 @@ void coroutine_log(int level, const char *file, int line, const char *fmt, ...);
 #define coroutine_log_warn(...)  coroutine_log(LOG_WARN,  __FILE__, __LINE__, __VA_ARGS__)
 #define coroutine_log_error(...) coroutine_log(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define coroutine_log_fatal(...) coroutine_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
-#endif // !COROUTINE_H
+
+#endif /* !COROUTINE_H */

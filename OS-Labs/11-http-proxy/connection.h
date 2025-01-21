@@ -12,5 +12,4 @@ typedef struct connection {
 int connect_domain_name(connection_t *conn, const char *domain, uint16_t port);
 void disconnect(connection_t *conn);
 
-
 #endif /* !CONNECTION_H */

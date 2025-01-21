@@ -394,6 +394,8 @@ static int proxy_send_response_from_cache(cache_entry_t *cache_entry,
     for (;;) {
         char *data_start;
         size_t total_data_len;
+
+        cache_entry_read_begin(cache_entry);
         cache_entry_get_data(cache_entry, &data_start, &total_data_len);
 
         const char *chunk = data_start + sent_total;
@@ -416,6 +418,7 @@ static int proxy_send_response_from_cache(cache_entry_t *cache_entry,
             coroutine_log_trace("Sent %zi cached bytes", sret);
         }
 
+        cache_entry_read_end(cache_entry);
 
         if (sent_total == total_data_len){
             /* wait for more data to appear in cache entry */
@@ -426,7 +429,6 @@ static int proxy_send_response_from_cache(cache_entry_t *cache_entry,
                 }
             }
         }
-
     }
     
     client_fd_setevents(client, 0);
@@ -505,7 +507,7 @@ void attribute_noreturn() proxy_main(void *arg)
     }
 
     /* find request in cache or add new cache entry */
-    cache_entry_t *cache_entry;
+    cache_entry_t *cache_entry = NULL;
     bool is_in_cache = false;
     if (proxy_request_is_cacheable(&request)) {
         if ((cache_entry = cache_get_entry(cache, buf)) != NULL) {

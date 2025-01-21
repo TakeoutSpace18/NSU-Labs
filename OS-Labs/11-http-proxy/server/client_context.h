@@ -150,4 +150,4 @@ static inline fdwatcher_t *client_fdwatcher(void)
     return dynarray_at(&cc->fdwatchers, 0);
 }
 
-#endif /* CLIENT_CONTEXT_H */
+#endif /* !CLIENT_CONTEXT_H */

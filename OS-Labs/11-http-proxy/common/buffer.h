@@ -89,4 +89,4 @@ static inline int buffer_add(buffer_t *buf, void *pointer, int size)
 	return OK;
 }
 
-#endif
+#endif /* !BUFFER_H */

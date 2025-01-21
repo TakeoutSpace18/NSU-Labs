@@ -5,8 +5,6 @@
 
 #include "c.h"
 #include "dynarray.h"
-#include "worker_thread.h"
-#include "list.h"
 #include "client_context.h"
 
 typedef struct server {
@@ -17,10 +15,6 @@ typedef struct server {
     ev_io accept_watcher;
 
     dynarray_t workers;
-
-    list_t clients;
-    size_t nr_clients;
-
 } server_t;
 
 #define accept_w_2_server(p) container_of(p, server_t, accept_watcher)

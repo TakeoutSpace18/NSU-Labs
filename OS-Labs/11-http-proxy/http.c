@@ -38,7 +38,7 @@ int http_parse_chunks(http_chunk_t *chunks, size_t max_chunks,
             break;
         }
 
-        const char *crlf = strstr(pos, "\r\n");
+        const char *crlf = memmem(pos, len - bytes_consumed, "\r\n", 2);
         if (crlf == NULL) {
             break;
         }
@@ -93,7 +93,7 @@ void http_response_print(http_response_t *d)
 struct phr_header *http_find_header(struct phr_header *headers,
                                     size_t num_headers, const char *name) {
     for (size_t i = 0; i < num_headers; ++i) {
-        if (memcmp(headers[i].name, name, headers[i].name_len) == 0) {
+        if (strncmp(headers[i].name, name, headers[i].name_len) == 0) {
             return &headers[i];
         }
     }

@@ -69,5 +69,9 @@ static inline int list_empty(list_t *list)
 	for (iterator = (list)->next; iterator != list; \
 	     iterator = (iterator)->next)
 
+#define list_foreach_safe(list, iterator, safe)          \
+	for (iterator = (list)->next;                        \
+         iterator != list && (safe = iterator->next);    \
+	     iterator = safe)
 
 #endif /* LIST_H */

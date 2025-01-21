@@ -58,4 +58,4 @@ const char *http_request_get_host(http_request_t *parsed);
 void http_request_print(http_request_t *request);
 void http_response_print(http_response_t *request);
 
-#endif /* HTTP_H */
+#endif /* !HTTP_H */

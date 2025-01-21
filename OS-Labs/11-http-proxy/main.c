@@ -11,12 +11,7 @@
 #define NR_WORKERS_DEFAULT 4
 #define CACHE_SIZE_DEFAULT_MB 512
 
-typedef struct proxy_globals {
-    cache_t cache;
-} proxy_globals_t;
-
-static void
-do_help(void)
+static void do_help(void)
 {
     printf("HTTP Proxy\n");
     printf("Options:\n");
@@ -27,8 +22,7 @@ do_help(void)
     printf("\t-h, --help\n");
 }
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     logger_setup();
 
@@ -94,6 +88,4 @@ main(int argc, char** argv)
 
     server_run(&server);
     return EXIT_SUCCESS;
-
 }
-

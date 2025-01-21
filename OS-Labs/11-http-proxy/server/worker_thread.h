@@ -1,12 +1,13 @@
 #ifndef WORKER_THREAD_H
 #define WORKER_THREAD_H
 
+#include <ev.h>
+#include <pthread.h>
+
 #include "c.h"
 #include "dns.h"
 #include "list.h"
 #include "coroutine.h"
-#include <ev.h>
-#include <pthread.h>
 
 typedef struct worker_thread {
     pthread_t thread;
@@ -20,12 +21,19 @@ typedef struct worker_thread {
 
     size_t id;
 
+    list_t clients;
+    size_t nr_clients;
+    pthread_mutex_t clients_lock;
+
 } worker_thread_t;
 
 int worker_thread_create(worker_thread_t *wt, size_t id);
 
 void worker_thread_stop(worker_thread_t *wt);
 void worker_thread_destroy(worker_thread_t *wt);
+
+void worker_thread_add_client(worker_thread_t *wt, client_context_t *cc);
+void worker_thread_remove_client(worker_thread_t *wt, client_context_t *cc);
 
 /* all ev_loop modifications from another thread context 
  * should happen between these 2 calls */

@@ -1,7 +1,6 @@
 #include "hashmap.h"
 #include "dynarray.h"
 
-
 static void hashmap_bucket_init(hashmap_bucket_t *bucket) {
     dynarray_create(&bucket->entries, sizeof(hashmap_entry_t));
 }
@@ -53,7 +52,6 @@ int hashmap_insert(hashmap_t *hm, void *key, void *value, void **old_value)
 {
     hash_t hash = hm->hashfunc(key);
     hashmap_bucket_t *bucket = hashmap_locate_bucket(hm, hash);
-
 
     /* check if element already inserted */
     hashmap_entry_t *entry;

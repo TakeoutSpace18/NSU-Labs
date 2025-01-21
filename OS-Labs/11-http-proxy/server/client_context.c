@@ -1,4 +1,3 @@
-#include <signal.h>
 #define _GNU_SOURCE
 #include "client_context.h"
 
@@ -7,7 +6,6 @@
 #include "c.h"
 #include "dns.h"
 #include "log.h"
-#include "list.h"
 #include "utils.h"
 #include "socket.h"
 #include "dynarray.h"
@@ -81,6 +79,7 @@ int client_context_create(client_context_t *cc, client_routine_t routine,
     snprintf(name, 256, "worker %zu :: %s", worker_thread_get_id(worker), descr);
     coroutine_set_name(&cc->coroutine, name);
 
+    /* TODO: move to worker_thread_add_client ? */
     worker_thread_begin_async_modify(worker);
 
     dynarray_create(&cc->fdwatchers, sizeof(fdwatcher_t));
@@ -373,7 +372,7 @@ static void on_client_drop_cb(EV_P_ ev_async *w, int revents)
     ev_async_stop(loop, &cc->drop_watcher);
     ev_async_stop(loop, &cc->wakeup_watcher);
 
-    list_unlink(&cc->link);
+    worker_thread_remove_client(cc->worker_p, cc);
     coroutine_destroy(&cc->coroutine);
     dynarray_destroy(&cc->fdwatchers);
     free(cc);

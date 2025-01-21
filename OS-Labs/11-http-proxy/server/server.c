@@ -1,11 +1,12 @@
-#include "dynarray.h"
 #define _GNU_SOURCE
 #include "server.h"
 
+#include <pthread.h>
+
 #include "dns.h"
-#include "list.h"
 #include "log.h"
 #include "socket.h"
+#include "dynarray.h"
 #include "client_context.h"
 #include "worker_thread.h"
 
@@ -102,9 +103,6 @@ int server_create(server_t *s, uint16_t port, client_routine_t routine,
         goto fail;
     }
 
-    list_init(&s->clients);
-    s->nr_clients = 0;
-
     s->loop = ev_default_loop(0);
     ev_io_init(&s->accept_watcher, on_accept_cb, sockfd, EV_READ);
     ev_io_start(s->loop, &s->accept_watcher);
@@ -178,8 +176,6 @@ static void on_accept_cb(EV_P_ struct ev_io *w, int revents)
         return;
     }
 
-    list_push_back(&server->clients, &new_client->link);
-    server->nr_clients++;
-
+    worker_thread_add_client(worker, new_client);
     async_client_wakeup(new_client);
 }
