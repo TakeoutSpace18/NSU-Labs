@@ -30,16 +30,19 @@ void proper_socket_close(int sfd)
         pollfd.fd = sfd;
         pollfd.events = POLLIN;
 
-        err = poll(&pollfd, 1, -1);
+        int timeout_ms = 300;
+        err = poll(&pollfd, 1, timeout_ms);
         if (err < 0) {
             log_error("poll(): %s", strerror(errno));
-            exit(EXIT_FAILURE);
+            close(sfd);
+            return;
         }
 
         err = read(sfd, buffer, 4096);
         if (err < 0) {
             log_error("read(): %s", strerror(errno));
-            exit(EXIT_FAILURE);
+            close(sfd);
+            return;
         }
         if (err == 0) {
             break;
