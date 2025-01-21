@@ -124,8 +124,6 @@ static int proxy_recv_response_header(buffer_t *buf, size_t *header_len,
         /* header is incomplete, continue the loop */
         assert(pret == -2);
     }
-
-    return OK;
 }
 
 
@@ -207,7 +205,6 @@ static int proxy_forward_chunked(buffer_t *buf, size_t header_len,
         cache_entry_append_data(cache_entry, buf->start, buffer_used(buf));
     }
 
-    size_t nread = 16384;
     http_chunk_t chunks[32];
     size_t n_parsed = header_len;
 
@@ -230,7 +227,7 @@ static int proxy_forward_chunked(buffer_t *buf, size_t header_len,
             break;
         }
 
-
+        const size_t nread = 16384;
         if (buffer_ensure(buf, nread) == ENOMEM) {
             out_of_memory();
         }
@@ -373,7 +370,7 @@ static int proxy_forward_till_sock_close(buffer_t *buf, fdwatcher_t *host,
         }
 
         if (cache_entry) {
-            cache_entry_append_data(cache_entry, buf->start, FORWARD_BUFFER_SIZE);
+            cache_entry_append_data(cache_entry, buf->start, rret);
         }
     }
 
