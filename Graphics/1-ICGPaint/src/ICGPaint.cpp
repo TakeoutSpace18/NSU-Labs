@@ -1,9 +1,15 @@
 #include "ICGPaint.h"
 
 #include <QtWidgets>
+#include <qactiongroup.h>
+#include <qcolor.h>
+#include <qnamespace.h>
+#include <qwidget.h>
 
 #include "Canvas.h"
 #include "tool/BrushTool.h"
+#include "tool/LineTool.h"
+#include "tool/FillTool.h"
 
 ICGPaint::ICGPaint() : QMainWindow()
 {
@@ -25,48 +31,84 @@ ICGPaint::ICGPaint() : QMainWindow()
     m_lineToolOptions = QSharedPointer<LineTool::Options>(new LineTool::Options());
     m_lineTool = new LineTool(m_canvas, m_lineToolOptions);
 
+    m_fillToolOptions = QSharedPointer<FillTool::Options>(new FillTool::Options());
+    m_fillTool = new FillTool(m_canvas, m_fillToolOptions);
+
     m_activeTool = nullptr;
     setActiveTool(m_brushTool);
+
+    setActiveColor(Qt::black);
 }
 
 void ICGPaint::createActions()
 {
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    QToolBar *fileToolBar = addToolBar(tr("File"));
+    QMenu *toolMenu = menuBar()->addMenu(tr("&Tool"));
+    QToolBar *toolbar = addToolBar(tr("File"));
 
     const QIcon newIcon = style()->standardIcon(QStyle::SP_FileIcon);
     const QIcon clearIcon = QIcon(":resources/icons/clear.svg");
     const QIcon selectColorIcon = generateColorIcon(Qt::black);
 
-    m_newAction = new QAction(newIcon, tr("New"), this);
-    m_clearAction = new QAction(clearIcon, tr("Clear"), this);
-    m_selectColorAction = new QAction(selectColorIcon, tr("Color"), this);
-    m_brushToolAction = new QAction(BrushTool::Icon(), tr("Brush"), this);
-    m_lineToolAction = new QAction(LineTool::Icon(), tr("Line"), this);
+    m_newAction = new QAction(newIcon, tr("&New"), this);
+    m_clearAction = new QAction(clearIcon, tr("&Clear"), this);
+    m_selectColorAction = new QAction(selectColorIcon, tr("&Color"), this);
+
+    m_brushToolAction = new QAction(BrushTool::Icon(), tr("&Brush"), this);
+    m_lineToolAction = new QAction(LineTool::Icon(), tr("&Line"), this);
+    m_fillToolAction = new QAction(FillTool::Icon(), tr("&Fill"), this);
 
     m_newAction->setShortcuts(QKeySequence::New);
     m_clearAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     m_selectColorAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     m_brushToolAction->setShortcut(QKeySequence(Qt::Key_B));
     m_lineToolAction->setShortcut(QKeySequence(Qt::Key_L));
+    m_fillToolAction->setShortcut(QKeySequence(Qt::Key_F));
 
     m_newAction->setStatusTip("Create new file");
     m_clearAction->setStatusTip("Clear canvas");
     m_selectColorAction->setStatusTip("Select color");
     m_brushToolAction->setStatusTip("Draw with brush");
     m_lineToolAction->setStatusTip("Draw line");
+    m_fillToolAction->setStatusTip("Fill area");
+
+    m_brushToolAction->setCheckable(true);
+    m_fillToolAction->setCheckable(true);
+    m_lineToolAction->setCheckable(true);
+
+    QActionGroup *toolActions = new QActionGroup(this);
+    toolActions->addAction(m_brushToolAction);
+    toolActions->addAction(m_fillToolAction);
+    toolActions->addAction(m_lineToolAction);
+    toolActions->setExclusive(true);
 
     fileMenu->addAction(m_newAction);
     fileMenu->addAction(m_clearAction);
-    fileMenu->addAction(m_selectColorAction);
-    fileMenu->addAction(m_brushToolAction);
-    fileMenu->addAction(m_lineToolAction);
 
-    fileToolBar->addAction(m_newAction);
-    fileToolBar->addAction(m_clearAction);
-    fileToolBar->addAction(m_selectColorAction);
-    fileToolBar->addAction(m_brushToolAction);
-    fileToolBar->addAction(m_lineToolAction);
+    toolMenu->addAction(m_brushToolAction);
+    toolMenu->addAction(m_lineToolAction);
+    toolMenu->addAction(m_fillToolAction);
+    toolMenu->addAction(m_selectColorAction);
+
+    QWidget *spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    toolbar->addAction(m_newAction);
+    toolbar->addAction(m_clearAction);
+    toolbar->addSeparator();
+    toolbar->addAction(m_brushToolAction);
+    toolbar->addAction(m_lineToolAction);
+    toolbar->addAction(m_fillToolAction);
+    toolbar->addSeparator();
+    toolbar->addWidget(spacer);
+
+    m_colorActions = createColorActions();
+    for (QAction* action : m_colorActions->actions()) {
+        toolbar->addAction(action);
+    }
+    toolbar->addSeparator();
+    toolbar->addAction(m_selectColorAction);
+
 
     connect(m_newAction, &QAction::triggered, this, &ICGPaint::newFile);
     connect(m_clearAction, &QAction::triggered, this, &ICGPaint::clearCanvas);
@@ -77,6 +119,39 @@ void ICGPaint::createActions()
     connect(m_lineToolAction, &QAction::triggered, this, [this]() {
         setActiveTool(m_lineTool);
     });
+    connect(m_fillToolAction, &QAction::triggered, this, [this]() {
+        setActiveTool(m_fillTool);
+    });
+}
+
+QActionGroup *ICGPaint::createColorActions()
+{
+    QList<QColor> colors = {
+        QColor(Qt::red),        // Red
+        QColor(255, 165, 0),    // Orange
+        QColor(Qt::yellow),     // Yellow
+        QColor(Qt::green),      // Green
+        QColor(Qt::blue),       // Blue
+        QColor(75, 0, 130),     // Indigo
+        QColor(238, 130, 238)   // Violet
+    };
+
+    QActionGroup *group = new QActionGroup(this);
+    group->setExclusive(true);
+    group->setExclusionPolicy(QActionGroup::ExclusionPolicy::ExclusiveOptional);
+
+    for (const QColor& color : colors) {
+        QAction *action = new QAction(generateColorIcon(color), color.name(), this);
+        action->setCheckable(true);
+
+        connect(action, &QAction::triggered, this, [color, this]() {
+            setActiveColor(color);
+        });
+
+        group->addAction(action);
+    }
+
+    return group;
 }
 
 void ICGPaint::newFile()
@@ -100,6 +175,9 @@ void ICGPaint::selectColorDialog()
 
     if (color.isValid()) {
         setActiveColor(color);
+        if (m_colorActions->checkedAction()) {
+            m_colorActions->checkedAction()->setChecked(false);
+        }
     }
     else {
         qDebug() << "Selected color is invalid";
@@ -118,6 +196,7 @@ void ICGPaint::setActiveColor(QColor color)
     m_activeColor = color;
     m_brushToolOptions->color = color;
     m_lineToolOptions->color = color;
+    m_fillToolOptions->color = color;
     m_selectColorAction->setIcon(generateColorIcon(color));
 }
 

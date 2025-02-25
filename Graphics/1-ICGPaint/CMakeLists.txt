@@ -25,6 +25,8 @@ set(PROJECT_SOURCES
         src/tool/BrushTool.h
         src/tool/LineTool.cpp
         src/tool/LineTool.h
+        src/tool/FillTool.cpp
+        src/tool/FillTool.h
         resources.qrc
 )
 

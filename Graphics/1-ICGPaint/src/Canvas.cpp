@@ -26,11 +26,9 @@ void Canvas::paintEvent(QPaintEvent *event)
 
 void Canvas::drawLine(QPoint a, QPoint b, QColor color, int width)
 {
-
     BresenhamLine::Draw(m_image, a, b, color, width);
-    m_isModified = true;
 
-    int rad = (10 / 2) + 2;
+    int rad = (width / 2) + 2;
     update(QRect(a, b).normalized().adjusted(-rad, -rad, +rad, +rad));
 }
 
@@ -59,4 +57,9 @@ void Canvas::clear()
 {
     m_image.fill(Qt::white);
     update();
+}
+
+void Canvas::setPixelColor(int x, int y, const QColor& color)
+{
+    m_image.setPixelColor(x, y, color);
 }

@@ -10,6 +10,7 @@
 #include "tool/Tool.h"
 #include "tool/BrushTool.h"
 #include "tool/LineTool.h"
+#include "tool/FillTool.h"
 
 class ICGPaint : public QMainWindow
 {
@@ -22,6 +23,7 @@ protected:
 
 private:
     void createActions();
+    QActionGroup *createColorActions();
 
     QIcon generateColorIcon(QColor color);
     void setActiveColor(QColor color);
@@ -42,11 +44,15 @@ private:
     BrushTool *m_brushTool;
     QSharedPointer<LineTool::Options> m_lineToolOptions;
     LineTool *m_lineTool;
+    QSharedPointer<FillTool::Options> m_fillToolOptions;
+    FillTool *m_fillTool;
 
     QAction *m_newAction;
     QAction *m_clearAction;
     QAction *m_selectColorAction;
     QAction *m_brushToolAction;
     QAction *m_lineToolAction;
+    QAction *m_fillToolAction;
+    QActionGroup *m_colorActions;
 };
 #endif // ICGPAINT_H

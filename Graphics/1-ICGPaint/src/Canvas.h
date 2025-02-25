@@ -2,6 +2,7 @@
 #define CANVAS_H
 
 #include <QWidget>
+#include <qcolor.h>
 
 class Canvas : public QWidget
 {
@@ -17,6 +18,7 @@ public:
 
     void setImage(const QImage& image);
     void drawLine(QPoint a, QPoint b, QColor color = Qt::black, int width = 5);
+    void setPixelColor(int x, int y, const QColor& color);
     void clear();
 
 protected:
@@ -25,7 +27,6 @@ protected:
 
 private:
     QImage m_image;
-    bool m_isModified;
 };
 
 #endif
