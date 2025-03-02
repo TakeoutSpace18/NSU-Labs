@@ -27,7 +27,7 @@ private:
     void plotOutput(QImage& image, const WaveEquation::Output& out);
 
     QImage m_image;
-    QTimer m_timer;
+    QTimer m_updateTimer;
 
     size_t m_step;
 

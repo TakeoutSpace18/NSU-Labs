@@ -4,10 +4,11 @@
 
 #include <chrono>
 #include <iostream>
+#include <qcoreapplication.h>
 #include <vector>
 
-Application::Application(std::unique_ptr<WaveEquation> equation, QWidget *parent)
     : QMainWindow(parent),
+Application::Application(std::unique_ptr<WaveEquation> equation, QWidget *parent)
     m_image(equation->nx(), equation->ny(), QImage::Format_Grayscale8),
     m_equation(std::move(equation)),
     m_step(0),
@@ -17,8 +18,8 @@ Application::Application(std::unique_ptr<WaveEquation> equation, QWidget *parent
     setFixedSize(m_image.size());
 
     // timer with timeout = 0 will update image as fast as possible
-    connect(&m_timer, &QTimer::timeout, this, &Application::nextIteration);
-    m_timer.start(0);
+    connect(&m_updateTimer, &QTimer::timeout, this, &Application::nextIteration);
+    m_updateTimer.start(0);
 }
 
 void Application::paintEvent(QPaintEvent *event)
@@ -53,10 +54,15 @@ void Application::plotOutput(QImage& image, const WaveEquation::Output& out)
 {
     const WaveEquation::ValueType *buf = out.data.data();
 
+    uchar* pixelData = image.bits();
+    const int stride = m_image.bytesPerLine();
+
     for (int i = 0; i < m_equation->ny(); ++i) {
         for (int j = 0; j < m_equation->nx(); ++j) {
-            float value = 255 * (buf[i * m_equation->nx() + j] + out.max) / (2 * out.max); 
-            image.setPixel(i, j, qRgb(value, value, value));
+            const WaveEquation::ValueType value = buf[i * m_equation->nx() + j];
+            const int normalizedValue = static_cast<int>(255 * (value + out.max) / (2 * out.max));
+
+            pixelData[i * stride + j] = static_cast<uchar>(std::clamp(normalizedValue, 0, 255));
         }
     }
 }
