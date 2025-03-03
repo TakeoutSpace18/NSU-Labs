@@ -3,15 +3,15 @@
 #include <qcoreapplication.h>
 #include <random>
 #include <memory>
+#include <chrono>
 
 #include "Application.h"
 #include "WaveEquation.h"
 
 #define RANDOM_SOURCE_LOCATION 0
 
-int main(int argc, char* argv[]) {
-    QApplication app(argc, argv);
-
+int main(int argc, char* argv[])
+{
     WaveEquation::AreaParams area = {
         .xa = 0.0,
         .xb = 4.0,
@@ -42,13 +42,24 @@ int main(int argc, char* argv[]) {
     }
 
     auto equation = std::make_unique<WaveEquation>(area, source);
-    Application window(std::move(equation));
-    window.show();
 
-    // exit after 30 seconds
-    QTimer::singleShot(20 * 1000, []() {
-        QCoreApplication::quit();
-    });
+    if (argc == 2 && strcmp(argv[1], "--gui") == 0) {
+        QApplication app(argc, argv);
+        Application window(std::move(equation));
+        window.show();
+        return app.exec();
+    }
 
-    return app.exec();
+    using namespace std::chrono;
+
+    auto start = high_resolution_clock::now();
+    equation->skipNIterarions(1500);
+    auto end = high_resolution_clock::now();
+
+    uint64_t elapsed = duration_cast<milliseconds>(end - start).count();
+    std::cout << "time: " << elapsed << "\n";
+
+    WaveEquation::Output out = equation->getCurrentState();
+    size_t size = out.data.size() * sizeof(out.data[0]);
+    Utils::writeToFile("out.dat", reinterpret_cast<const char*>(out.data.data()), size);
 }
