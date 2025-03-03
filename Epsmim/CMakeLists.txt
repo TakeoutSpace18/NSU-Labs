@@ -49,6 +49,7 @@ else()
 endif()
 
 target_link_libraries(WaveEquation PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_compile_options(WaveEquation PRIVATE "-march=native" "-O2" "-ffast-math")
 
 target_include_directories(WaveEquation PUBLIC ${PROJECT_INCLUDE_DIRECTORIES})
 

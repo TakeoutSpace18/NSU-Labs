@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     window.show();
 
     // exit after 30 seconds
-    QTimer::singleShot(30 * 1000, []() {
+    QTimer::singleShot(20 * 1000, []() {
         QCoreApplication::quit();
     });
 

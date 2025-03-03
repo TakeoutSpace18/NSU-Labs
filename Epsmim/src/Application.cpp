@@ -7,8 +7,8 @@
 #include <qcoreapplication.h>
 #include <vector>
 
-    : QMainWindow(parent),
 Application::Application(std::unique_ptr<WaveEquation> equation, QWidget *parent)
+    : QMainWindow(parent),
     m_image(equation->nx(), equation->ny(), QImage::Format_Grayscale8),
     m_equation(std::move(equation)),
     m_step(0),
