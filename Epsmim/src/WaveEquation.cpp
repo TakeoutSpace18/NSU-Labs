@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <span>
 #include <limits>
 
 WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
@@ -49,7 +48,7 @@ WaveEquation::Output WaveEquation::nextIteration()
             const ValueType b4 = phaseSpeed;
             const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
 
-            const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+            const ValueType c = m_tau * m_tau * (a + b);
 
             accessValue(m_buf2, i, j) = 2 * accessValue(m_buf1, i, j) - accessValue(m_buf2, i, j) + c;
             m_max = std::max(m_max, std::abs(accessValue(m_buf2, i, j)));
@@ -67,7 +66,7 @@ WaveEquation::Output WaveEquation::nextIteration()
         const ValueType b4 = 0.1 * 0.1 + 0.2 * 0.2;
         const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
 
-        const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+        const ValueType c = m_tau * m_tau * (a + b);
 
         accessValue(m_buf2, i, j) = 2 * accessValue(m_buf1, i, j) - accessValue(m_buf2, i, j) + c;
         m_max = std::max(m_max, std::abs(accessValue(m_buf2, i, j)));
@@ -88,15 +87,16 @@ WaveEquation::Output WaveEquation::nextIteration()
             const ValueType b4 = phaseSpeed;
             const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
 
-            const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+            const ValueType c = m_tau * m_tau * (a + b);
 
             accessValue(m_buf2, i, j) = 2 * accessValue(m_buf1, i, j) - accessValue(m_buf2, i, j) + c;
             m_max = std::max(m_max, std::abs(accessValue(m_buf2, i, j)));
         }
     }
 
-    m_step++;
+    accessValue(m_buf2, m_source.y, m_source.x) += m_tau * m_tau * sourceFunc(m_step);
 
+    m_step++;
     return {m_buf2, m_max};
 }
 
@@ -114,12 +114,8 @@ WaveEquation::Output WaveEquation::skipNIterarions(int n)
     return getCurrentState();
 }
 
-WaveEquation::ValueType WaveEquation::sourceFunc(int i, int j, int n)
+WaveEquation::ValueType WaveEquation::sourceFunc(int n)
 {
-    if (i != m_source.x || j != m_source.y) {
-        return 0;
-    }
-
     const ValueType f0 = 1.0;
     const ValueType t0 = 1.5;
     const ValueType gamma = 4.0;
@@ -127,22 +123,6 @@ WaveEquation::ValueType WaveEquation::sourceFunc(int i, int j, int n)
     const ValueType tmp = 2 * M_PI * f0 * (n * m_tau - t0);
 
     return std::exp(-(tmp * tmp) / (gamma * gamma)) * std::sin(tmp);
-}
-
-WaveEquation::ValueType& WaveEquation::accessValue(std::span<ValueType>& buf, int i, int j)
-{
-    assert(0 <= i && i < m_area.ny);
-    assert(0 <= j && j < m_area.nx);
-
-    return buf[i * m_area.nx + j];
-}
-
-WaveEquation::ValueType& WaveEquation::accessValue(std::vector<ValueType>& buf, int i, int j)
-{
-    assert(0 <= i && i < m_area.ny);
-    assert(0 <= j && j < m_area.nx);
-
-    return buf[i * m_area.nx + j];
 }
 
 WaveEquation::ValueType& WaveEquation::accessValue(WaveEquation::ValueType *buf, int i, int j)

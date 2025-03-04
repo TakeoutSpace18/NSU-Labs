@@ -2,7 +2,6 @@
 #define WAVE_EQUATION_H
 
 #include <vector>
-#include <span>
 
 #include "Utils.h"
 
@@ -40,9 +39,7 @@ public:
     int ny() const { return m_area.ny; };
 
 private:
-    ValueType sourceFunc(int i, int j, int n);
-    ValueType& accessValue(std::span<ValueType>& buf, int i, int j);
-    ValueType& accessValue(std::vector<ValueType>& buf, int i, int j);
+    ValueType sourceFunc(int n);
     ValueType& accessValue(ValueType *buf, int i, int j);
 
     std::vector<ValueType> m_data;
