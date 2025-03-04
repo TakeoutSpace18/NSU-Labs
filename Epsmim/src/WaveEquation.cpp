@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <span>
 #include <limits>
 
 WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
@@ -9,9 +10,10 @@ WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
     m_source(source),
     m_step(0),
     m_max(0),
-    m_buf1(area.nx * area.ny, 0),
-    m_buf2(area.nx * area.ny, 0),
-    m_buf3(area.nx * area.ny, 0),
+    m_data(area.nx * area.ny * 3, 0),
+    m_buf1(m_data.begin(), area.nx * area.ny),
+    m_buf2(m_data.begin() + area.nx * area.ny, area.nx * area.ny),
+    m_buf3(m_data.begin() + area.nx * area.ny, area.nx * area.ny),
     m_phaseSpeed(area.nx * area.ny, 0)
 {
     if (area.nx > 1000 || area.ny > 1000) {
@@ -101,10 +103,26 @@ WaveEquation::ValueType WaveEquation::sourceFunc(int i, int j, int n)
     return std::exp(-(tmp * tmp) / (gamma * gamma)) * std::sin(tmp);
 }
 
-WaveEquation::ValueType& WaveEquation::accessValue(std::vector<ValueType>& vec, int i, int j)
+WaveEquation::ValueType& WaveEquation::accessValue(std::span<ValueType>& buf, int i, int j)
 {
     assert(0 <= i && i < m_area.ny);
     assert(0 <= j && j < m_area.nx);
 
-    return vec[i * m_area.nx + j];
+    return buf[i * m_area.nx + j];
+}
+
+WaveEquation::ValueType& WaveEquation::accessValue(std::vector<ValueType>& buf, int i, int j)
+{
+    assert(0 <= i && i < m_area.ny);
+    assert(0 <= j && j < m_area.nx);
+
+    return buf[i * m_area.nx + j];
+}
+
+WaveEquation::ValueType& WaveEquation::accessValue(WaveEquation::ValueType *buf, int i, int j)
+{
+    assert(0 <= i && i < m_area.ny);
+    assert(0 <= j && j < m_area.nx);
+
+    return buf[i * m_area.nx + j];
 }

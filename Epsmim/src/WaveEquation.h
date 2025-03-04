@@ -2,6 +2,7 @@
 #define WAVE_EQUATION_H
 
 #include <vector>
+#include <span>
 
 #include "Utils.h"
 
@@ -25,7 +26,7 @@ public:
 
     struct Output
     {
-        const std::vector<ValueType>& data;
+        const std::span<ValueType>& data;
         ValueType max;
     };
 
@@ -40,11 +41,16 @@ public:
 
 private:
     ValueType sourceFunc(int i, int j, int n);
-    ValueType& accessValue(std::vector<ValueType>& vec, int i, int j);
+    ValueType& accessValue(std::span<ValueType>& buf, int i, int j);
+    ValueType& accessValue(std::vector<ValueType>& buf, int i, int j);
+    ValueType& accessValue(ValueType *buf, int i, int j);
 
-    std::vector<ValueType> m_buf1;
-    std::vector<ValueType> m_buf2;
-    std::vector<ValueType> m_buf3;
+    std::vector<ValueType> m_data;
+
+    std::span<ValueType> m_buf1;
+    std::span<ValueType> m_buf2;
+    std::span<ValueType> m_buf3;
+    
     std::vector<ValueType> m_phaseSpeed;
 
     AreaParams m_area;

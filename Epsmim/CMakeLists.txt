@@ -6,7 +6,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
@@ -49,7 +49,13 @@ else()
 endif()
 
 target_link_libraries(WaveEquation PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_compile_options(WaveEquation PRIVATE "-march=native" "-O2" "-ffast-math")
+target_compile_options(WaveEquation PRIVATE
+    "-g"
+    "-fno-omit-frame-pointer"
+    "-march=native"
+    "-O2"
+    "-ffast-math"
+)
 
 target_include_directories(WaveEquation PUBLIC ${PROJECT_INCLUDE_DIRECTORIES})
 
