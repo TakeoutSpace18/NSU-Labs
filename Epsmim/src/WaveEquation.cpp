@@ -13,8 +13,7 @@ WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
     m_data(area.nx * area.ny * 3, 0),
     m_buf1(m_data.data()),
     m_buf2(m_data.data() + area.nx * area.ny),
-    m_buf3(m_data.data() + 2 * area.nx * area.ny),
-    m_phaseSpeed(area.nx * area.ny, 0)
+    m_buf3(m_data.data() + 2 * area.nx * area.ny)
 {
     if (area.nx > 1000 || area.ny > 1000) {
         m_tau = 0.001;
@@ -25,17 +24,6 @@ WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
 
     m_gridStep.x = (m_area.xb - m_area.xa) / (m_area.nx - 1);
     m_gridStep.y = (m_area.yb - m_area.ya) / (m_area.ny - 1);
-
-    for (int i = 0; i < m_area.nx; ++i) {
-        for (int j = 0; j < m_area.ny; ++j) {
-            if (j < area.nx / 2) {
-                accessValue(m_phaseSpeed, i, j) = 0.1 * 0.1;
-            }
-            else {
-                accessValue(m_phaseSpeed, i, j) = 0.2 * 0.2;
-            }
-        }
-    }
 }
 
 WaveEquation::Output WaveEquation::nextIteration()
@@ -47,24 +35,64 @@ WaveEquation::Output WaveEquation::nextIteration()
         
     for (int i = 1; i < m_area.ny - 1; ++i)
     {
-        for (int j = 1; j < m_area.nx - 1; ++j)
+        int j;
+        for (j = 1; j < m_area.nx / 2; ++j)
         {
-            ValueType a1 = accessValue(m_buf2, i, j+1) - accessValue(m_buf2, i, j);
-            ValueType a2 = accessValue(m_phaseSpeed, i-1, j) + accessValue(m_phaseSpeed, i, j);
-            ValueType a3 = accessValue(m_buf2, i, j-1) - accessValue(m_buf2, i, j);
-            ValueType a4 = accessValue(m_phaseSpeed, i-1, j-1) + accessValue(m_phaseSpeed, i, j-1);
-            ValueType a = (a1 * a2 + a3 * a4) / (2 * m_gridStep.x * m_gridStep.x);
+            const ValueType phaseSpeed = 0.1 * 0.1 * 2;
+            const ValueType a1 = accessValue(m_buf2, i, j+1) - accessValue(m_buf2, i, j);
+            const ValueType a2 = phaseSpeed;
+            const ValueType a3 = accessValue(m_buf2, i, j-1) - accessValue(m_buf2, i, j);
+            const ValueType a4 = phaseSpeed;
+            const ValueType a = (a1 * a2 + a3 * a4) / (2 * m_gridStep.x * m_gridStep.x);
 
-            ValueType b1 = accessValue(m_buf2, i+1, j) - accessValue(m_buf2, i, j);
-            ValueType b2 = accessValue(m_phaseSpeed, i, j-1) + accessValue(m_phaseSpeed, i, j);
-            ValueType b3 = accessValue(m_buf2, i-1, j) - accessValue(m_buf2, i, j);
-            ValueType b4 = accessValue(m_phaseSpeed, i-1, j-1) + accessValue(m_phaseSpeed, i-1, j);
-            ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
+            const ValueType b1 = accessValue(m_buf2, i+1, j) - accessValue(m_buf2, i, j);
+            const ValueType b2 = phaseSpeed;
+            const ValueType b3 = accessValue(m_buf2, i-1, j) - accessValue(m_buf2, i, j);
+            const ValueType b4 = phaseSpeed;
+            const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
 
-            ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+            const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
 
             accessValue(m_buf3, i, j) = 2 * accessValue(m_buf2, i, j) - accessValue(m_buf1, i, j) + c;
+            m_max = std::max(m_max, std::abs(accessValue(m_buf3, i, j)));
+        }
 
+        const ValueType a1 = accessValue(m_buf2, i, j+1) - accessValue(m_buf2, i, j);
+        const ValueType a2 = 2 * 0.2 * 0.2;
+        const ValueType a3 = accessValue(m_buf2, i, j-1) - accessValue(m_buf2, i, j);
+        const ValueType a4 = 2 * 0.1 * 0.1;
+        const ValueType a = (a1 * a2 + a3 * a4) / (2 * m_gridStep.x * m_gridStep.x);
+
+        const ValueType b1 = accessValue(m_buf2, i+1, j) - accessValue(m_buf2, i, j);
+        const ValueType b2 = 0.1 * 0.1 + 0.2 * 0.2;
+        const ValueType b3 = accessValue(m_buf2, i-1, j) - accessValue(m_buf2, i, j);
+        const ValueType b4 = 0.1 * 0.1 + 0.2 * 0.2;
+        const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
+
+        const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+
+        accessValue(m_buf3, i, j) = 2 * accessValue(m_buf2, i, j) - accessValue(m_buf1, i, j) + c;
+        m_max = std::max(m_max, std::abs(accessValue(m_buf3, i, j)));
+
+        j++;
+        for (; j < m_area.nx - 1; ++j)
+        {
+            const ValueType phaseSpeed = 2 * 0.2 * 0.2;
+            const ValueType a1 = accessValue(m_buf2, i, j+1) - accessValue(m_buf2, i, j);
+            const ValueType a2 = phaseSpeed;
+            const ValueType a3 = accessValue(m_buf2, i, j-1) - accessValue(m_buf2, i, j);
+            const ValueType a4 = phaseSpeed;
+            const ValueType a = (a1 * a2 + a3 * a4) / (2 * m_gridStep.x * m_gridStep.x);
+
+            const ValueType b1 = accessValue(m_buf2, i+1, j) - accessValue(m_buf2, i, j);
+            const ValueType b2 = phaseSpeed;
+            const ValueType b3 = accessValue(m_buf2, i-1, j) - accessValue(m_buf2, i, j);
+            const ValueType b4 = phaseSpeed;
+            const ValueType b = (b1 * b2 + b3 * b4) / (2 * m_gridStep.y * m_gridStep.y);
+
+            const ValueType c = m_tau * m_tau * (sourceFunc(i, j, m_step) + a + b);
+
+            accessValue(m_buf3, i, j) = 2 * accessValue(m_buf2, i, j) - accessValue(m_buf1, i, j) + c;
             m_max = std::max(m_max, std::abs(accessValue(m_buf3, i, j)));
         }
     }

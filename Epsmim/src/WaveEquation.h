@@ -51,8 +51,6 @@ private:
     ValueType *m_buf2;
     ValueType *m_buf3;
 
-    std::vector<ValueType> m_phaseSpeed;
-
     AreaParams m_area;
     Utils::Vec2i m_source;
     Utils::Vec2<ValueType> m_gridStep;
