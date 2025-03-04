@@ -1,12 +1,22 @@
 #include "BresenhamLine.h"
 
 #include <cmath>
+#include <QRgb>
 
 void BresenhamLine::Draw(QImage& image, QPoint a, QPoint b, QColor color,
                     int width)
 {
+    Q_ASSERT(image.format() == QImage::Format_ARGB32);
     Q_ASSERT(image.rect().contains(a) && image.rect().contains(b));
     Q_ASSERT(width > 0);
+
+    QRgb *pixelData = reinterpret_cast<QRgb*>(image.bits());
+
+    auto setcolor = [&](int x, int y, const QColor& color) {
+        if (image.rect().contains(x, y)) {
+            pixelData[y * image.width() + x] = color.rgba();
+        }
+    };
 
     int dx = std::abs(b.x() - a.x());
     int dy = std::abs(b.y() - a.y());
@@ -30,7 +40,7 @@ void BresenhamLine::Draw(QImage& image, QPoint a, QPoint b, QColor color,
 
             int off = width / 2;
             for (int i = 0; i < width; ++i) {
-                image.setPixelColor(x, y - off + i, color);
+                setcolor(x, y - off + i, color);
             }
         }
     }
@@ -47,7 +57,7 @@ void BresenhamLine::Draw(QImage& image, QPoint a, QPoint b, QColor color,
 
             int off = width / 2;
             for (int i = 0; i < width; ++i) {
-                image.setPixelColor(x - off + i, y, color);
+                setcolor(x - off + i, y, color);
             }
         }
     }

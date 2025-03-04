@@ -18,7 +18,10 @@ public:
 
     void setImage(const QImage& image);
     void drawLine(QPoint a, QPoint b, QColor color = Qt::black, int width = 5);
-    void setPixelColor(int x, int y, const QColor& color);
+
+    QImage& image() { return m_image; }
+    QRect rect() const { return m_image.rect(); };
+
     void clear();
 
 protected:

@@ -27,7 +27,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
 
 private:
-    void doSpanFilling(QPoint seed);
+    void doSpanFilling(QImage& image, QPoint seed, const QColor& color);
 
     QSharedPointer<const FillTool::Options> m_options;
 };

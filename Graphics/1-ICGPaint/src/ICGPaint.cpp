@@ -14,6 +14,7 @@
 ICGPaint::ICGPaint() : QMainWindow()
 {
     setWindowTitle("ICGPaint");
+    setWindowIcon(QIcon(":resources/icons/icgpaint.svg"));
     createActions();
 
     m_canvas = new Canvas(QSize(800, 900));
@@ -44,6 +45,7 @@ void ICGPaint::createActions()
 {
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     QMenu *toolMenu = menuBar()->addMenu(tr("&Tool"));
+    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QToolBar *toolbar = addToolBar(tr("File"));
 
     const QIcon newIcon = style()->standardIcon(QStyle::SP_FileIcon);
@@ -76,6 +78,7 @@ void ICGPaint::createActions()
     m_fillToolAction->setCheckable(true);
     m_lineToolAction->setCheckable(true);
 
+
     QActionGroup *toolActions = new QActionGroup(this);
     toolActions->addAction(m_brushToolAction);
     toolActions->addAction(m_fillToolAction);
@@ -89,6 +92,9 @@ void ICGPaint::createActions()
     toolMenu->addAction(m_lineToolAction);
     toolMenu->addAction(m_fillToolAction);
     toolMenu->addAction(m_selectColorAction);
+
+    QAction *aboutAction = new QAction(windowIcon(), tr("&About"), this);
+    helpMenu->addAction(aboutAction);
 
     QWidget *spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -122,11 +128,14 @@ void ICGPaint::createActions()
     connect(m_fillToolAction, &QAction::triggered, this, [this]() {
         setActiveTool(m_fillTool);
     });
+    connect(aboutAction, &QAction::triggered, this, &ICGPaint::aboutDialog);
 }
 
 QActionGroup *ICGPaint::createColorActions()
 {
     QList<QColor> colors = {
+        QColor(Qt::black),      // Black
+        QColor(Qt::white),      // White
         QColor(Qt::red),        // Red
         QColor(255, 165, 0),    // Orange
         QColor(Qt::yellow),     // Yellow
@@ -204,4 +213,11 @@ void ICGPaint::setActiveTool(Tool *tool)
 {
     tool->raise();
     m_activeTool = tool;
+}
+
+void ICGPaint::aboutDialog()
+{
+    QString text = "Made by Pavel Urdin\nGroup 22201 NSU FIT\n2025";
+    QMessageBox::about(this, "About ICGPaint", text);
+
 }

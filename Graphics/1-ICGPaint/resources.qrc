@@ -3,5 +3,6 @@
     <file>resources/icons/clear.svg</file>
     <file>resources/icons/brush.svg</file>
     <file>resources/icons/fill.svg</file>
+    <file>resources/icons/icgpaint.svg</file>
 </qresource>
 </RCC>

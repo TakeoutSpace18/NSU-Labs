@@ -27,14 +27,18 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
-    // void paintEvent(QPaintEvent *event) override;
-    // void resizeEvent(QResizeEvent *event) override;
+
+    void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
+    void drawPreview(QPoint a, QPoint b);
+    void resetPreview();
+
     QPoint m_firstPoint;
     bool m_firstPointSelected;
 
-    QPixmap m_preview;
+    QImage m_preview;
 
     QSharedPointer<const LineTool::Options> m_options;
 };

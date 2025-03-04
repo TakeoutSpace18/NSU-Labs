@@ -11,6 +11,14 @@ class Tool : public QWidget {
 public:
     Tool(Canvas *canvas) : QWidget(canvas), m_canvas(canvas) {
         setGeometry(0, 0, canvas->width(), canvas->height());
+
+        // Make the widget transparent
+        setAttribute(Qt::WA_TransparentForMouseEvents, false);
+        setAttribute(Qt::WA_NoSystemBackground, true);
+        setAttribute(Qt::WA_TranslucentBackground, true);
+        
+        // Ensure this widget stays on top
+        setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
     }
 
     virtual ~Tool() = default;

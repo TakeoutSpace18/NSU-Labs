@@ -6,14 +6,13 @@
 #include <QHBoxLayout>
 
 Canvas::Canvas(const QSize& size, QWidget *parent) : QWidget(),
-    m_image(size, QImage::Format_RGB32)
+    m_image(size, QImage::Format_ARGB32)
 {
     // only for optimization
     setAttribute(Qt::WA_StaticContents);
     resize(m_image.size());
     clear();
 
-    BresenhamLine::Test(m_image);
     update();
 }
 
@@ -59,7 +58,3 @@ void Canvas::clear()
     update();
 }
 
-void Canvas::setPixelColor(int x, int y, const QColor& color)
-{
-    m_image.setPixelColor(x, y, color);
-}

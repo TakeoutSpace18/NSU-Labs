@@ -32,6 +32,7 @@ private:
     void newFile();
     void clearCanvas();
     void selectColorDialog();
+    void aboutDialog();
 
     Canvas *m_canvas;
     QSizeGrip *m_sizeGrip;
