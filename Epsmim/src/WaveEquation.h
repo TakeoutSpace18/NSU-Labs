@@ -49,7 +49,6 @@ private:
 
     ValueType *m_buf1;
     ValueType *m_buf2;
-    ValueType *m_buf3;
 
     AreaParams m_area;
     Utils::Vec2i m_source;
