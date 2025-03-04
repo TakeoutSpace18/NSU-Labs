@@ -26,7 +26,7 @@ public:
 
     struct Output
     {
-        const std::span<ValueType>& data;
+        const ValueType *data;
         ValueType max;
     };
 
@@ -47,10 +47,10 @@ private:
 
     std::vector<ValueType> m_data;
 
-    std::span<ValueType> m_buf1;
-    std::span<ValueType> m_buf2;
-    std::span<ValueType> m_buf3;
-    
+    ValueType *m_buf1;
+    ValueType *m_buf2;
+    ValueType *m_buf3;
+
     std::vector<ValueType> m_phaseSpeed;
 
     AreaParams m_area;

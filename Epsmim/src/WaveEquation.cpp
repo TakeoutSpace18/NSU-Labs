@@ -11,9 +11,9 @@ WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
     m_step(0),
     m_max(0),
     m_data(area.nx * area.ny * 3, 0),
-    m_buf1(m_data.begin(), area.nx * area.ny),
-    m_buf2(m_data.begin() + area.nx * area.ny, area.nx * area.ny),
-    m_buf3(m_data.begin() + area.nx * area.ny, area.nx * area.ny),
+    m_buf1(m_data.data()),
+    m_buf2(m_data.data() + area.nx * area.ny),
+    m_buf3(m_data.data() + 2 * area.nx * area.ny),
     m_phaseSpeed(area.nx * area.ny, 0)
 {
     if (area.nx > 1000 || area.ny > 1000) {

@@ -60,6 +60,6 @@ int main(int argc, char* argv[])
     std::cout << "time: " << elapsed << "\n";
 
     WaveEquation::Output out = equation->getCurrentState();
-    size_t size = out.data.size() * sizeof(out.data[0]);
-    Utils::writeToFile("out.dat", reinterpret_cast<const char*>(out.data.data()), size);
+    size_t size = area.nx * area.ny * sizeof(WaveEquation::ValueType);
+    Utils::writeToFile("out.dat", reinterpret_cast<const char*>(out.data), size);
 }

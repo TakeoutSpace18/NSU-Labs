@@ -52,7 +52,7 @@ void Application::nextIteration()
 
 void Application::plotOutput(QImage& image, const WaveEquation::Output& out)
 {
-    const WaveEquation::ValueType *buf = out.data.data();
+    const WaveEquation::ValueType *buf = out.data;
 
     uchar* pixelData = image.bits();
     const int stride = m_image.bytesPerLine();
