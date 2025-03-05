@@ -20,13 +20,29 @@ set(PROJECT_SOURCES
         src/ICGPaint.h
         src/BresenhamLine.h
         src/BresenhamLine.cpp
+        src/ToolOptionsDialog.cpp
+        src/ToolOptionsDialog.h
+
         src/tool/Tool.h
+        src/tool/ToolOptionsPanel.h
+
         src/tool/BrushTool.cpp
         src/tool/BrushTool.h
+        src/tool/BrushToolOptions.h
+
         src/tool/LineTool.cpp
         src/tool/LineTool.h
+        src/tool/LineToolOptions.h
+        src/tool/LineToolOptionsPanel.h
+        src/tool/LineToolOptionsPanel.cpp
+
         src/tool/FillTool.cpp
         src/tool/FillTool.h
+        src/tool/FillToolOptions.h
+
+        src/util/SliderWithInput.cpp
+        src/util/SliderWithInput.h
+
         resources.qrc
 )
 

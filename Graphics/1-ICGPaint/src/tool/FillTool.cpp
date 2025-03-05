@@ -4,7 +4,7 @@
 #include <QPainter>
 #include <QStack>
 
-FillTool::FillTool(Canvas *canvas, const QSharedPointer<const FillTool::Options>& options)
+FillTool::FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options)
     : Tool(canvas), m_options(options)
 {
 }
@@ -12,7 +12,7 @@ FillTool::FillTool(Canvas *canvas, const QSharedPointer<const FillTool::Options>
 void FillTool::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        doSpanFilling(m_canvas->image(), event->pos(), m_options->color);
+        doSpanFilling(m_canvas->image(), event->pos(), m_options->color());
     }
 }
 
@@ -26,7 +26,7 @@ void FillTool::doSpanFilling(QImage& image, QPoint seed, const QColor& color)
     QRgb *pixelData = reinterpret_cast<QRgb*>(image.bits());
     QRgb areaColor = pixelData[seed.y() * image.width() + seed.x()];
 
-    if (areaColor == m_options->color.rgba()) {
+    if (areaColor == m_options->color().rgba()) {
         return;
     }
 

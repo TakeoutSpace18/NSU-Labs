@@ -4,5 +4,6 @@
     <file>resources/icons/brush.svg</file>
     <file>resources/icons/fill.svg</file>
     <file>resources/icons/icgpaint.svg</file>
+    <file>resources/icons/options.svg</file>
 </qresource>
 </RCC>

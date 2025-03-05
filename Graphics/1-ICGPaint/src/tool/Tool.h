@@ -3,9 +3,11 @@
 
 #include <QWidget>
 
+#include "ToolOptionsPanel.h"
 #include "Canvas.h"
 
-class Tool : public QWidget {
+class Tool : public QWidget
+{
     Q_OBJECT
 
 public:
@@ -20,6 +22,11 @@ public:
         // Ensure this widget stays on top
         setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
     }
+
+    virtual ToolOptionsPanel* createOptionsPanel(QWidget* parent = nullptr) const {
+        return nullptr;
+    }
+
 
     virtual ~Tool() = default;
 

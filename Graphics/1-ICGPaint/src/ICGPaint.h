@@ -5,12 +5,19 @@
 #include <QScrollArea>
 #include <QSizeGrip>
 #include <QColor>
+#include <QDockWidget>
 
 #include "Canvas.h"
 #include "tool/Tool.h"
+
+#include "tool/BrushToolOptions.h"
+#include "tool/LineToolOptions.h"
+#include "tool/FillToolOptions.h"
+
 #include "tool/BrushTool.h"
 #include "tool/LineTool.h"
 #include "tool/FillTool.h"
+#include "tool/ToolOptionsPanel.h"
 
 class ICGPaint : public QMainWindow
 {
@@ -19,10 +26,18 @@ class ICGPaint : public QMainWindow
 public:
     ICGPaint();
 
-protected:
+    struct ToolOptions
+    {
+        ToolOptions();
+
+        QSharedPointer<BrushToolOptions> brush;
+        QSharedPointer<LineToolOptions> line;
+        QSharedPointer<FillToolOptions> fill;
+    };
 
 private:
     void createActions();
+    void createToolOptionsDock();
     QActionGroup *createColorActions();
 
     QIcon generateColorIcon(QColor color);
@@ -31,6 +46,7 @@ private:
 
     void newFile();
     void clearCanvas();
+    void toolOptions();
     void selectColorDialog();
     void aboutDialog();
 
@@ -41,11 +57,10 @@ private:
     QColor m_activeColor;
     Tool *m_activeTool;
 
-    QSharedPointer<BrushTool::Options> m_brushToolOptions;
+    ToolOptions m_toolOptions;
+
     BrushTool *m_brushTool;
-    QSharedPointer<LineTool::Options> m_lineToolOptions;
     LineTool *m_lineTool;
-    QSharedPointer<FillTool::Options> m_fillToolOptions;
     FillTool *m_fillTool;
 
     QAction *m_newAction;
@@ -54,6 +69,9 @@ private:
     QAction *m_brushToolAction;
     QAction *m_lineToolAction;
     QAction *m_fillToolAction;
+    QAction *m_toolOptionsAction;
     QActionGroup *m_colorActions;
+
+    QDockWidget *m_toolOptionsDock;
 };
 #endif // ICGPAINT_H

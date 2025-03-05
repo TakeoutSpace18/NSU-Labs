@@ -2,24 +2,18 @@
 #define FILL_TOOL_H
 
 #include "Tool.h"
+#include "tool/FillToolOptions.h"
 
 class FillTool : public Tool
 {
     Q_OBJECT;
 
 public:
-    struct Options
-    {
-        Options() : color(Qt::black) {}
-
-        QColor color;
-    };
-
     static QIcon Icon();
 
-    FillTool(Canvas *canvas, const QSharedPointer<const Options>& options);
+    FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options);
 
-    void setOptions(const QSharedPointer<const Options>& options) {
+    void setOptions(const QSharedPointer<FillToolOptions>& options) {
         m_options = options;
     }
 
@@ -29,7 +23,7 @@ protected:
 private:
     void doSpanFilling(QImage& image, QPoint seed, const QColor& color);
 
-    QSharedPointer<const FillTool::Options> m_options;
+    QSharedPointer<FillToolOptions> m_options;
 };
 
 

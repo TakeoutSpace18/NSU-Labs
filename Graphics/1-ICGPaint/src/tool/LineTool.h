@@ -2,27 +2,23 @@
 #define LINE_TOOL_H
 
 #include "Tool.h"
+#include "LineToolOptions.h"
+#include "ToolOptionsPanel.h"
 
 class LineTool : public Tool
 {
     Q_OBJECT;
 
 public:
-    struct Options
-    {
-        Options() : color(Qt::black), width(5) {}
-
-        QColor color;
-        int width;
-    };
-
     static QIcon Icon();
 
-    LineTool(Canvas *canvas, const QSharedPointer<const Options>& options);
+    LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options);
 
-    void setOptions(const QSharedPointer<const Options>& options) {
+    void setOptions(const QSharedPointer<LineToolOptions>& options) {
         m_options = options;
     }
+
+    ToolOptionsPanel* createOptionsPanel(QWidget* parent = nullptr) const override;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -40,7 +36,7 @@ private:
 
     QImage m_preview;
 
-    QSharedPointer<const LineTool::Options> m_options;
+    QSharedPointer<LineToolOptions> m_options;
 };
 
 

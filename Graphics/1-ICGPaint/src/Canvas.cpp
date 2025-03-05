@@ -33,8 +33,6 @@ void Canvas::drawLine(QPoint a, QPoint b, QColor color, int width)
 
 void Canvas::resizeEvent(QResizeEvent *event)
 {
-    qDebug() << "Canvas resize " << event->size();
-
     if (m_image.size() == event->size()) {
         return;
     }

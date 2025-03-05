@@ -1,21 +1,37 @@
 #include "ICGPaint.h"
 
 #include <QtWidgets>
-#include <qactiongroup.h>
-#include <qcolor.h>
-#include <qnamespace.h>
-#include <qwidget.h>
+#include <QActionGroup>
+#include <QBoxLayout>
+#include <QColor>
+#include <QDockWidget>
 
 #include "Canvas.h"
+#include "ToolOptionsDialog.h"
+
 #include "tool/BrushTool.h"
 #include "tool/LineTool.h"
 #include "tool/FillTool.h"
+#include "tool/FillToolOptions.h"
+#include "tool/BrushToolOptions.h"
+#include "tool/LineToolOptions.h"
+
+#include "tool/LineToolOptionsPanel.h"
+#include "tool/ToolOptionsPanel.h"
+
+ICGPaint::ToolOptions::ToolOptions()
+{
+    brush = QSharedPointer<BrushToolOptions>(new BrushToolOptions());
+    line = QSharedPointer<LineToolOptions>(new LineToolOptions());
+    fill = QSharedPointer<FillToolOptions>(new FillToolOptions());
+}
 
 ICGPaint::ICGPaint() : QMainWindow()
 {
     setWindowTitle("ICGPaint");
     setWindowIcon(QIcon(":resources/icons/icgpaint.svg"));
     createActions();
+    createToolOptionsDock();
 
     m_canvas = new Canvas(QSize(800, 900));
 
@@ -26,17 +42,14 @@ ICGPaint::ICGPaint() : QMainWindow()
     setMinimumSize(600, 400);
     resize(minimumSize());
 
-    m_brushToolOptions = QSharedPointer<BrushTool::Options>(new BrushTool::Options());
-    m_brushTool = new BrushTool(m_canvas, m_brushToolOptions);
+    m_toolOptions = ToolOptions();
 
-    m_lineToolOptions = QSharedPointer<LineTool::Options>(new LineTool::Options());
-    m_lineTool = new LineTool(m_canvas, m_lineToolOptions);
-
-    m_fillToolOptions = QSharedPointer<FillTool::Options>(new FillTool::Options());
-    m_fillTool = new FillTool(m_canvas, m_fillToolOptions);
+    m_brushTool = new BrushTool(m_canvas, m_toolOptions.brush);
+    m_lineTool = new LineTool(m_canvas, m_toolOptions.line);
+    m_fillTool = new FillTool(m_canvas, m_toolOptions.fill);
 
     m_activeTool = nullptr;
-    setActiveTool(m_brushTool);
+    m_brushToolAction->trigger();
 
     setActiveColor(Qt::black);
 }
@@ -51,10 +64,12 @@ void ICGPaint::createActions()
     const QIcon newIcon = style()->standardIcon(QStyle::SP_FileIcon);
     const QIcon clearIcon = QIcon(":resources/icons/clear.svg");
     const QIcon selectColorIcon = generateColorIcon(Qt::black);
+    const QIcon optionsIcon = QIcon(":resources/icons/options.svg");
 
     m_newAction = new QAction(newIcon, tr("&New"), this);
     m_clearAction = new QAction(clearIcon, tr("&Clear"), this);
     m_selectColorAction = new QAction(selectColorIcon, tr("&Color"), this);
+    m_toolOptionsAction = new QAction(optionsIcon, tr("Tool &Options"), this);
 
     m_brushToolAction = new QAction(BrushTool::Icon(), tr("&Brush"), this);
     m_lineToolAction = new QAction(LineTool::Icon(), tr("&Line"), this);
@@ -66,6 +81,7 @@ void ICGPaint::createActions()
     m_brushToolAction->setShortcut(QKeySequence(Qt::Key_B));
     m_lineToolAction->setShortcut(QKeySequence(Qt::Key_L));
     m_fillToolAction->setShortcut(QKeySequence(Qt::Key_F));
+    m_toolOptionsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
 
     m_newAction->setStatusTip("Create new file");
     m_clearAction->setStatusTip("Clear canvas");
@@ -73,11 +89,11 @@ void ICGPaint::createActions()
     m_brushToolAction->setStatusTip("Draw with brush");
     m_lineToolAction->setStatusTip("Draw line");
     m_fillToolAction->setStatusTip("Fill area");
+    m_fillToolAction->setStatusTip("Tool options");
 
     m_brushToolAction->setCheckable(true);
     m_fillToolAction->setCheckable(true);
     m_lineToolAction->setCheckable(true);
-
 
     QActionGroup *toolActions = new QActionGroup(this);
     toolActions->addAction(m_brushToolAction);
@@ -92,6 +108,7 @@ void ICGPaint::createActions()
     toolMenu->addAction(m_lineToolAction);
     toolMenu->addAction(m_fillToolAction);
     toolMenu->addAction(m_selectColorAction);
+    toolMenu->addAction(m_toolOptionsAction);
 
     QAction *aboutAction = new QAction(windowIcon(), tr("&About"), this);
     helpMenu->addAction(aboutAction);
@@ -101,6 +118,7 @@ void ICGPaint::createActions()
 
     toolbar->addAction(m_newAction);
     toolbar->addAction(m_clearAction);
+    toolbar->addAction(m_toolOptionsAction);
     toolbar->addSeparator();
     toolbar->addAction(m_brushToolAction);
     toolbar->addAction(m_lineToolAction);
@@ -118,6 +136,7 @@ void ICGPaint::createActions()
 
     connect(m_newAction, &QAction::triggered, this, &ICGPaint::newFile);
     connect(m_clearAction, &QAction::triggered, this, &ICGPaint::clearCanvas);
+    connect(m_toolOptionsAction, &QAction::triggered, this, &ICGPaint::toolOptions);
     connect(m_selectColorAction, &QAction::triggered, this, &ICGPaint::selectColorDialog);
     connect(m_brushToolAction, &QAction::triggered, this, [this]() {
         setActiveTool(m_brushTool);
@@ -129,6 +148,13 @@ void ICGPaint::createActions()
         setActiveTool(m_fillTool);
     });
     connect(aboutAction, &QAction::triggered, this, &ICGPaint::aboutDialog);
+}
+
+void ICGPaint::createToolOptionsDock()
+{
+    m_toolOptionsDock = new QDockWidget("Tool options", this);
+    m_toolOptionsDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    addDockWidget(Qt::RightDockWidgetArea, m_toolOptionsDock);
 }
 
 QActionGroup *ICGPaint::createColorActions()
@@ -203,9 +229,9 @@ QIcon ICGPaint::generateColorIcon(QColor color)
 void ICGPaint::setActiveColor(QColor color)
 {
     m_activeColor = color;
-    m_brushToolOptions->color = color;
-    m_lineToolOptions->color = color;
-    m_fillToolOptions->color = color;
+    m_toolOptions.line->setColor(color);
+    m_toolOptions.brush->setColor(color);
+    m_toolOptions.fill->setColor(color);
     m_selectColorAction->setIcon(generateColorIcon(color));
 }
 
@@ -213,11 +239,26 @@ void ICGPaint::setActiveTool(Tool *tool)
 {
     tool->raise();
     m_activeTool = tool;
+
+    ToolOptionsPanel *optionsPanel = tool->createOptionsPanel();
+    if (optionsPanel) {
+        optionsPanel->setAutoApply(true);
+        m_toolOptionsDock->show();
+        m_toolOptionsDock->setWidget(optionsPanel);
+    }
+    else {
+        m_toolOptionsDock->hide();
+    }
 }
 
 void ICGPaint::aboutDialog()
 {
     QString text = "Made by Pavel Urdin\nGroup 22201 NSU FIT\n2025";
     QMessageBox::about(this, "About ICGPaint", text);
+}
 
+void ICGPaint::toolOptions()
+{
+    ToolOptionsDialog dialog(m_toolOptions, this);
+    dialog.exec();
 }

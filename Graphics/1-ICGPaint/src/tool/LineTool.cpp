@@ -1,9 +1,12 @@
 #include "LineTool.h"
 
+#include "LineToolOptionsPanel.h"
+#include "ToolOptionsPanel.h"
+
 #include <QMouseEvent>
 #include <QPainter>
 
-LineTool::LineTool(Canvas *canvas, const QSharedPointer<const LineTool::Options>& options)
+LineTool::LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options)
     : Tool(canvas), m_firstPoint(0, 0), m_firstPointSelected(false),
     m_options(options), m_preview(canvas->size(), QImage::Format_ARGB32)
 {
@@ -20,7 +23,7 @@ void LineTool::mousePressEvent(QMouseEvent *event)
         }
         else {
             m_canvas->drawLine(m_firstPoint, event->pos(),
-                               m_options->color, m_options->width);
+                               m_options->color(), m_options->width());
             m_firstPointSelected = false;
             setCursor(Qt::ArrowCursor);
 
@@ -65,7 +68,7 @@ void LineTool::drawPreview(QPoint a, QPoint b)
     m_preview.fill(Qt::transparent);
 
     QPainter painter(&m_preview);
-    painter.setPen(QPen(m_options->color, 1, Qt::SolidLine, Qt::RoundCap,
+    painter.setPen(QPen(m_options->color(), 1, Qt::SolidLine, Qt::RoundCap,
                         Qt::RoundJoin));
     painter.drawLine(a, b);
 
@@ -76,4 +79,9 @@ void LineTool::resetPreview()
 {
     m_preview.fill(Qt::transparent);
     update();
+}
+
+ToolOptionsPanel* LineTool::createOptionsPanel(QWidget* parent) const
+{
+    return new LineToolOptionsPanel(m_options, parent);
 }

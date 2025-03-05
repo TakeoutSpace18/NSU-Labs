@@ -3,7 +3,9 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-BrushTool::BrushTool(Canvas *canvas, const QSharedPointer<const BrushTool::Options>& options)
+#include "tool/BrushToolOptions.h"
+
+BrushTool::BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options)
     : Tool(canvas), m_lastPoint(0, 0), m_isPainting(false), m_options(options)
 {
 
@@ -22,7 +24,7 @@ void BrushTool::mouseMoveEvent(QMouseEvent *event)
 {
     if ((event->buttons() & Qt::LeftButton) && m_isPainting) {
         m_canvas->drawLine(m_lastPoint, event->pos(),
-                           m_options->color, m_options->width);
+                           m_options->color(), m_options->width());
         m_lastPoint = event->pos();
     }
  }

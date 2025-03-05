@@ -2,25 +2,18 @@
 #define BRUSH_TOOL_H
 
 #include "Tool.h"
+#include "tool/BrushToolOptions.h"
 
 class BrushTool : public Tool
 {
     Q_OBJECT;
 
 public:
-    struct Options
-    {
-        Options() : color(Qt::black), width(5) {}
-
-        QColor color;
-        int width;
-    };
-
     static QIcon Icon();
 
-    BrushTool(Canvas *canvas, const QSharedPointer<const Options>& options);
+    BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options);
 
-    void setOptions(const QSharedPointer<const Options>& options) {
+    void setOptions(const QSharedPointer<BrushToolOptions>& options) {
         m_options = options;
     }
 
@@ -33,7 +26,7 @@ private:
     QPoint m_lastPoint;
     bool m_isPainting;
 
-    QSharedPointer<const BrushTool::Options> m_options;
+    QSharedPointer<const BrushToolOptions> m_options;
 };
 
 
