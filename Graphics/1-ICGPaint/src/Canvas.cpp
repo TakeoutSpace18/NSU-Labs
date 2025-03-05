@@ -1,21 +1,28 @@
 #include "Canvas.h"
-#include "BresenhamLine.h"
 
 #include <QMouseEvent>
 #include <QPainter>
 #include <QHBoxLayout>
+#include <QImage>
 
-Canvas::Canvas(const QSize& size, QWidget *parent) : QWidget(),
-    m_image(size, QImage::Format_ARGB32)
+#include "BresenhamLine.h"
+
+Canvas::Canvas(const QSize& size, QWidget *parent)
+    : Canvas(QImage(size, QImage::Format_ARGB32))
 {
-    // only for optimization
+    clear();
+}
+
+Canvas::Canvas(const QImage& image, QWidget *parent)
+    : QWidget(parent), m_image(image)
+{
+    m_image.convertTo(QImage::Format_ARGB32);
+
     setAttribute(Qt::WA_StaticContents);
     resize(m_image.size());
-    clear();
 
     update();
 }
-
 void Canvas::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -53,6 +60,14 @@ void Canvas::resizeEvent(QResizeEvent *event)
 void Canvas::clear()
 {
     m_image.fill(Qt::white);
+    update();
+}
+
+void Canvas::setImage(const QImage& image)
+{
+    m_image = image;
+    m_image.convertTo(QImage::Format_ARGB32);
+    resize(image.size());
     update();
 }
 

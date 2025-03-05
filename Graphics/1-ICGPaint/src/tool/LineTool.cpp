@@ -6,9 +6,13 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-LineTool::LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options)
-    : Tool(canvas), m_firstPoint(0, 0), m_firstPointSelected(false),
-    m_options(options), m_preview(canvas->size(), QImage::Format_ARGB32)
+LineTool::LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options,
+                   QWidget *parent)
+    : Tool(canvas, parent),
+    m_firstPoint(0, 0),
+    m_firstPointSelected(false),
+    m_options(options),
+    m_preview(canvas->size(), QImage::Format_ARGB32)
 {
     m_preview.fill(Qt::transparent);
 }
@@ -27,7 +31,7 @@ void LineTool::mousePressEvent(QMouseEvent *event)
             m_firstPointSelected = false;
             setCursor(Qt::ArrowCursor);
 
-            resetPreview();
+            // resetPreview();
         }
     }
 }
@@ -35,7 +39,7 @@ void LineTool::mousePressEvent(QMouseEvent *event)
 void LineTool::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_firstPointSelected) {
-        drawPreview(m_firstPoint, event->pos());
+        // drawPreview(m_firstPoint, event->pos());
     }
  }
 

@@ -5,6 +5,8 @@
 #include <QBoxLayout>
 #include <QColor>
 #include <QDockWidget>
+#include <QStackedLayout>
+#include <QValidator>
 
 #include "Canvas.h"
 #include "ToolOptionsDialog.h"
@@ -16,7 +18,6 @@
 #include "tool/BrushToolOptions.h"
 #include "tool/LineToolOptions.h"
 
-#include "tool/LineToolOptionsPanel.h"
 #include "tool/ToolOptionsPanel.h"
 
 ICGPaint::ToolOptions::ToolOptions()
@@ -30,28 +31,47 @@ ICGPaint::ICGPaint() : QMainWindow()
 {
     setWindowTitle("ICGPaint");
     setWindowIcon(QIcon(":resources/icons/icgpaint.svg"));
-    createActions();
-    createToolOptionsDock();
 
-    m_canvas = new Canvas(QSize(800, 900));
+    m_activeTool = nullptr;
+    m_toolsLayout = nullptr;
 
     m_scrollArea = new QScrollArea(this);
-    m_scrollArea->setWidget(m_canvas);
     setCentralWidget(m_scrollArea);
+
+    setCanvas(new Canvas(QSize(640, 480), this));
+
+    createActions();
+    createToolOptionsDock();
+    createTools(m_canvas);
 
     setMinimumSize(600, 400);
     resize(minimumSize());
 
+    setActiveColor(Qt::black);
+}
+
+void ICGPaint::createTools(Canvas *canvas)
+{
     m_toolOptions = ToolOptions();
 
-    m_brushTool = new BrushTool(m_canvas, m_toolOptions.brush);
-    m_lineTool = new LineTool(m_canvas, m_toolOptions.line);
-    m_fillTool = new FillTool(m_canvas, m_toolOptions.fill);
+
+    m_brushTool = new BrushTool(canvas, m_toolOptions.brush);
+    m_lineTool = new LineTool(canvas, m_toolOptions.line);
+    m_fillTool = new FillTool(canvas, m_toolOptions.fill);
+
+    m_tools.append(m_brushTool);
+    m_tools.append(m_lineTool);
+    m_tools.append(m_fillTool);
+
+    m_toolsLayout = new QStackedLayout;
+    for (auto tool : m_tools) {
+        m_toolsLayout->addWidget(tool);
+    }
+
+    canvas->setLayout(m_toolsLayout);
 
     m_activeTool = nullptr;
     m_brushToolAction->trigger();
-
-    setActiveColor(Qt::black);
 }
 
 void ICGPaint::createActions()
@@ -62,11 +82,15 @@ void ICGPaint::createActions()
     QToolBar *toolbar = addToolBar(tr("File"));
 
     const QIcon newIcon = style()->standardIcon(QStyle::SP_FileIcon);
+    const QIcon saveIcon = style()->standardIcon(QStyle::SP_DialogSaveButton);
+    const QIcon openIcon = style()->standardIcon(QStyle::SP_DialogOpenButton);
     const QIcon clearIcon = QIcon(":resources/icons/clear.svg");
     const QIcon selectColorIcon = generateColorIcon(Qt::black);
     const QIcon optionsIcon = QIcon(":resources/icons/options.svg");
 
     m_newAction = new QAction(newIcon, tr("&New"), this);
+    m_saveAction = new QAction(saveIcon, tr("&Save"), this);
+    m_openAction = new QAction(openIcon, tr("&Open"), this);
     m_clearAction = new QAction(clearIcon, tr("&Clear"), this);
     m_selectColorAction = new QAction(selectColorIcon, tr("&Color"), this);
     m_toolOptionsAction = new QAction(optionsIcon, tr("Tool &Options"), this);
@@ -76,6 +100,8 @@ void ICGPaint::createActions()
     m_fillToolAction = new QAction(FillTool::Icon(), tr("&Fill"), this);
 
     m_newAction->setShortcuts(QKeySequence::New);
+    m_saveAction->setShortcuts(QKeySequence::Save);
+    m_openAction->setShortcuts(QKeySequence::Open);
     m_clearAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     m_selectColorAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     m_brushToolAction->setShortcut(QKeySequence(Qt::Key_B));
@@ -84,6 +110,8 @@ void ICGPaint::createActions()
     m_toolOptionsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
 
     m_newAction->setStatusTip("Create new file");
+    m_saveAction->setStatusTip("Save file");
+    m_openAction->setStatusTip("Open file");
     m_clearAction->setStatusTip("Clear canvas");
     m_selectColorAction->setStatusTip("Select color");
     m_brushToolAction->setStatusTip("Draw with brush");
@@ -102,8 +130,10 @@ void ICGPaint::createActions()
     toolActions->setExclusive(true);
 
     fileMenu->addAction(m_newAction);
-    fileMenu->addAction(m_clearAction);
+    fileMenu->addAction(m_openAction);
+    fileMenu->addAction(m_saveAction);
 
+    toolMenu->addAction(m_clearAction);
     toolMenu->addAction(m_brushToolAction);
     toolMenu->addAction(m_lineToolAction);
     toolMenu->addAction(m_fillToolAction);
@@ -117,9 +147,14 @@ void ICGPaint::createActions()
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     toolbar->addAction(m_newAction);
+    toolbar->addAction(m_openAction);
+    toolbar->addAction(m_saveAction);
+    toolbar->addSeparator();
+
     toolbar->addAction(m_clearAction);
     toolbar->addAction(m_toolOptionsAction);
     toolbar->addSeparator();
+
     toolbar->addAction(m_brushToolAction);
     toolbar->addAction(m_lineToolAction);
     toolbar->addAction(m_fillToolAction);
@@ -133,8 +168,9 @@ void ICGPaint::createActions()
     toolbar->addSeparator();
     toolbar->addAction(m_selectColorAction);
 
-
-    connect(m_newAction, &QAction::triggered, this, &ICGPaint::newFile);
+    connect(m_newAction, &QAction::triggered, this, &ICGPaint::newFileDialog);
+    connect(m_saveAction, &QAction::triggered, this, &ICGPaint::saveFile);
+    connect(m_openAction, &QAction::triggered, this, &ICGPaint::openFile);
     connect(m_clearAction, &QAction::triggered, this, &ICGPaint::clearCanvas);
     connect(m_toolOptionsAction, &QAction::triggered, this, &ICGPaint::toolOptions);
     connect(m_selectColorAction, &QAction::triggered, this, &ICGPaint::selectColorDialog);
@@ -189,9 +225,76 @@ QActionGroup *ICGPaint::createColorActions()
     return group;
 }
 
-void ICGPaint::newFile()
+void ICGPaint::setCanvas(Canvas *canvas)
 {
-    qInfo() << "New File clicked";
+    // move all tool widgets to new canvas
+    for (auto tool : m_tools) {
+        tool->setCanvas(canvas);
+    }
+
+    if (m_toolsLayout)
+        canvas->setLayout(m_toolsLayout);
+    m_scrollArea->setWidget(canvas);
+    m_canvas = canvas;
+}
+
+void ICGPaint::newFileDialog()
+{
+    QDialog dialog;
+    dialog.setWindowTitle("Create new file");
+    dialog.setModal(true);
+    dialog.setFixedSize(QSize(200, 150));
+
+    QVBoxLayout layout(&dialog);
+    QFormLayout formLayout;
+
+    QLineEdit widthEdit("640"), heightEdit("480");
+    QValidator *validator = new QIntValidator(10, 20000, &dialog);
+    widthEdit.setValidator(validator);
+    heightEdit.setValidator(validator);
+    formLayout.addRow("Width:", &widthEdit);
+    formLayout.addRow("Height:", &heightEdit);
+
+    QPushButton okButton("OK"), cancelButton("Cancel");
+
+    QObject::connect(&okButton, &QPushButton::clicked, [&]() { dialog.accept(); });
+    QObject::connect(&cancelButton, &QPushButton::clicked, [&]() { dialog.reject(); });
+
+    layout.addLayout(&formLayout);
+    layout.addWidget(&okButton);
+    layout.addWidget(&cancelButton);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        int width = widthEdit.text().toInt();
+        int height = heightEdit.text().toInt();
+
+        Canvas *canvas = new Canvas(QSize(width, height));
+        setCanvas(canvas);
+
+        m_savePath = "";
+    }
+}
+
+void ICGPaint::saveFile()
+{
+    if (m_savePath.isEmpty()) {
+        m_savePath = QFileDialog::getSaveFileName(this, "Save file",
+                                     QDir::homePath() + "/untitled.png",
+                                     "PNG Image (*.png);;All Files (*)");
+    }
+
+    if (!m_canvas->image().save(m_savePath, "PNG")) {
+        qWarning() << "Failed to save to " << m_savePath;
+    }
+}
+
+void ICGPaint::openFile()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"),
+                                                    QDir::homePath(),
+                                                    tr("Image Files (*.png *.jpg *.jpeg *.bmp);;All Files (*)"));
+    Canvas *canvas = new Canvas(QImage(filePath));
+    setCanvas(canvas);
 }
 
 void ICGPaint::clearCanvas()
@@ -237,10 +340,10 @@ void ICGPaint::setActiveColor(QColor color)
 
 void ICGPaint::setActiveTool(Tool *tool)
 {
-    tool->raise();
+    m_toolsLayout->setCurrentWidget(tool);
     m_activeTool = tool;
 
-    ToolOptionsPanel *optionsPanel = tool->createOptionsPanel();
+    ToolOptionsPanel *optionsPanel = tool->createOptionsPanel(this);
     if (optionsPanel) {
         optionsPanel->setAutoApply(true);
         m_toolOptionsDock->show();
@@ -253,6 +356,7 @@ void ICGPaint::setActiveTool(Tool *tool)
 
 void ICGPaint::aboutDialog()
 {
+    // TODO: expand this text
     QString text = "Made by Pavel Urdin\nGroup 22201 NSU FIT\n2025";
     QMessageBox::about(this, "About ICGPaint", text);
 }

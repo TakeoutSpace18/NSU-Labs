@@ -3,10 +3,15 @@
 #include <QMouseEvent>
 #include <QPainter>
 
+#include "BrushToolOptionsPanel.h"
 #include "tool/BrushToolOptions.h"
 
-BrushTool::BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options)
-    : Tool(canvas), m_lastPoint(0, 0), m_isPainting(false), m_options(options)
+BrushTool::BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options,
+                     QWidget *parent)
+    : Tool(canvas, parent),
+    m_lastPoint(0, 0),
+    m_isPainting(false),
+    m_options(options)
 {
 
 }
@@ -41,4 +46,9 @@ void BrushTool::mouseReleaseEvent(QMouseEvent *event)
 QIcon BrushTool::Icon()
 {
     return QIcon(":resources/icons/brush.svg");
+}
+
+ToolOptionsPanel* BrushTool::createOptionsPanel(QWidget* parent) const
+{
+    return new BrushToolOptionsPanel(m_options, parent);
 }

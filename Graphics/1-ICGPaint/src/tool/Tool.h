@@ -11,8 +11,9 @@ class Tool : public QWidget
     Q_OBJECT
 
 public:
-    Tool(Canvas *canvas) : QWidget(canvas), m_canvas(canvas) {
+    Tool(Canvas *canvas, QWidget *parent = nullptr) : QWidget(parent), m_canvas(canvas) {
         setGeometry(0, 0, canvas->width(), canvas->height());
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
         // Make the widget transparent
         setAttribute(Qt::WA_TransparentForMouseEvents, false);
@@ -27,6 +28,9 @@ public:
         return nullptr;
     }
 
+    void setCanvas(Canvas *canvas) {
+        m_canvas = canvas;
+    }
 
     virtual ~Tool() = default;
 

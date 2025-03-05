@@ -10,16 +10,15 @@ class Canvas : public QWidget
 
 public:
     Canvas(const QSize& size, QWidget *parent = nullptr);
-    Canvas(const QImage& image, QWidget *parent = nullptr) {
-        throw std::runtime_error("Not implemented yet");
-    };
+    Canvas(const QImage& image, QWidget *parent = nullptr);
 
     Canvas(QWidget *parent = nullptr) : Canvas(QSize(640, 480), parent) {}
 
+    QImage& image() { return m_image; }
     void setImage(const QImage& image);
+
     void drawLine(QPoint a, QPoint b, QColor color = Qt::black, int width = 5);
 
-    QImage& image() { return m_image; }
     QRect rect() const { return m_image.rect(); };
 
     void clear();

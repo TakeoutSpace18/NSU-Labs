@@ -29,6 +29,8 @@ set(PROJECT_SOURCES
         src/tool/BrushTool.cpp
         src/tool/BrushTool.h
         src/tool/BrushToolOptions.h
+        src/tool/BrushToolOptionsPanel.h
+        src/tool/BrushToolOptionsPanel.cpp
 
         src/tool/LineTool.cpp
         src/tool/LineTool.h

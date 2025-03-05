@@ -11,7 +11,8 @@ class FillTool : public Tool
 public:
     static QIcon Icon();
 
-    FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options);
+    FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options,
+             QWidget *parent = nullptr);
 
     void setOptions(const QSharedPointer<FillToolOptions>& options) {
         m_options = options;

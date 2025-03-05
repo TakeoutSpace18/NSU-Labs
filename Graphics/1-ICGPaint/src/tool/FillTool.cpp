@@ -4,8 +4,9 @@
 #include <QPainter>
 #include <QStack>
 
-FillTool::FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options)
-    : Tool(canvas), m_options(options)
+FillTool::FillTool(Canvas *canvas, const QSharedPointer<FillToolOptions>& options,
+                   QWidget *parent)
+    : Tool(canvas, parent), m_options(options)
 {
 }
 

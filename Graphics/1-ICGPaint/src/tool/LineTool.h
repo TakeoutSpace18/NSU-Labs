@@ -1,6 +1,8 @@
 #ifndef LINE_TOOL_H
 #define LINE_TOOL_H
 
+#include <QWidget>
+
 #include "Tool.h"
 #include "LineToolOptions.h"
 #include "ToolOptionsPanel.h"
@@ -12,7 +14,8 @@ class LineTool : public Tool
 public:
     static QIcon Icon();
 
-    LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options);
+    LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& options,
+             QWidget *parent = nullptr);
 
     void setOptions(const QSharedPointer<LineToolOptions>& options) {
         m_options = options;

@@ -11,11 +11,14 @@ class BrushTool : public Tool
 public:
     static QIcon Icon();
 
-    BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options);
+    BrushTool(Canvas *canvas, const QSharedPointer<BrushToolOptions>& options,
+              QWidget *parent = nullptr);
 
     void setOptions(const QSharedPointer<BrushToolOptions>& options) {
         m_options = options;
     }
+
+    ToolOptionsPanel* createOptionsPanel(QWidget* parent = nullptr) const override;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -26,7 +29,7 @@ private:
     QPoint m_lastPoint;
     bool m_isPainting;
 
-    QSharedPointer<const BrushToolOptions> m_options;
+    QSharedPointer<BrushToolOptions> m_options;
 };
 
 

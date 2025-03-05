@@ -6,6 +6,7 @@
 #include <QSizeGrip>
 #include <QColor>
 #include <QDockWidget>
+#include <QStackedLayout>
 
 #include "Canvas.h"
 #include "tool/Tool.h"
@@ -17,7 +18,6 @@
 #include "tool/BrushTool.h"
 #include "tool/LineTool.h"
 #include "tool/FillTool.h"
-#include "tool/ToolOptionsPanel.h"
 
 class ICGPaint : public QMainWindow
 {
@@ -37,6 +37,7 @@ public:
 
 private:
     void createActions();
+    void createTools(Canvas *canvas);
     void createToolOptionsDock();
     QActionGroup *createColorActions();
 
@@ -44,7 +45,12 @@ private:
     void setActiveColor(QColor color);
     void setActiveTool(Tool *tool);
 
-    void newFile();
+    void newFileDialog();
+    void saveFile();
+    void openFile();
+
+    void setCanvas(Canvas *canvas);
+
     void clearCanvas();
     void toolOptions();
     void selectColorDialog();
@@ -55,15 +61,23 @@ private:
     QScrollArea *m_scrollArea;
 
     QColor m_activeColor;
-    Tool *m_activeTool;
 
     ToolOptions m_toolOptions;
+
+    QList<Tool*> m_tools;
+    Tool *m_activeTool;
 
     BrushTool *m_brushTool;
     LineTool *m_lineTool;
     FillTool *m_fillTool;
 
+    QStackedLayout *m_toolsLayout;
+
+    QDockWidget *m_toolOptionsDock;
+
     QAction *m_newAction;
+    QAction *m_openAction;
+    QAction *m_saveAction;
     QAction *m_clearAction;
     QAction *m_selectColorAction;
     QAction *m_brushToolAction;
@@ -72,6 +86,6 @@ private:
     QAction *m_toolOptionsAction;
     QActionGroup *m_colorActions;
 
-    QDockWidget *m_toolOptionsDock;
+    QString m_savePath;
 };
 #endif // ICGPAINT_H
