@@ -11,18 +11,7 @@ class Tool : public QWidget
     Q_OBJECT
 
 public:
-    Tool(Canvas *canvas, QWidget *parent = nullptr) : QWidget(parent), m_canvas(canvas) {
-        setGeometry(0, 0, canvas->width(), canvas->height());
-        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-        // Make the widget transparent
-        setAttribute(Qt::WA_TransparentForMouseEvents, false);
-        setAttribute(Qt::WA_NoSystemBackground, true);
-        setAttribute(Qt::WA_TranslucentBackground, true);
-        
-        // Ensure this widget stays on top
-        setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
-    }
+    Tool(Canvas *canvas, QWidget *parent = nullptr);
 
     virtual ToolOptionsPanel* createOptionsPanel(QWidget* parent = nullptr) const {
         return nullptr;
@@ -35,7 +24,13 @@ public:
     virtual ~Tool() = default;
 
 protected:
+    void resizeEvent(QResizeEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+
+    void clearPreview();
+
     Canvas *m_canvas;
+    QImage m_preview;
 };
 
 #endif // !TOOL_H

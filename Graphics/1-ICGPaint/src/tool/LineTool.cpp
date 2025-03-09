@@ -2,6 +2,7 @@
 
 #include "LineToolOptionsPanel.h"
 #include "ToolOptionsPanel.h"
+#include "BresenhamLine.h"
 
 #include <QMouseEvent>
 #include <QPainter>
@@ -11,11 +12,8 @@ LineTool::LineTool(Canvas *canvas, const QSharedPointer<LineToolOptions>& option
     : Tool(canvas, parent),
     m_firstPoint(0, 0),
     m_firstPointSelected(false),
-    m_options(options),
-    m_preview(canvas->size(), QImage::Format_ARGB32)
-{
-    m_preview.fill(Qt::transparent);
-}
+    m_options(options)
+{}
 
 void LineTool::mousePressEvent(QMouseEvent *event)
 {
@@ -26,12 +24,12 @@ void LineTool::mousePressEvent(QMouseEvent *event)
             setCursor(Qt::CrossCursor);
         }
         else {
+            clearPreview();
+
             m_canvas->drawLine(m_firstPoint, event->pos(),
                                m_options->color(), m_options->width());
             m_firstPointSelected = false;
             setCursor(Qt::ArrowCursor);
-
-            // resetPreview();
         }
     }
 }
@@ -39,21 +37,9 @@ void LineTool::mousePressEvent(QMouseEvent *event)
 void LineTool::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_firstPointSelected) {
-        // drawPreview(m_firstPoint, event->pos());
+        drawPreview(m_firstPoint, event->pos());
     }
  }
-
-void LineTool::paintEvent(QPaintEvent *event) 
-{
-    QPainter painter(this);
-    QRect dirtyRect = event->rect();
-    painter.drawImage(dirtyRect, m_preview, dirtyRect);
-}
-
-void LineTool::resizeEvent(QResizeEvent *event)
-{
-    // resize preview pixmap ?
-}
 
 QIcon LineTool::Icon()
 {
@@ -69,21 +55,12 @@ QIcon LineTool::Icon()
 
 void LineTool::drawPreview(QPoint a, QPoint b)
 {
+    // TODO: do not refill entire image on each redraw
     m_preview.fill(Qt::transparent);
-
-    QPainter painter(&m_preview);
-    painter.setPen(QPen(m_options->color(), 1, Qt::SolidLine, Qt::RoundCap,
-                        Qt::RoundJoin));
-    painter.drawLine(a, b);
-
+    BresenhamLine::Draw(m_preview, a, b, m_options->color(), m_options->width());
     update();
 }
 
-void LineTool::resetPreview()
-{
-    m_preview.fill(Qt::transparent);
-    update();
-}
 
 ToolOptionsPanel* LineTool::createOptionsPanel(QWidget* parent) const
 {

@@ -283,7 +283,7 @@ void ICGPaint::saveFile()
                                      "PNG Image (*.png);;All Files (*)");
     }
 
-    if (!m_canvas->image().save(m_savePath, "PNG")) {
+    if (!m_savePath.isEmpty() && !m_canvas->image().save(m_savePath, "PNG")) {
         qWarning() << "Failed to save to " << m_savePath;
     }
 }

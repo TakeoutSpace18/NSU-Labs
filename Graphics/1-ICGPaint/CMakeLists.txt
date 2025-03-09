@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         src/ToolOptionsDialog.h
 
         src/tool/Tool.h
+        src/tool/Tool.cpp
         src/tool/ToolOptionsPanel.h
 
         src/tool/BrushTool.cpp
