@@ -41,8 +41,12 @@ public:
 private:
     ValueType sourceFunc(int n);
     ValueType& accessValue(ValueType *buf, int i, int j);
+    ValueType& accessValue(std::vector<ValueType>& vector, int i, int j);
+
+    void generatePhaseSpeed();
 
     std::vector<ValueType> m_data;
+    std::vector<ValueType> m_phaseSpeed;
 
     ValueType *m_buf1;
     ValueType *m_buf2;
