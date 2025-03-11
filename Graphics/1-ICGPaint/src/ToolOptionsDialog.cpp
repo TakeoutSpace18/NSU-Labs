@@ -1,9 +1,11 @@
 #include "ToolOptionsDialog.h"
+
+#include <QLabel>
+
 #include "ICGPaint.h"
 #include "tool/BrushToolOptionsPanel.h"
 #include "tool/LineToolOptionsPanel.h"
-#include <qlabel.h>
-#include <qnamespace.h>
+#include "tool/StampToolOptionsPanel.h"
 
 ToolOptionsDialog::ToolOptionsDialog(ICGPaint::ToolOptions& toolOptions,
                                      QWidget *parent)
@@ -13,6 +15,7 @@ ToolOptionsDialog::ToolOptionsDialog(ICGPaint::ToolOptions& toolOptions,
 
     m_toolOptionsPanels.append(new LineToolOptionsPanel(m_toolOptions.line, this));
     m_toolOptionsPanels.append(new BrushToolOptionsPanel(m_toolOptions.brush, this));
+    m_toolOptionsPanels.append(new StampToolOptionsPanel(m_toolOptions.stamp, this));
 
     m_okButton = new QPushButton("OK");
     m_cancelButton = new QPushButton("Cancel");

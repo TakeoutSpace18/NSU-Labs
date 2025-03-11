@@ -14,10 +14,12 @@
 #include "tool/BrushToolOptions.h"
 #include "tool/LineToolOptions.h"
 #include "tool/FillToolOptions.h"
+#include "tool/StampToolOptions.h"
 
 #include "tool/BrushTool.h"
 #include "tool/LineTool.h"
 #include "tool/FillTool.h"
+#include "tool/StampTool.h"
 
 class ICGPaint : public QMainWindow
 {
@@ -33,6 +35,7 @@ public:
         QSharedPointer<BrushToolOptions> brush;
         QSharedPointer<LineToolOptions> line;
         QSharedPointer<FillToolOptions> fill;
+        QSharedPointer<StampToolOptions> stamp;
     };
 
 private:
@@ -70,6 +73,7 @@ private:
     BrushTool *m_brushTool;
     LineTool *m_lineTool;
     FillTool *m_fillTool;
+    StampTool *m_stampTool;
 
     QStackedLayout *m_toolsLayout;
 
@@ -80,9 +84,12 @@ private:
     QAction *m_saveAction;
     QAction *m_clearAction;
     QAction *m_selectColorAction;
+
     QAction *m_brushToolAction;
     QAction *m_lineToolAction;
     QAction *m_fillToolAction;
+    QAction *m_stampToolAction;
+
     QAction *m_toolOptionsAction;
     QActionGroup *m_colorActions;
 

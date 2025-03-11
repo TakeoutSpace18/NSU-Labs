@@ -39,6 +39,12 @@ set(PROJECT_SOURCES
         src/tool/LineToolOptionsPanel.h
         src/tool/LineToolOptionsPanel.cpp
 
+        src/tool/StampTool.cpp
+        src/tool/StampTool.h
+        src/tool/StampToolOptions.h
+        src/tool/StampToolOptionsPanel.h
+        src/tool/StampToolOptionsPanel.cpp
+
         src/tool/FillTool.cpp
         src/tool/FillTool.h
         src/tool/FillToolOptions.h

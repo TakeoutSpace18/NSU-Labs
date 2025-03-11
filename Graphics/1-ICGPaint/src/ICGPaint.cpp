@@ -25,6 +25,7 @@ ICGPaint::ToolOptions::ToolOptions()
     brush = QSharedPointer<BrushToolOptions>(new BrushToolOptions());
     line = QSharedPointer<LineToolOptions>(new LineToolOptions());
     fill = QSharedPointer<FillToolOptions>(new FillToolOptions());
+    stamp = QSharedPointer<StampToolOptions>(new StampToolOptions());
 }
 
 ICGPaint::ICGPaint() : QMainWindow()
@@ -58,10 +59,12 @@ void ICGPaint::createTools(Canvas *canvas)
     m_brushTool = new BrushTool(canvas, m_toolOptions.brush);
     m_lineTool = new LineTool(canvas, m_toolOptions.line);
     m_fillTool = new FillTool(canvas, m_toolOptions.fill);
+    m_stampTool = new StampTool(canvas, m_toolOptions.stamp);
 
     m_tools.append(m_brushTool);
     m_tools.append(m_lineTool);
     m_tools.append(m_fillTool);
+    m_tools.append(m_stampTool);
 
     m_toolsLayout = new QStackedLayout;
     for (auto tool : m_tools) {
@@ -98,6 +101,7 @@ void ICGPaint::createActions()
     m_brushToolAction = new QAction(BrushTool::Icon(), tr("&Brush"), this);
     m_lineToolAction = new QAction(LineTool::Icon(), tr("&Line"), this);
     m_fillToolAction = new QAction(FillTool::Icon(), tr("&Fill"), this);
+    m_stampToolAction = new QAction(StampTool::Icon(), tr("&Stamp"), this);
 
     m_newAction->setShortcuts(QKeySequence::New);
     m_saveAction->setShortcuts(QKeySequence::Save);
@@ -107,6 +111,7 @@ void ICGPaint::createActions()
     m_brushToolAction->setShortcut(QKeySequence(Qt::Key_B));
     m_lineToolAction->setShortcut(QKeySequence(Qt::Key_L));
     m_fillToolAction->setShortcut(QKeySequence(Qt::Key_F));
+    m_stampToolAction->setShortcut(QKeySequence(Qt::Key_S));
     m_toolOptionsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
 
     m_newAction->setStatusTip("Create new file");
@@ -117,16 +122,19 @@ void ICGPaint::createActions()
     m_brushToolAction->setStatusTip("Draw with brush");
     m_lineToolAction->setStatusTip("Draw line");
     m_fillToolAction->setStatusTip("Fill area");
-    m_fillToolAction->setStatusTip("Tool options");
+    m_stampToolAction->setStatusTip("Draw shape");
+    m_toolOptionsAction->setStatusTip("Tool options");
 
     m_brushToolAction->setCheckable(true);
     m_fillToolAction->setCheckable(true);
     m_lineToolAction->setCheckable(true);
+    m_stampToolAction->setCheckable(true);
 
     QActionGroup *toolActions = new QActionGroup(this);
     toolActions->addAction(m_brushToolAction);
     toolActions->addAction(m_fillToolAction);
     toolActions->addAction(m_lineToolAction);
+    toolActions->addAction(m_stampToolAction);
     toolActions->setExclusive(true);
 
     fileMenu->addAction(m_newAction);
@@ -137,6 +145,7 @@ void ICGPaint::createActions()
     toolMenu->addAction(m_brushToolAction);
     toolMenu->addAction(m_lineToolAction);
     toolMenu->addAction(m_fillToolAction);
+    toolMenu->addAction(m_stampToolAction);
     toolMenu->addAction(m_selectColorAction);
     toolMenu->addAction(m_toolOptionsAction);
 
@@ -158,6 +167,7 @@ void ICGPaint::createActions()
     toolbar->addAction(m_brushToolAction);
     toolbar->addAction(m_lineToolAction);
     toolbar->addAction(m_fillToolAction);
+    toolbar->addAction(m_stampToolAction);
     toolbar->addSeparator();
     toolbar->addWidget(spacer);
 
@@ -182,6 +192,9 @@ void ICGPaint::createActions()
     });
     connect(m_fillToolAction, &QAction::triggered, this, [this]() {
         setActiveTool(m_fillTool);
+    });
+    connect(m_stampToolAction, &QAction::triggered, this, [this]() {
+        setActiveTool(m_stampTool);
     });
     connect(aboutAction, &QAction::triggered, this, &ICGPaint::aboutDialog);
 }
@@ -335,6 +348,7 @@ void ICGPaint::setActiveColor(QColor color)
     m_toolOptions.line->setColor(color);
     m_toolOptions.brush->setColor(color);
     m_toolOptions.fill->setColor(color);
+    m_toolOptions.stamp->setColor(color);
     m_selectColorAction->setIcon(generateColorIcon(color));
 }
 
