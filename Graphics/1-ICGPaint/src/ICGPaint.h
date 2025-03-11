@@ -57,7 +57,6 @@ private:
     void clearCanvas();
     void toolOptions();
     void selectColorDialog();
-    void aboutDialog();
 
     Canvas *m_canvas;
     QSizeGrip *m_sizeGrip;

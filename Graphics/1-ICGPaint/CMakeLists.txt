@@ -14,12 +14,17 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         src/main.cpp
+
         src/Canvas.cpp
         src/Canvas.h
+
         src/ICGPaint.cpp
         src/ICGPaint.h
+        src/AboutDialog.h
+
         src/BresenhamLine.h
         src/BresenhamLine.cpp
+
         src/ToolOptionsDialog.cpp
         src/ToolOptionsDialog.h
 

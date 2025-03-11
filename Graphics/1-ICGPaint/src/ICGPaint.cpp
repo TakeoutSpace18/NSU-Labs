@@ -8,6 +8,7 @@
 #include <QStackedLayout>
 #include <QValidator>
 
+#include "AboutDialog.h"
 #include "Canvas.h"
 #include "ToolOptionsDialog.h"
 
@@ -196,7 +197,10 @@ void ICGPaint::createActions()
     connect(m_stampToolAction, &QAction::triggered, this, [this]() {
         setActiveTool(m_stampTool);
     });
-    connect(aboutAction, &QAction::triggered, this, &ICGPaint::aboutDialog);
+    connect(aboutAction, &QAction::triggered, this, [&]() {
+        AboutDialog *dialog = new AboutDialog(this);
+        dialog->exec();
+    });
 }
 
 void ICGPaint::createToolOptionsDock()
@@ -366,13 +370,6 @@ void ICGPaint::setActiveTool(Tool *tool)
     else {
         m_toolOptionsDock->hide();
     }
-}
-
-void ICGPaint::aboutDialog()
-{
-    // TODO: expand this text
-    QString text = "Made by Pavel Urdin\nGroup 22201 NSU FIT\n2025";
-    QMessageBox::about(this, "About ICGPaint", text);
 }
 
 void ICGPaint::toolOptions()
