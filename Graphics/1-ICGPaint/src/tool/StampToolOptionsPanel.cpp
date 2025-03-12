@@ -65,6 +65,11 @@ StampToolOptionsPanel::StampToolOptionsPanel(
 
     setLayout(layout);
 
+    if (m_options->shape() == StampToolOptions::Shape::Polygon) {
+            m_innerRadiusSlider->hide();
+            m_innerRadiusLabel->hide();
+    }
+
     connect(m_shapeComboBox, &QComboBox::currentIndexChanged, this, [this](int index) {
         if (isAutoApply()) {
             m_options->setShape(m_shapeComboBox->currentData().value<StampToolOptions::Shape>());

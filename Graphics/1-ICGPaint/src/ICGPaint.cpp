@@ -7,6 +7,9 @@
 #include <QDockWidget>
 #include <QStackedLayout>
 #include <QValidator>
+#include <QBoxLayout>
+#include <QStackedLayout>
+#include <QWidget>
 
 #include "AboutDialog.h"
 #include "Canvas.h"
@@ -35,19 +38,24 @@ ICGPaint::ICGPaint() : QMainWindow()
     setWindowIcon(QIcon(":resources/icons/icgpaint.svg"));
 
     m_activeTool = nullptr;
-    m_toolsLayout = nullptr;
+    m_toolsLayout = new QStackedLayout();
 
     m_scrollArea = new QScrollArea(this);
+    m_scrollArea->setWidgetResizable(true);
     setCentralWidget(m_scrollArea);
 
-    setCanvas(new Canvas(QSize(640, 480), this));
+    setCanvas(new Canvas(m_scrollArea->maximumSize(), this));
+
+    // Disable resizing canvas after show() when sizes are determined
+    QTimer::singleShot(0, this, [&]() {
+        m_scrollArea->setWidgetResizable(false);
+    });
 
     createActions();
     createToolOptionsDock();
     createTools(m_canvas);
 
-    setMinimumSize(600, 400);
-    resize(minimumSize());
+    setMinimumSize(800, 600);
 
     setActiveColor(Qt::black);
 }
@@ -67,12 +75,9 @@ void ICGPaint::createTools(Canvas *canvas)
     m_tools.append(m_fillTool);
     m_tools.append(m_stampTool);
 
-    m_toolsLayout = new QStackedLayout;
     for (auto tool : m_tools) {
         m_toolsLayout->addWidget(tool);
     }
-
-    canvas->setLayout(m_toolsLayout);
 
     m_activeTool = nullptr;
     m_brushToolAction->trigger();
@@ -249,9 +254,33 @@ void ICGPaint::setCanvas(Canvas *canvas)
         tool->setCanvas(canvas);
     }
 
-    if (m_toolsLayout)
-        canvas->setLayout(m_toolsLayout);
+    QStackedLayout *stackedLayout = new QStackedLayout;
+
+    while (QLayoutItem* item = m_toolsLayout->takeAt(0)) {
+        if (QWidget* widget = item->widget()) {
+            stackedLayout->addWidget(widget);
+        }
+        delete item;
+    }
+
+    QVBoxLayout* mainLayout = new QVBoxLayout(canvas);
+    mainLayout->setContentsMargins(QMargins(0, 0, 0, 0));
+    mainLayout->addLayout(stackedLayout);
+
     m_scrollArea->setWidget(canvas);
+
+    canvas->setWindowFlags(Qt::SubWindow);
+    QWidget *sizeGripAligned = new QWidget(canvas); 
+    QVBoxLayout *sizeGripLayout = new QVBoxLayout(sizeGripAligned);
+    sizeGripLayout->setContentsMargins(QMargins(0, 0, 0, 0));
+    QSizeGrip *sizeGrip = new QSizeGrip(canvas);
+    sizeGripLayout->addWidget(sizeGrip, 0, Qt::AlignRight | Qt::AlignBottom);
+
+    mainLayout->addWidget(sizeGripAligned);
+
+    canvas->setLayout(mainLayout);
+
+    m_toolsLayout = stackedLayout;
     m_canvas = canvas;
 }
 
@@ -285,7 +314,7 @@ void ICGPaint::newFileDialog()
         int width = widthEdit.text().toInt();
         int height = heightEdit.text().toInt();
 
-        Canvas *canvas = new Canvas(QSize(width, height));
+        Canvas *canvas = new Canvas(QSize(width, height), this);
         setCanvas(canvas);
 
         m_savePath = "";

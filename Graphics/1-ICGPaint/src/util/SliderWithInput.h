@@ -22,6 +22,9 @@ signals:
 private:
     QSlider *m_slider;
     QLineEdit *m_inputField;
+
+    int m_minValue;
+    int m_maxValue;
 };
 
 #endif // SLIDER_WITH_INPUT_H

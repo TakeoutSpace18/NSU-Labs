@@ -47,7 +47,6 @@ void Canvas::resizeEvent(QResizeEvent *event)
     QImage newImage(event->size(), QImage::Format_RGB32);
     newImage.fill(Qt::white);
     QPainter painter(&newImage);
-    qDebug() << m_image.isNull();
     painter.drawImage(QPoint(0, 0), m_image);
 
     m_image = newImage;

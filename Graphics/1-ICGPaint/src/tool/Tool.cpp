@@ -17,8 +17,6 @@ Tool::Tool(Canvas *canvas, QWidget *parent)
 
 void Tool::resizeEvent(QResizeEvent *event)
 {
-    qDebug() << "Tool resize";
-
     if (m_preview.size() == event->size()) {
         return;
     }
