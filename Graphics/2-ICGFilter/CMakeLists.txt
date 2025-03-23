@@ -19,6 +19,9 @@ set(PROJECT_SOURCES
         src/ICGFilter.h
         src/ICGFilter.ui
 
+        src/ImageViewport.cpp
+        src/ImageViewport.h
+
         src/AboutDialog.h
 
         resources.qrc
@@ -50,6 +53,10 @@ endif()
 target_link_libraries(ICGFilter PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::SvgWidgets
+)
+
+target_include_directories(ICGFilter PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

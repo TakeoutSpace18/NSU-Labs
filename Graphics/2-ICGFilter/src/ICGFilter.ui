@@ -6,30 +6,38 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1192</width>
+    <height>699</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ICGFilter</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
-     <widget class="QScrollArea" name="scrollArea">
-      <property name="widgetResizable">
-       <bool>true</bool>
+     <widget class="ImageViewport" name="viewport">
+      <property name="styleSheet">
+       <string notr="true">QGraphicsView {border: 2px dashed black; border-radius: 0px}</string>
       </property>
-      <widget class="QWidget" name="scrollAreaWidgetContents">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>780</width>
-         <height>519</height>
-        </rect>
-       </property>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -46,13 +54,16 @@
    </attribute>
    <addaction name="importAction"/>
    <addaction name="saveAction"/>
+   <addaction name="separator"/>
+   <addaction name="originalSizeAction"/>
+   <addaction name="fitToViewportAction"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1192</width>
      <height>22</height>
     </rect>
    </property>
@@ -69,9 +80,18 @@
     </property>
     <addaction name="aboutAction"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="originalSizeAction"/>
+    <addaction name="fitToViewportAction"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="importAction">
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -114,7 +134,47 @@
     <string>About ICGFilter</string>
    </property>
   </action>
+  <action name="originalSizeAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/resources/icons/numeric-1-box-outline.svg</normaloff>:/resources/icons/numeric-1-box-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Original size</string>
+   </property>
+   <property name="toolTip">
+    <string>Scale to original size</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+O</string>
+   </property>
+  </action>
+  <action name="fitToViewportAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/resources/icons/fit-to-screen-outline.svg</normaloff>:/resources/icons/fit-to-screen-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Fit to viewport</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+F</string>
+   </property>
+  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageViewport</class>
+   <extends>QGraphicsView</extends>
+   <header>ImageViewport.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>

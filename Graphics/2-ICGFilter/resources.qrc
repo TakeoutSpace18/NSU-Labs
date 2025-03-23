@@ -3,5 +3,8 @@
     <file>resources/icons/content-save-all.svg</file>
     <file>resources/icons/file-import.svg</file>
     <file>resources/icons/image-edit.svg</file>
+    <file>resources/icons/numeric-1-box-outline.svg</file>
+    <file>resources/icons/fit-to-screen-outline.svg</file>
+    <file>resources/test-image.jpg</file>
 </qresource>
 </RCC>

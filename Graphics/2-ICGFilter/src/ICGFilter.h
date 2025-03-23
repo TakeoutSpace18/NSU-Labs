@@ -2,6 +2,8 @@
 #define ICGFILTER_H
 
 #include <QMainWindow>
+#include <QGraphicsScene>
+#include <qgraphicsscene.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,6 +19,12 @@ public:
     ICGFilter(QWidget *parent = nullptr);
     ~ICGFilter();
 
+    bool importImage(const QString& path);
+    bool saveImage(const QString& path);
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
 private slots:
     void on_saveAction_triggered();
 
@@ -24,9 +32,16 @@ private slots:
 
     void on_aboutAction_triggered();
 
+    void on_originalSizeAction_triggered();
+
+    void on_fitToViewportAction_triggered();
+
 private:
     Ui::ICGFilter *ui;
 
-    QString m_savePath;
+    QImage original;
+    QImage preview;
+
+    QString savePath;
 };
 #endif // ICGFILTER_H
