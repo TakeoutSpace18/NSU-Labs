@@ -38,6 +38,15 @@
       <property name="styleSheet">
        <string notr="true">QGraphicsView {border: 2px dashed black; border-radius: 0px}</string>
       </property>
+      <property name="dragMode">
+       <enum>QGraphicsView::ScrollHandDrag</enum>
+      </property>
+      <property name="transformationAnchor">
+       <enum>QGraphicsView::AnchorUnderMouse</enum>
+      </property>
+      <property name="resizeAnchor">
+       <enum>QGraphicsView::AnchorUnderMouse</enum>
+      </property>
      </widget>
     </item>
    </layout>

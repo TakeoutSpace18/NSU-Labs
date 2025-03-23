@@ -13,7 +13,6 @@ ImageViewport::ImageViewport(QWidget *parent)
 
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
-    setDragMode(QGraphicsView::ScrollHandDrag);
 }
 
 void ImageViewport::updateImage(const QImage& image)
