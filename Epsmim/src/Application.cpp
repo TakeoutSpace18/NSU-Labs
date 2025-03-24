@@ -58,6 +58,7 @@ void Application::plotOutput(QImage& image, const WaveEquation::Output& out)
     const int stride = m_image.bytesPerLine();
 
     for (int i = 0; i < m_equation->ny(); ++i) {
+        #pragma omp simd
         for (int j = 0; j < m_equation->nx(); ++j) {
             const WaveEquation::ValueType value = buf[i * m_equation->nx() + j];
             const int normalizedValue = static_cast<int>(255 * (value + out.max) / (2 * out.max));

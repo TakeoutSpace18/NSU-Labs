@@ -55,6 +55,7 @@ target_compile_options(WaveEquation PRIVATE
     "-march=native"
     "-O2"
     "-ffast-math"
+    "-fopenmp"
 )
 
 target_include_directories(WaveEquation PUBLIC ${PROJECT_INCLUDE_DIRECTORIES})

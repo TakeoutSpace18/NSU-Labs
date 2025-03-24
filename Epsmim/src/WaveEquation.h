@@ -40,8 +40,6 @@ public:
 
 private:
     ValueType sourceFunc(int n);
-    ValueType& accessValue(ValueType *buf, int i, int j);
-    ValueType& accessValue(std::vector<ValueType>& vector, int i, int j);
 
     void generatePhaseSpeed();
 
@@ -54,6 +52,7 @@ private:
     AreaParams m_area;
     Utils::Vec2i m_source;
     Utils::Vec2<ValueType> m_gridStep;
+    Utils::Vec2<ValueType> m_stepInvariant;
     ValueType m_tau;
     ValueType m_max;
     int m_step;
