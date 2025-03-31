@@ -1,12 +1,16 @@
 #ifndef ICGFILTER_H
 #define ICGFILTER_H
 
-#include <QMainWindow>
+#include <QAction>
 #include <QGraphicsScene>
-#include <qgraphicsscene.h>
+#include <QMainWindow>
+#include <QSharedPointer>
+
+#include "filter/Filter.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui {
+namespace Ui
+{
 class ICGFilter;
 }
 QT_END_NAMESPACE
@@ -16,14 +20,22 @@ class ICGFilter : public QMainWindow
     Q_OBJECT
 
 public:
-    ICGFilter(QWidget *parent = nullptr);
+    ICGFilter(QWidget* parent = nullptr);
     ~ICGFilter();
 
     bool importImage(const QString& path);
     bool saveImage(const QString& path);
 
+    void setActiveFilter(QSharedPointer<Filter> filter);
+
+    void applyFilter(const Filter& filter);
+    void previewFilter(const Filter& filter);
+    void cancelFilter();
+
+    void togglePreviewOriginal();
+
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void on_saveAction_triggered();
@@ -36,12 +48,24 @@ private slots:
 
     void on_fitToViewportAction_triggered();
 
+    void on_handAction_triggered();
+
 private:
-    Ui::ICGFilter *ui;
+    void createFilters();
+    void addFilter(QSharedPointer<Filter> filter);
+
+    Ui::ICGFilter* ui;
+
+    QList<QSharedPointer<Filter>> filters;
+    QSharedPointer<Filter> activeFilter;
+
+    QActionGroup* filterActions;
 
     QImage original;
     QImage preview;
 
     QString savePath;
+
+    bool showOriginal = false;
 };
-#endif // ICGFILTER_H
+#endif  // ICGFILTER_H

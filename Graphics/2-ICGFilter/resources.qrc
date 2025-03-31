@@ -5,6 +5,8 @@
     <file>resources/icons/image-edit.svg</file>
     <file>resources/icons/numeric-1-box-outline.svg</file>
     <file>resources/icons/fit-to-screen-outline.svg</file>
+    <file>resources/icons/image-filter-black-white.svg</file>
+    <file>resources/icons/hand-back-right-outline.svg</file>
     <file>resources/test-image.jpg</file>
 </qresource>
 </RCC>

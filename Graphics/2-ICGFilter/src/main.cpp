@@ -1,6 +1,6 @@
-#include "ICGFilter.h"
-
 #include <QApplication>
+
+#include "ICGFilter.h"
 
 int main(int argc, char *argv[])
 {

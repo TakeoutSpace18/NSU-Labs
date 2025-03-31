@@ -2,24 +2,26 @@
 #define ABOUT_DIALOG
 
 #include <QDialog>
-#include <QVBoxLayout>
 #include <QLabel>
-#include <QPushButton>
 #include <QPixmap>
+#include <QPushButton>
 #include <QSvgWidget>
-#include <qsvgwidget.h>
+#include <QVBoxLayout>
 
-class AboutDialog : public QDialog {
+class AboutDialog : public QDialog
+{
     Q_OBJECT
 
 public:
-    explicit AboutDialog(QWidget *parent = nullptr) : QDialog(parent) {
+    explicit AboutDialog(QWidget *parent = nullptr) : QDialog(parent)
+    {
         setWindowTitle("About ICGPaint");
         setFixedSize(450, 400);
 
         QVBoxLayout *layout = new QVBoxLayout(this);
-        
-        QSvgWidget *logo = new QSvgWidget(":resources/icons/image-edit.svg", this);
+
+        QSvgWidget *logo =
+            new QSvgWidget(":resources/icons/image-edit.svg", this);
         logo->setFixedSize(100, 100);
 
         QLabel *titleLabel = new QLabel("<h2>ICGPaint</h2>");
@@ -33,8 +35,7 @@ public:
             "<li>...</li>"
             "<li>...</li>"
             "</ul>"
-            "<p><b>Made by:</b> Pavel Urdin, NSU FIT 2025, Group 22201</p>"
-        );
+            "<p><b>Made by:</b> Pavel Urdin, NSU FIT 2025, Group 22201</p>");
         infoLabel->setWordWrap(true);
 
         QPushButton *closeButton = new QPushButton("Close");
@@ -47,5 +48,4 @@ public:
     }
 };
 
-#endif // !ABOUT_DIALOG
-
+#endif  // !ABOUT_DIALOG

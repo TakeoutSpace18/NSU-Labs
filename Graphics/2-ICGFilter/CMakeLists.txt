@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SvgWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SvgWidgets)
+find_package(OpenMP REQUIRED)  # Find OpenMP package
+
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -23,6 +25,17 @@ set(PROJECT_SOURCES
         src/ImageViewport.h
 
         src/AboutDialog.h
+
+        src/filter/Filter.h
+
+        src/filter/FilterPanel.h
+        src/filter/FilterPanel.cpp
+
+        src/filter/BWFilter.h
+        src/filter/BWFilter.cpp
+
+        src/util/SliderWithInput.h
+        src/util/SliderWithInput.cpp
 
         resources.qrc
 )
@@ -58,6 +71,11 @@ target_link_libraries(ICGFilter PRIVATE
 target_include_directories(ICGFilter PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found")
+    target_link_libraries(ICGFilter PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

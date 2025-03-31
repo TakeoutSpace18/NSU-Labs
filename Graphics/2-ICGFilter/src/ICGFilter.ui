@@ -66,6 +66,8 @@
    <addaction name="separator"/>
    <addaction name="originalSizeAction"/>
    <addaction name="fitToViewportAction"/>
+   <addaction name="handAction"/>
+   <addaction name="separator"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -95,12 +97,31 @@
     </property>
     <addaction name="originalSizeAction"/>
     <addaction name="fitToViewportAction"/>
+    <addaction name="handAction"/>
+   </widget>
+   <widget class="QMenu" name="menuFilter">
+    <property name="title">
+     <string>&amp;Filter</string>
+    </property>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuFilter"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Filter</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents"/>
+  </widget>
   <action name="importAction">
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -110,6 +131,9 @@
     <string>&amp;Import Image</string>
    </property>
    <property name="toolTip">
+    <string>Import image for editing</string>
+   </property>
+   <property name="statusTip">
     <string>Import image for editing</string>
    </property>
    <property name="shortcut">
@@ -127,6 +151,9 @@
    <property name="toolTip">
     <string>Save image</string>
    </property>
+   <property name="statusTip">
+    <string>Save image</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
    </property>
@@ -140,6 +167,9 @@
     <string>&amp;About ICGFilter</string>
    </property>
    <property name="toolTip">
+    <string>About ICGFilter</string>
+   </property>
+   <property name="statusTip">
     <string>About ICGFilter</string>
    </property>
   </action>
@@ -157,6 +187,9 @@
    <property name="toolTip">
     <string>Scale to original size</string>
    </property>
+   <property name="statusTip">
+    <string>Scale to original size</string>
+   </property>
    <property name="shortcut">
     <string>Alt+O</string>
    </property>
@@ -172,8 +205,32 @@
    <property name="text">
     <string>&amp;Fit to viewport</string>
    </property>
+   <property name="statusTip">
+    <string>Fit to viewport</string>
+   </property>
    <property name="shortcut">
     <string>Alt+F</string>
+   </property>
+  </action>
+  <action name="handAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/resources/icons/hand-back-right-outline.svg</normaloff>:/resources/icons/hand-back-right-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Hand</string>
+   </property>
+   <property name="toolTip">
+    <string>Drag image view with mouse</string>
+   </property>
+   <property name="statusTip">
+    <string>Drag image view with mouse</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>

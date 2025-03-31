@@ -1,30 +1,47 @@
 #include "ICGFilter.h"
-#include "./ui_ICGFilter.h"
 
-#include <QFileDialog>
+#include <QAction>
+#include <QActionGroup>
 #include <QDir>
-#include <QGraphicsScene>
+#include <QFileDialog>
 #include <QGraphicsPixmapItem>
-#include <QStatusBar>
+#include <QGraphicsScene>
 #include <QMessageBox>
-#include <qmessagebox.h>
+#include <QSharedPointer>
+#include <QStatusBar>
 
+#include "./ui_ICGFilter.h"
 #include "AboutDialog.h"
 #include "ImageViewport.h"
+#include "filter/BWFilter.h"
+#include "filter/Filter.h"
+#include "filter/FilterPanel.h"
 
 ICGFilter::ICGFilter(QWidget *parent)
-    : QMainWindow(parent),
-    ui(new Ui::ICGFilter)
+    : QMainWindow(parent), ui(new Ui::ICGFilter)
 {
     ui->setupUi(this);
+    ui->dockWidget->hide();
+    ui->viewport->setDragMode(QGraphicsView::DragMode::NoDrag);
+
+    createFilters();
+
     setWindowTitle("ICGFilter");
     setWindowIcon(QIcon(":resources/icons/image-edit.svg"));
 
-    connect(ui->viewport, &ImageViewport::scaleChanged, this, [this](double scale) {
-        ui->fitToViewportAction->setChecked(false);
-        ui->originalSizeAction->setChecked(false);
-        statusBar()->showMessage("Scale: " + QString::number(scale));
-    });
+    connect(ui->viewport, &ImageViewport::scaleChanged, this,
+            [this](double scale) {
+                ui->fitToViewportAction->setChecked(false);
+                ui->originalSizeAction->setChecked(false);
+                statusBar()->showMessage("Scale: " + QString::number(scale));
+            });
+
+    connect(ui->viewport, &ImageViewport::mousePressed, this,
+            &ICGFilter::togglePreviewOriginal);
+    connect(ui->viewport, &ImageViewport::mouseReleased, this,
+            &ICGFilter::togglePreviewOriginal);
+    connect(ui->viewport, &ImageViewport::mouseDblPressed, this,
+            &ICGFilter::togglePreviewOriginal);
 
     importImage(":resources/test-image.jpg");
 }
@@ -37,9 +54,9 @@ ICGFilter::~ICGFilter()
 void ICGFilter::on_saveAction_triggered()
 {
     if (savePath.isEmpty()) {
-        savePath = QFileDialog::getSaveFileName(this, "Save file",
-                                     QDir::homePath() + "/untitled.png",
-                                     "PNG Image (*.png);;All Files (*)");
+        savePath = QFileDialog::getSaveFileName(
+            this, "Save file", QDir::homePath() + "/untitled.png",
+            "PNG Image (*.png);;All Files (*)");
     }
 
     if (savePath.isEmpty() || !saveImage(savePath)) {
@@ -47,20 +64,17 @@ void ICGFilter::on_saveAction_triggered()
     }
 }
 
-
 void ICGFilter::on_importAction_triggered()
 {
-    QString filter = tr("Image Files (*.png *.jpg *.jpeg *.bmp);;All Files (*)");
-    QString filePath = QFileDialog::getOpenFileName(this,
-                                                    tr("Open file"),
-                                                    QDir::homePath(),
-                                                    filter);
+    QString filter =
+        tr("Image Files (*.png *.jpg *.jpeg *.bmp);;All Files (*)");
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"),
+                                                    QDir::homePath(), filter);
 
     if (!filePath.isEmpty()) {
         importImage(filePath);
     }
 }
-
 
 void ICGFilter::on_aboutAction_triggered()
 {
@@ -68,16 +82,14 @@ void ICGFilter::on_aboutAction_triggered()
     dialog->exec();
 }
 
-bool ICGFilter::importImage(const QString& path)
+bool ICGFilter::importImage(const QString &path)
 {
     QImage image = QImage(path);
     if (image.isNull()) {
         statusBar()->showMessage("Falied to import " + path);
-        QMessageBox messageBox(QMessageBox::Critical,
-                               "Falied to import image",
+        QMessageBox messageBox(QMessageBox::Critical, "Falied to import image",
                                "Falied to import image " + path,
-                               QMessageBox::Ok,
-                               this);
+                               QMessageBox::Ok, this);
         messageBox.exec();
         return false;
     }
@@ -91,15 +103,13 @@ bool ICGFilter::importImage(const QString& path)
     return true;
 }
 
-bool ICGFilter::saveImage(const QString& path)
+bool ICGFilter::saveImage(const QString &path)
 {
     if (!original.save(path, "PNG")) {
         statusBar()->showMessage("Falied to save to " + path);
-        QMessageBox messageBox(QMessageBox::Critical,
-                               "Falied to save image",
+        QMessageBox messageBox(QMessageBox::Critical, "Falied to save image",
                                "Falied to save image to " + path,
-                               QMessageBox::Ok,
-                               this);
+                               QMessageBox::Ok, this);
         messageBox.exec();
         return false;
     }
@@ -117,7 +127,6 @@ void ICGFilter::on_originalSizeAction_triggered()
 
     statusBar()->showMessage("Original size");
 }
-
 
 void ICGFilter::on_fitToViewportAction_triggered()
 {
@@ -138,3 +147,109 @@ void ICGFilter::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
 }
 
+void ICGFilter::addFilter(QSharedPointer<Filter> filter)
+{
+    filters.append(filter);
+
+    QAction *action = filter->createAction(this);
+    action->setData(QVariant::fromValue(filter));
+    action->setCheckable(true);
+
+    filterActions->addAction(action);
+    ui->toolBar->addAction(action);
+    ui->menuFilter->addAction(action);
+
+    connect(action, &QAction::triggered, this, [this]() {
+        QAction *action = qobject_cast<QAction *>(sender());
+        if (action->isChecked()) {
+            setActiveFilter(action->data().value<QSharedPointer<Filter>>());
+        } else {
+            cancelFilter();
+        }
+    });
+}
+
+void ICGFilter::setActiveFilter(QSharedPointer<Filter> filter)
+{
+    FilterPanel *panel = new FilterPanel(filter, this);
+    ui->dockWidget->setWidget(panel);
+    ui->dockWidget->setWindowTitle(filter->getDisplayName());
+    ui->dockWidget->show();
+
+    connect(panel, &FilterPanel::panelClosed, this,
+            [this]() { cancelFilter(); });
+
+    connect(panel, &FilterPanel::applyFilter, this, [this]() {
+        FilterPanel *panel = qobject_cast<FilterPanel *>(sender());
+        QSharedPointer<Filter> filter = panel->getFilter();
+        applyFilter(*filter.get());
+    });
+
+    connect(panel, &FilterPanel::previewFilter, this, [this]() {
+        FilterPanel *panel = qobject_cast<FilterPanel *>(sender());
+        QSharedPointer<Filter> filter = panel->getFilter();
+        previewFilter(*filter.get());
+    });
+
+    if (panel->isAutoPreviewEnabled()) {
+        previewFilter(*filter.get());
+    }
+}
+
+void ICGFilter::createFilters()
+{
+    filterActions = new QActionGroup(this);
+    filterActions->setExclusionPolicy(
+        QActionGroup::ExclusionPolicy::ExclusiveOptional);
+    addFilter(QSharedPointer<BWFilter>::create());
+}
+
+void ICGFilter::applyFilter(const Filter &filter)
+{
+    previewFilter(filter);
+    original = preview;
+
+    ui->statusBar->showMessage("Applied " + filter.getDisplayName());
+}
+
+void ICGFilter::previewFilter(const Filter &filter)
+{
+    filter.apply(original, preview);
+    ui->viewport->updateImage(preview);
+}
+
+void ICGFilter::cancelFilter()
+{
+    for (QAction *action : filterActions->actions()) {
+        action->setChecked(false);
+    }
+    ui->dockWidget->hide();
+
+    ui->viewport->updateImage(original);
+}
+
+void ICGFilter::on_handAction_triggered()
+{
+    if (ui->handAction->isChecked()) {
+        ui->viewport->setDragMode(QGraphicsView::DragMode::ScrollHandDrag);
+    } else {
+        ui->viewport->setDragMode(QGraphicsView::DragMode::NoDrag);
+    }
+}
+
+void ICGFilter::togglePreviewOriginal()
+{
+    // Disable orignal preview toggle when hand dragging is active
+    if (ui->handAction->isChecked()) {
+        return;
+    }
+
+    showOriginal = !showOriginal;
+    if (showOriginal) {
+        ui->viewport->updateImage(original);
+        ui->statusBar->showMessage("Show original");
+    } else {
+        ui->viewport->updateImage(preview);
+        ui->statusBar->showMessage("Show preview");
+    }
+}
