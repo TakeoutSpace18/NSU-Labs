@@ -39,13 +39,13 @@
        <string notr="true">QGraphicsView {border: 2px dashed black; border-radius: 0px}</string>
       </property>
       <property name="dragMode">
-       <enum>QGraphicsView::ScrollHandDrag</enum>
+       <enum>QGraphicsView::DragMode::ScrollHandDrag</enum>
       </property>
       <property name="transformationAnchor">
-       <enum>QGraphicsView::AnchorUnderMouse</enum>
+       <enum>QGraphicsView::ViewportAnchor::AnchorUnderMouse</enum>
       </property>
       <property name="resizeAnchor">
-       <enum>QGraphicsView::AnchorUnderMouse</enum>
+       <enum>QGraphicsView::ViewportAnchor::AnchorUnderMouse</enum>
       </property>
      </widget>
     </item>
@@ -112,7 +112,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockWidget">
    <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Filter</string>
@@ -215,6 +215,9 @@
   <action name="handAction">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">

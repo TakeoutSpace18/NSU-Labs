@@ -39,8 +39,8 @@ QAction *BWFilter::createAction(QObject *parent)
 {
     QAction *action = new QAction(parent);
     action->setIcon(QIcon(":resources/icons/image-filter-black-white.svg"));
-    action->setText("&B/W Filter");
-    action->setStatusTip("Convert image to black and white");
+    action->setText("&B/W");
+    action->setStatusTip("B/W Filter");
     action->setToolTip(action->statusTip());
 
     return action;

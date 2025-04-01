@@ -30,9 +30,6 @@ public:
     QString getFilterName() const { return filterName; };
     bool isAutoPreviewEnabled() const { return autoPreviewEnabled; };
 
-public slots:
-    void updateParameters(const QMap<QString, QVariant>& params);
-
 signals:
     void applyFilter();
     void previewFilter();

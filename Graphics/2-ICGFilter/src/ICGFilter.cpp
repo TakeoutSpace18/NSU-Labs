@@ -2,20 +2,29 @@
 
 #include <QAction>
 #include <QActionGroup>
+#include <QCursor>
 #include <QDir>
 #include <QFileDialog>
+#include <QFuture>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QMessageBox>
 #include <QSharedPointer>
 #include <QStatusBar>
+#include <QWidgetAction>
+#include <QtConcurrent/QtConcurrent>
 
 #include "./ui_ICGFilter.h"
 #include "AboutDialog.h"
 #include "ImageViewport.h"
 #include "filter/BWFilter.h"
+#include "filter/BlurFilter.h"
+#include "filter/EmbossFilter.h"
 #include "filter/Filter.h"
 #include "filter/FilterPanel.h"
+#include "filter/GammaCorrectionFilter.h"
+#include "filter/InversionFilter.h"
+#include "filter/SharpenFilter.h"
 
 ICGFilter::ICGFilter(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ICGFilter)
@@ -25,6 +34,10 @@ ICGFilter::ICGFilter(QWidget *parent)
     ui->viewport->setDragMode(QGraphicsView::DragMode::NoDrag);
 
     createFilters();
+    QWidget *spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui->toolBar->addWidget(spacer);
+    createTransformationModeChoice();
 
     setWindowTitle("ICGFilter");
     setWindowIcon(QIcon(":resources/icons/image-edit.svg"));
@@ -36,12 +49,9 @@ ICGFilter::ICGFilter(QWidget *parent)
                 statusBar()->showMessage("Scale: " + QString::number(scale));
             });
 
-    connect(ui->viewport, &ImageViewport::mousePressed, this,
-            &ICGFilter::togglePreviewOriginal);
-    connect(ui->viewport, &ImageViewport::mouseReleased, this,
-            &ICGFilter::togglePreviewOriginal);
-    connect(ui->viewport, &ImageViewport::mouseDblPressed, this,
-            &ICGFilter::togglePreviewOriginal);
+    setupMouseTogglePreviewOriginal();
+
+    ui->handAction->trigger();
 
     importImage(":resources/test-image.jpg");
 }
@@ -49,6 +59,44 @@ ICGFilter::ICGFilter(QWidget *parent)
 ICGFilter::~ICGFilter()
 {
     delete ui;
+}
+
+void ICGFilter::setupMouseTogglePreviewOriginal()
+{
+    connect(ui->viewport, &ImageViewport::mousePressed, this,
+            &ICGFilter::togglePreviewOriginal);
+    connect(ui->viewport, &ImageViewport::mouseReleased, this,
+            &ICGFilter::togglePreviewOriginal);
+    connect(ui->viewport, &ImageViewport::mouseDblPressed, this,
+            &ICGFilter::togglePreviewOriginal);
+}
+
+void ICGFilter::createTransformationModeChoice()
+{
+    QWidget *comboWidget = new QWidget();
+    QHBoxLayout *layout = new QHBoxLayout(comboWidget);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    QLabel *label = new QLabel("Interpolation mode:");
+    QComboBox *comboBox = new QComboBox();
+    comboBox->addItems({"Fast", "Smooth"});
+
+    connect(
+        comboBox, &QComboBox::currentTextChanged, this,
+        [=](const QString &text) {
+            if (text == "Fast") {
+                ui->viewport->setTransformationMode(Qt::FastTransformation);
+                ui->statusBar->showMessage("Fast transformation mode");
+            } else if (text == "Smooth") {
+                ui->viewport->setTransformationMode(Qt::SmoothTransformation);
+                ui->statusBar->showMessage("Smooth transformation mode");
+            }
+        });
+
+    layout->addWidget(label);
+    layout->addWidget(comboBox);
+
+    ui->toolBar->addWidget(comboWidget);
 }
 
 void ICGFilter::on_saveAction_triggered()
@@ -201,7 +249,13 @@ void ICGFilter::createFilters()
     filterActions = new QActionGroup(this);
     filterActions->setExclusionPolicy(
         QActionGroup::ExclusionPolicy::ExclusiveOptional);
+
     addFilter(QSharedPointer<BWFilter>::create());
+    addFilter(QSharedPointer<InversionFilter>::create());
+    addFilter(QSharedPointer<BlurFilter>::create());
+    addFilter(QSharedPointer<SharpenFilter>::create());
+    addFilter(QSharedPointer<EmbossFilter>::create());
+    addFilter(QSharedPointer<GammaCorrectionFilter>::create());
 }
 
 void ICGFilter::applyFilter(const Filter &filter)
@@ -210,12 +264,15 @@ void ICGFilter::applyFilter(const Filter &filter)
     original = preview;
 
     ui->statusBar->showMessage("Applied " + filter.getDisplayName());
+    cancelFilter();
 }
 
 void ICGFilter::previewFilter(const Filter &filter)
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     filter.apply(original, preview);
     ui->viewport->updateImage(preview);
+    QApplication::restoreOverrideCursor();
 }
 
 void ICGFilter::cancelFilter()
@@ -226,6 +283,7 @@ void ICGFilter::cancelFilter()
     ui->dockWidget->hide();
 
     ui->viewport->updateImage(original);
+    preview = original;
 }
 
 void ICGFilter::on_handAction_triggered()

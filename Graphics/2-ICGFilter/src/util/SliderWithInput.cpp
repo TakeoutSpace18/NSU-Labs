@@ -24,11 +24,8 @@ SliderWithInput::SliderWithInput(int minValue, int maxValue, QWidget *parent)
             return;
         }
 
-        if (value < m_minValue) {
-            setValue(m_minValue);
-        } else if (value > m_maxValue) {
-            setValue(m_maxValue);
-        }
+        value = qBound(m_minValue, value, m_maxValue);
+        setValue(value);
     });
 
     QHBoxLayout *layout = new QHBoxLayout(this);
@@ -41,9 +38,10 @@ SliderWithInput::SliderWithInput(int minValue, int maxValue, QWidget *parent)
         emit valueChanged(value);
     });
 
-    connect(m_spinBox, &QSpinBox::editingFinished, this, [this]() {
-        int value = m_spinBox->text().toInt();
+    connect(m_spinBox, &QSpinBox::valueChanged, this, [this](int value) {
+        value = qBound(m_minValue, value, m_maxValue);
         m_slider->setValue(value);
+        emit valueChanged(value);
     });
 }
 

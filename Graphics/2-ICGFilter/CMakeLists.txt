@@ -27,6 +27,7 @@ set(PROJECT_SOURCES
         src/AboutDialog.h
 
         src/filter/Filter.h
+        src/filter/Filter.cpp
 
         src/filter/FilterPanel.h
         src/filter/FilterPanel.cpp
@@ -34,8 +35,26 @@ set(PROJECT_SOURCES
         src/filter/BWFilter.h
         src/filter/BWFilter.cpp
 
+        src/filter/InversionFilter.h
+        src/filter/InversionFilter.cpp
+
+        src/filter/BlurFilter.h
+        src/filter/BlurFilter.cpp
+
+        src/filter/SharpenFilter.h
+        src/filter/SharpenFilter.cpp
+
+        src/filter/EmbossFilter.h
+        src/filter/EmbossFilter.cpp
+
+        src/filter/GammaCorrectionFilter.h
+        src/filter/GammaCorrectionFilter.cpp
+
         src/util/SliderWithInput.h
         src/util/SliderWithInput.cpp
+
+        src/util/DoubleSliderWithInput.h
+        src/util/DoubleSliderWithInput.cpp
 
         resources.qrc
 )

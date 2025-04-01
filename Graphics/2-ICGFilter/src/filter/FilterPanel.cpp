@@ -6,6 +6,7 @@
 #include <QCloseEvent>
 
 #include "util/SliderWithInput.h"
+#include "util/DoubleSliderWithInput.h"
 
 FilterPanel::FilterPanel(QSharedPointer<Filter> filter, QWidget *parent)
     : QWidget(parent), filter(filter), filterName(filter->getDisplayName())
@@ -96,14 +97,14 @@ QWidget *FilterPanel::createParameterWidget(
 
         widget = slider;
     } else if (paramInfo.type == "double") {
-        QDoubleSpinBox *spinBox = new QDoubleSpinBox();
-        spinBox->setMinimum(paramInfo.minValue.toDouble());
-        spinBox->setMaximum(paramInfo.maxValue.toDouble());
-        spinBox->setValue(filter->getParameter(paramInfo.name).toDouble());
+        DoubleSliderWithInput *slider = new DoubleSliderWithInput();
+        slider->setMinimum(paramInfo.minValue.toDouble());
+        slider->setMaximum(paramInfo.maxValue.toDouble());
+        slider->setValue(filter->getParameter(paramInfo.name).toDouble());
 
-        connect(spinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+        connect(slider, QOverload<double>::of(&DoubleSliderWithInput::valueChanged),
                 this, &FilterPanel::onParameterChanged);
-        widget = spinBox;
+        widget = slider;
     } else if (paramInfo.type == "bool") {
         QCheckBox *checkBox = new QCheckBox();
         checkBox->setChecked(filter->getParameter(paramInfo.name).toBool());
@@ -146,9 +147,9 @@ void FilterPanel::onParameterChanged()
     if (SliderWithInput *slider =
             qobject_cast<SliderWithInput *>(senderWidget)) {
         value = slider->value();
-    } else if (QDoubleSpinBox *doubleSpinBox =
-                   qobject_cast<QDoubleSpinBox *>(senderWidget)) {
-        value = doubleSpinBox->value();
+    } else if (DoubleSliderWithInput *slider =
+                   qobject_cast<DoubleSliderWithInput *>(senderWidget)) {
+        value = slider->value();
     } else if (QCheckBox *checkBox = qobject_cast<QCheckBox *>(senderWidget)) {
         value = checkBox->isChecked();
     } else if (QComboBox *comboBox = qobject_cast<QComboBox *>(senderWidget)) {
@@ -159,31 +160,6 @@ void FilterPanel::onParameterChanged()
 
     if (autoPreviewEnabled) {
         emit previewFilter();
-    }
-}
-
-void FilterPanel::updateParameters(const QMap<QString, QVariant> &params)
-{
-    filter->setAllParameters(params);
-
-    // Update UI widgets
-    for (auto it = parameterWidgets.begin(); it != parameterWidgets.end();
-         ++it) {
-        QString paramName = it.key();
-        QWidget *widget = it.value();
-
-        QVariant value = params.value(paramName);
-
-        if (QSpinBox *spinBox = qobject_cast<QSpinBox *>(widget)) {
-            spinBox->setValue(value.toInt());
-        } else if (QDoubleSpinBox *doubleSpinBox =
-                       qobject_cast<QDoubleSpinBox *>(widget)) {
-            doubleSpinBox->setValue(value.toDouble());
-        } else if (QCheckBox *checkBox = qobject_cast<QCheckBox *>(widget)) {
-            checkBox->setChecked(value.toBool());
-        } else if (QComboBox *comboBox = qobject_cast<QComboBox *>(widget)) {
-            comboBox->setCurrentText(value.toString());
-        }
     }
 }
 

@@ -19,7 +19,7 @@ public:
 
     const QString& getDisplayName() const { return displayName; }
 
-    void setParameter(const QString& name, const QVariant& value)
+    virtual void setParameter(const QString& name, const QVariant& value)
     {
         parameters[name] = value;
     }
@@ -30,11 +30,6 @@ public:
     }
 
     QMap<QString, QVariant> getAllParameters() const { return parameters; }
-
-    void setAllParameters(const QMap<QString, QVariant>& params)
-    {
-        parameters = params;
-    }
 
     struct ParameterInfo
     {
@@ -52,6 +47,9 @@ public:
     virtual QAction* createAction(QObject* parent = nullptr) = 0;
 
 protected:
+    void convolve(const QImage& input, QImage& output,
+                  const std::vector<double>& kernel, int ksize) const;
+
     QMap<QString, QVariant> parameters;
     QString displayName;
 };

@@ -18,6 +18,8 @@ public:
     void fitToViewport();
     void originalSize();
 
+    void setTransformationMode(Qt::TransformationMode mode);
+
 signals:
     void scaleChanged(double scale);
     void mousePressed();

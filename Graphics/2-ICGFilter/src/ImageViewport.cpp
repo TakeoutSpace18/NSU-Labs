@@ -1,4 +1,5 @@
 #include "ImageViewport.h"
+#include <qnamespace.h>
 
 #include <QGraphicsItem>
 #include <QGraphicsScene>
@@ -53,6 +54,7 @@ void ImageViewport::mousePressEvent(QMouseEvent *event)
     emit mousePressed();
     QGraphicsView::mousePressEvent(event);
 }
+
 void ImageViewport::mouseReleaseEvent(QMouseEvent *event)
 {
     emit mouseReleased();
@@ -63,4 +65,9 @@ void ImageViewport::mouseDoubleClickEvent(QMouseEvent *event)
 {
     emit mouseDblPressed();
     QGraphicsView::mouseDoubleClickEvent(event);
+}
+
+void ImageViewport::setTransformationMode(Qt::TransformationMode mode)
+{
+    pixmapItem->setTransformationMode(mode);
 }

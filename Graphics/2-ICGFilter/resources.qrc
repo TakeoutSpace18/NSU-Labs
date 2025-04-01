@@ -7,6 +7,11 @@
     <file>resources/icons/fit-to-screen-outline.svg</file>
     <file>resources/icons/image-filter-black-white.svg</file>
     <file>resources/icons/hand-back-right-outline.svg</file>
+    <file>resources/icons/invert.png</file>
+    <file>resources/icons/blur.svg</file>
+    <file>resources/icons/sharpness.png</file>
+    <file>resources/icons/church-outline.svg</file>
+    <file>resources/icons/gamma.svg</file>
     <file>resources/test-image.jpg</file>
 </qresource>
 </RCC>

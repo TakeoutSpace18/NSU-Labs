@@ -53,6 +53,8 @@ private slots:
 private:
     void createFilters();
     void addFilter(QSharedPointer<Filter> filter);
+    void createTransformationModeChoice();
+    void setupMouseTogglePreviewOriginal();
 
     Ui::ICGFilter* ui;
 
