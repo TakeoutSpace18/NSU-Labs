@@ -2,6 +2,7 @@
 #define WAVE_EQUATION_H
 
 #include <vector>
+#include <immintrin.h>
 
 #include "Utils.h"
 
@@ -39,6 +40,7 @@ public:
     int ny() const { return m_area.ny; };
 
 private:
+    float hmax256(__m256 vec);
     ValueType sourceFunc(int n);
 
     void generatePhaseSpeed();
@@ -52,7 +54,12 @@ private:
     AreaParams m_area;
     Utils::Vec2i m_source;
     Utils::Vec2<ValueType> m_gridStep;
-    Utils::Vec2<ValueType> m_stepInvariant;
+
+    __m256 m_stepInvariantX;
+    __m256 m_stepInvariantY;
+    __m256 m_tauSquared;
+    __m256 m_two;
+
     ValueType m_tau;
     ValueType m_max;
     int m_step;

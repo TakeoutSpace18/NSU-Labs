@@ -1,11 +1,10 @@
 #include "Application.h"
 
-#include <QPainter>
-
 #include <chrono>
 #include <iostream>
-#include <qcoreapplication.h>
-#include <vector>
+
+#include <QPainter>
+#include <QCoreApplication>
 
 Application::Application(std::unique_ptr<WaveEquation> equation, QWidget *parent)
     : QMainWindow(parent),
