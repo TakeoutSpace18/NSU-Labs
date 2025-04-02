@@ -25,6 +25,7 @@
 #include "filter/GammaCorrectionFilter.h"
 #include "filter/InversionFilter.h"
 #include "filter/SharpenFilter.h"
+#include "filter/EdgeDetectionFilter.h"
 
 ICGFilter::ICGFilter(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ICGFilter)
@@ -256,6 +257,7 @@ void ICGFilter::createFilters()
     addFilter(QSharedPointer<SharpenFilter>::create());
     addFilter(QSharedPointer<EmbossFilter>::create());
     addFilter(QSharedPointer<GammaCorrectionFilter>::create());
+    addFilter(QSharedPointer<EdgeDetectionFilter>::create());
 }
 
 void ICGFilter::applyFilter(const Filter &filter)

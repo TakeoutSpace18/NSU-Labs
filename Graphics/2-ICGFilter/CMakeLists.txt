@@ -50,6 +50,9 @@ set(PROJECT_SOURCES
         src/filter/GammaCorrectionFilter.h
         src/filter/GammaCorrectionFilter.cpp
 
+        src/filter/EdgeDetectionFilter.h
+        src/filter/EdgeDetectionFilter.cpp
+
         src/util/SliderWithInput.h
         src/util/SliderWithInput.cpp
 

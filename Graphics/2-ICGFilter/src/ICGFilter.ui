@@ -191,7 +191,7 @@
     <string>Scale to original size</string>
    </property>
    <property name="shortcut">
-    <string>Alt+O</string>
+    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="fitToViewportAction">
@@ -209,7 +209,7 @@
     <string>Fit to viewport</string>
    </property>
    <property name="shortcut">
-    <string>Alt+F</string>
+    <string>Ctrl+F</string>
    </property>
   </action>
   <action name="handAction">

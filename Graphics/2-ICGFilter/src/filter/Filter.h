@@ -50,6 +50,14 @@ protected:
     void convolve(const QImage& input, QImage& output,
                   const std::vector<double>& kernel, int ksize) const;
 
+    QRgb convolveOnce(const QRgb *inputPixels, int width, int height,
+                      int i, int j,
+                      const std::vector<double>& kernel, int ksize) const;
+
+    double convolveOnceGray(const QRgb *inputPixels, int width, int height,
+                            int i, int j,
+                            const std::vector<double>& kernel, int ksize) const;
+
     QMap<QString, QVariant> parameters;
     QString displayName;
 };

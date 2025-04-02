@@ -12,6 +12,7 @@
     <file>resources/icons/sharpness.png</file>
     <file>resources/icons/church-outline.svg</file>
     <file>resources/icons/gamma.svg</file>
+    <file>resources/icons/square-circle-outline.svg</file>
     <file>resources/test-image.jpg</file>
 </qresource>
 </RCC>

@@ -43,3 +43,55 @@ void Filter::convolve(const QImage& input, QImage& output,
         }
     }
 }
+
+QRgb Filter::convolveOnce(const QRgb *inputPixels, int width, int height,
+                          int i, int j,
+                          const std::vector<double>& kernel, int ksize) const
+{
+    int khalf = ksize / 2;
+    double rsum, gsum, bsum;
+    rsum = gsum = bsum = 0;
+
+    for (int ki = -khalf; ki < -khalf + ksize; ++ki) {
+        for (int kj = -khalf; kj < -khalf + ksize; ++kj) {
+
+            int pi = qBound(0, i + ki, height - 1);
+            int pj = qBound(0, j + kj, width - 1);
+
+            double r = qRed(inputPixels[pi * width + pj]);
+            double g = qGreen(inputPixels[pi * width + pj]);
+            double b = qBlue(inputPixels[pi * width + pj]);
+
+            double weight = kernel[(ki + khalf) * ksize + (kj + khalf)];
+            rsum += r * weight;
+            gsum += g * weight;
+            bsum += b * weight;
+        }
+    }
+
+    return qRgb(rsum + 0.5, gsum + 0.5, bsum + 0.5);
+
+}
+
+double Filter::convolveOnceGray(const QRgb *inputPixels, int width, int height,
+                                int i, int j,
+                                const std::vector<double>& kernel, int ksize) const
+{
+    int khalf = ksize / 2;
+    double ysum = 0;
+
+    for (int ki = -khalf; ki < -khalf + ksize; ++ki) {
+        for (int kj = -khalf; kj < -khalf + ksize; ++kj) {
+
+            int pi = qBound(0, i + ki, height - 1);
+            int pj = qBound(0, j + kj, width - 1);
+
+            int y = qGray(inputPixels[pi * width + pj]);
+
+            double weight = kernel[(ki + khalf) * ksize + (kj + khalf)];
+            ysum += y * weight;
+        }
+    }
+
+    return ysum;
+}
