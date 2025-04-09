@@ -151,6 +151,10 @@ bool ICGFilter::importImage(const QString &path)
     preview = original;
     ui->viewport->updateImage(preview);
 
+    if (!activeFilter.isNull()) {
+        previewFilter(*activeFilter);
+    }
+
     statusBar()->showMessage("Imported " + path);
 
     return true;
@@ -250,6 +254,8 @@ void ICGFilter::setActiveFilter(QSharedPointer<Filter> filter)
     if (panel->isAutoPreviewEnabled()) {
         previewFilter(*filter.get());
     }
+
+    activeFilter = filter;
 }
 
 void ICGFilter::createFilters()
