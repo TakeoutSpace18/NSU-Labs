@@ -13,6 +13,10 @@
     <file>resources/icons/church-outline.svg</file>
     <file>resources/icons/gamma.svg</file>
     <file>resources/icons/square-circle-outline.svg</file>
+    <file>resources/icons/gradient-horizontal.svg</file>
+    <file>resources/icons/sun-wireless.svg</file>
+    <file>resources/icons/rotate-right.svg</file>
+    <file>resources/icons/palette-outline.svg</file>
     <file>resources/test-image.jpg</file>
 </qresource>
 </RCC>

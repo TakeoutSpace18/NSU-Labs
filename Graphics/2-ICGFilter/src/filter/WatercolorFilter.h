@@ -1,13 +1,13 @@
-#ifndef SHARPENFILLTER_H
-#define SHARPENFILLTER_H
+#ifndef WATERCOLORFILTER_H
+#define WATERCOLORFILTER_H
 
 #include <QVariant>
 #include "Filter.h"
 
-class SharpenFilter : public Filter
+class WatercolorFilter : public Filter
 {
 public:
-    SharpenFilter();
+    WatercolorFilter();
 
     void apply(const QImage& input, QImage& output) const override;
 
@@ -23,4 +23,4 @@ private:
     std::vector<double> kernel;
 };
 
-#endif  // !SHARPENFILLTER_H
+#endif  // !WATERCOLORFILTER_H

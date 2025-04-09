@@ -50,3 +50,16 @@ void SliderWithInput::setValue(int newValue)
     m_slider->setValue(newValue);
     m_spinBox->setValue(newValue);
 }
+
+void SliderWithInput::setMaximum(int max)
+{
+    m_maxValue = max;
+    m_slider->setRange(m_minValue, m_maxValue);
+    m_spinBox->setRange(m_minValue, m_maxValue);
+}
+void SliderWithInput::setMinimum(int min)
+{
+    m_minValue = min;
+    m_slider->setRange(m_minValue, m_maxValue);
+    m_spinBox->setRange(m_minValue, m_maxValue);
+}

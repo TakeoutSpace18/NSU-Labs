@@ -26,6 +26,10 @@
 #include "filter/InversionFilter.h"
 #include "filter/SharpenFilter.h"
 #include "filter/EdgeDetectionFilter.h"
+#include "filter/DitheringFilter.h"
+#include "filter/RotationFilter.h"
+#include "filter/WatercolorFilter.h"
+#include "filter/ChromaticAberrationFilter.h"
 
 ICGFilter::ICGFilter(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ICGFilter)
@@ -220,6 +224,9 @@ void ICGFilter::addFilter(QSharedPointer<Filter> filter)
 
 void ICGFilter::setActiveFilter(QSharedPointer<Filter> filter)
 {
+    preview = original;
+    ui->viewport->updateImage(original);
+
     FilterPanel *panel = new FilterPanel(filter, this);
     ui->dockWidget->setWidget(panel);
     ui->dockWidget->setWindowTitle(filter->getDisplayName());
@@ -258,6 +265,10 @@ void ICGFilter::createFilters()
     addFilter(QSharedPointer<EmbossFilter>::create());
     addFilter(QSharedPointer<GammaCorrectionFilter>::create());
     addFilter(QSharedPointer<EdgeDetectionFilter>::create());
+    addFilter(QSharedPointer<DitheringFilter>::create());
+    addFilter(QSharedPointer<RotationFilter>::create());
+    addFilter(QSharedPointer<WatercolorFilter>::create());
+    addFilter(QSharedPointer<ChromaticAberrationFilter>::create());
 }
 
 void ICGFilter::applyFilter(const Filter &filter)

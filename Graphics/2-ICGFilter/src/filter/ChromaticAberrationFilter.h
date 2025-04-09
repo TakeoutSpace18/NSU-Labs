@@ -1,13 +1,13 @@
-#ifndef SHARPENFILLTER_H
-#define SHARPENFILLTER_H
+#ifndef CHROMATICABERRATIONFILTER_H
+#define CHROMATICABERRATIONFILTER_H
 
 #include <QVariant>
 #include "Filter.h"
 
-class SharpenFilter : public Filter
+class ChromaticAberrationFilter : public Filter
 {
 public:
-    SharpenFilter();
+    ChromaticAberrationFilter();
 
     void apply(const QImage& input, QImage& output) const override;
 
@@ -18,9 +18,6 @@ public:
     QAction* createAction(QObject* parent = nullptr) override;
 
 private:
-    std::vector<double> sharpenKernel(int intensity);
-
-    std::vector<double> kernel;
 };
 
-#endif  // !SHARPENFILLTER_H
+#endif  // !CHROMATICABERRATIONFILTER_H

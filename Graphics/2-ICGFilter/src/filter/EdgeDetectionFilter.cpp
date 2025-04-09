@@ -13,7 +13,7 @@ EdgeDetectionFilter::EdgeDetectionFilter() : Filter("Edge Detection Filter")
 
 void EdgeDetectionFilter::apply(const QImage &input, QImage &output) const
 {
-    if (parameters["type"].toString() == QString("Roberts")){
+    if (parameters["type"].toString() == "Roberts"){
         applyRoberts(input, output);
     }
     else if (parameters["type"].toString() == "Sobel") {

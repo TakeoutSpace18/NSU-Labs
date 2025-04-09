@@ -58,6 +58,10 @@ protected:
                             int i, int j,
                             const std::vector<double>& kernel, int ksize) const;
 
+    QRgb medianOnce(const QRgb *inputPixels, int width, int height,
+                    int i, int j, int radius) const;
+
+
     QMap<QString, QVariant> parameters;
     QString displayName;
 };

@@ -18,12 +18,7 @@ DoubleSliderWithInput::DoubleSliderWithInput(double minValue, double maxValue, Q
     m_spinBox->setMaximum(maxValue);
 
     connect(m_spinBox, &QSpinBox::editingFinished, this, [&]() {
-        bool ok;
-        double value = m_spinBox->text().toInt(&ok);
-        if (!ok) {
-            setValue(m_minValue);
-            return;
-        }
+        double value = m_spinBox->value();
 
         value = qBound(m_minValue, value, m_maxValue);
         setValue(value);
@@ -60,7 +55,7 @@ void DoubleSliderWithInput::setMaximum(double max)
 }
 void DoubleSliderWithInput::setMinimum(double min)
 {
-    m_maxValue = min;
+    m_minValue = min;
     m_slider->setRange(m_minValue * 10, m_maxValue * 10);
     m_spinBox->setRange(m_minValue, m_maxValue);
 }

@@ -16,7 +16,7 @@ public:
     explicit AboutDialog(QWidget *parent = nullptr) : QDialog(parent)
     {
         setWindowTitle("About ICGPaint");
-        setFixedSize(450, 400);
+        setFixedSize(450, 500);
 
         QVBoxLayout *layout = new QVBoxLayout(this);
 
@@ -30,10 +30,17 @@ public:
             "<p><b>Version:</b> 1.0</p>"
             "<p><b>Features:</b></p>"
             "<ul>"
-            "<li>...</li>"
-            "<li>...</li>"
-            "<li>...</li>"
-            "<li>...</li>"
+            "<li>Conversion to grayscale image</li>"
+            "<li>Inversion</li>"
+            "<li>Gaussian blur</li>"
+            "<li>Chromatic aberration</li>"
+            "<li>Dithering (Floyd-Steinberg & Ordered)</li>"
+            "<li>Edge detection (Sobel & Roberts filters)</li>"
+            "<li>Emboss</li>"
+            "<li>Gamma correction</li>"
+            "<li>Sharpen filter</li>"
+            "<li>Watercolor filter</li>"
+            "<li>Rotation</li>"
             "</ul>"
             "<p><b>Made by:</b> Pavel Urdin, NSU FIT 2025, Group 22201</p>");
         infoLabel->setWordWrap(true);

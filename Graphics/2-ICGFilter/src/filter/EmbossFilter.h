@@ -1,7 +1,7 @@
 #ifndef EMBOSSFILTER_H
 #define EMBOSSFILTER_H
 
-#include <qvariant.h>
+#include <QVariant>
 #include "Filter.h"
 
 class EmbossFilter : public Filter

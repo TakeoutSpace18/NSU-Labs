@@ -1,7 +1,7 @@
 #ifndef BLURFILTER_H
 #define BLURFILTER_H
 
-#include <qvariant.h>
+#include <QVariant>
 #include "Filter.h"
 
 class BlurFilter : public Filter

@@ -53,6 +53,18 @@ set(PROJECT_SOURCES
         src/filter/EdgeDetectionFilter.h
         src/filter/EdgeDetectionFilter.cpp
 
+        src/filter/DitheringFilter.h
+        src/filter/DitheringFilter.cpp
+
+        src/filter/RotationFilter.h
+        src/filter/RotationFilter.cpp
+
+        src/filter/ChromaticAberrationFilter.h
+        src/filter/ChromaticAberrationFilter.cpp
+
+        src/filter/WatercolorFilter.h
+        src/filter/WatercolorFilter.cpp
+
         src/util/SliderWithInput.h
         src/util/SliderWithInput.cpp
 

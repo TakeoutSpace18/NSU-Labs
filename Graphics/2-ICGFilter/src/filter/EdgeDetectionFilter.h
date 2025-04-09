@@ -1,7 +1,7 @@
 #ifndef EDGEDETECTIONFILTER_H
 #define EDGEDETECTIONFILTER_H
 
-#include <qvariant.h>
+#include <QVariant>
 #include "Filter.h"
 
 class EdgeDetectionFilter : public Filter

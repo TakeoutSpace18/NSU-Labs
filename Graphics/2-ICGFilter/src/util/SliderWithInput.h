@@ -19,8 +19,8 @@ public:
     int value() const { return m_slider->value(); }
     void setValue(int newValue);
 
-    void setMaximum(int max) { m_maxValue = max; }
-    void setMinimum(int min) { m_minValue = min; }
+    void setMaximum(int max);
+    void setMinimum(int min);
 
 signals:
     void valueChanged(int newValue);
