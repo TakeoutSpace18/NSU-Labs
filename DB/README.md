@@ -1,7 +1,7 @@
 # ConstructionFirm database 
 [Задание](tech_specification.md)\
 [Этап 1: концептуальное проектирование и ER-модель](#Сущности)\
-[Этап 2: пользователи и роли](#Роли-пользователей-приложения)
+[Этап 2: пользователи и роли](#Роли-пользователей-приложения)\
 [Этап 3: логическое проектирование](task_3_report.md)
 
 ---
@@ -343,14 +343,12 @@
 | 11 | employee                | CRUD              | CRUD               | R                 |
 | 12 | worker                  | CRUD              | CRUD               | R                 |
 | 13 | worker_type             | CRUD              | CRUD               | R                 |
-| 14 | mason_worker            | CRUD              | CRUD               | R                 |
 | 21 | specialist              | CRUD              | CRUD               | R                 |
 | 22 | specialist_type         | CRUD              | CRUD               | R                 |
 | 26 | brigade                 | CRUD              | R                  | CRUD                 |
 | 27 | work_schedule           | CRUD              | R                  | CRUD                 |
 | 28 | work_type               | CRUD              | R                  | CRUD                 |
 | 29 | material_supply         | CRUD              | R                  | CRUD                 |
-| 30 | material_type           | CRUD              | R                  | CRUD                 |
 | 31 | department_supervisor   | CRUD              | R                  | R                 |
 | 32 | site_supervisor         | CRUD              | R                  | CRUD                 |
 | 33 | site_specialist         | CRUD              | R                  | CRUD                 |

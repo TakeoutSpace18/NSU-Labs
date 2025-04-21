@@ -46,7 +46,7 @@ CREATE TYPE object_type AS ENUM (
 CREATE TABLE object (
     object_id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    type object_type NOT NULL,
+    type object_type,
     site_id INTEGER NOT NULL REFERENCES site(site_id),
     customer_id INTEGER NOT NULL REFERENCES customer(customer_id),
     planned_start_date DATE,
@@ -243,5 +243,4 @@ CREATE TABLE site_machine (
 
     CHECK (start_date <= end_date)
 );
-
 COMMIT;

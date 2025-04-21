@@ -1,5 +1,7 @@
 # Отчет по логическому проектированию БД
 
+[DDL Script](scripts/ddl.sql)
+
 ## Functions
 
 ### `is_valid_email(email TEXT)`
@@ -48,7 +50,7 @@
 |---------------------|--------------|---------------------------------|
 | object_id           | BIGSERIAL    | PRIMARY KEY                     |
 | name                | VARCHAR(100) | NOT NULL                        |
-| type                | object_type  | NOT NULL                        |
+| type                | object_type  |                                 |
 | site_id             | INTEGER      | NOT NULL, REFERENCES site(site_id) |
 | customer_id         | INTEGER      | NOT NULL, REFERENCES customer(customer_id) |
 | planned_start_date  | DATE         |                                 |
@@ -276,3 +278,10 @@
 
 **CHECK constraints:**
 - `start_date <= end_date`
+
+## Other constraints
+
+- work schedule dates should be in range of object construction dates
+- there should be only one brigadier, site_supervisor, department_supervisor at a time (and no same brigadiers for different brigades)
+- one site_specialist or bridade_worker can't be assigned to many sites/brigades at one time
+- one worker/specialist can't be brigadier/supervisor and worker/specialist of one brigade/site at the same time
