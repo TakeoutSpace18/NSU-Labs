@@ -1,6 +1,6 @@
 # Отчет по DDL и ограничениям БД
 
-[DDL Script](../script/ddl.sql)
+[DDL Script](../script/01-ddl.sql)
 
 ## Functions
 
