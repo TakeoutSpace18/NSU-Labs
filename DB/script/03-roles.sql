@@ -1,8 +1,8 @@
 BEGIN;
 
-CREATE ROLE director;
-CREATE ROLE hr_manager;
-CREATE ROLE project_manager;
+CREATE ROLE director WITH LOGIN;
+CREATE ROLE hr_manager WITH LOGIN;
+CREATE ROLE project_manager WITH LOGIN;
 
 GRANT CONNECT ON DATABASE cfdb TO director, hr_manager, project_manager;
 

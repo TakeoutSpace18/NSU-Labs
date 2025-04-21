@@ -243,4 +243,5 @@ CREATE TABLE site_machine (
 
     CHECK (start_date <= end_date)
 );
+
 COMMIT;

@@ -291,10 +291,10 @@ DECLARE
     existing_site_supervisor RECORD;
 BEGIN
     SELECT * INTO existing_site_supervisor
-    FROM site_supervisor ss
-    WHERE ss.specialist_id = NEW.specialist_id
-      AND (ss.end_date IS NULL OR ss.end_date > NEW.start_date)
-      AND (NEW.end_date IS NULL OR ss.start_date < NEW.end_date);
+    FROM site_supervisor
+    WHERE specialist_id = NEW.specialist_id
+      AND (end_date IS NULL OR end_date > NEW.start_date)
+      AND (NEW.end_date IS NULL OR start_date < NEW.end_date);
     
     IF FOUND THEN
         RAISE EXCEPTION 'Specialist ID % cannot be both a supervisor and a site specialist during the same time period',
@@ -305,6 +305,88 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION check_worker_single_brigadier()
+RETURNS TRIGGER AS $$
+DECLARE
+    existing_brigadier_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO existing_brigadier_count
+    FROM brigadier
+    WHERE worker_id = NEW.worker_id
+      AND (end_date IS NULL OR end_date >= NEW.start_date)
+      AND (NEW.end_date IS NULL OR start_date < NEW.end_date)
+      AND brigadier_id != COALESCE(NEW.brigadier_id, -1);
+    
+    IF existing_brigadier_count > 0 THEN
+        RAISE EXCEPTION 'Worker ID % is already a brigadier for another brigade during this period', NEW.worker_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION check_specialist_single_site_supervisor()
+RETURNS TRIGGER AS $$
+DECLARE
+    existing_site_supervisor_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO existing_site_supervisor_count
+    FROM site_supervisor
+    WHERE specialist_id = NEW.specialist_id
+      AND (end_date IS NULL OR end_date >= NEW.start_date)
+      AND (NEW.end_date IS NULL OR start_date < NEW.end_date)
+      AND site_supervisor_id != COALESCE(NEW.site_supervisor_id, -1);
+    
+    IF existing_site_supervisor_count > 0 THEN
+        RAISE EXCEPTION 'Specialist ID % is already a supervisor for another site during this period', NEW.worker_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION check_specialist_single_department_supervisor()
+RETURNS TRIGGER AS $$
+DECLARE
+    existing_department_supervisor_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO existing_department_supervisor_count
+    FROM department_supervisor
+    WHERE specialist_id = NEW.specialist_id
+      AND (end_date IS NULL OR end_date >= NEW.start_date)
+      AND (NEW.end_date IS NULL OR start_date < NEW.end_date)
+      AND department_supervisor_id != COALESCE(NEW.department_supervisor_id, -1);
+    
+    IF existing_department_supervisor_count > 0 THEN
+        RAISE EXCEPTION 'Specialist ID % is already a supervisor for another department during this period', NEW.worker_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_machine_single_site_assignment()
+RETURNS TRIGGER AS $$
+DECLARE
+    existing_assignments_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO existing_assignments_count
+    FROM site_machine
+    WHERE machine_id = NEW.machine_id
+      AND (end_date IS NULL OR end_date >= NEW.start_date)
+      AND (NEW.end_date IS NULL OR start_date < NEW.end_date)
+      AND site_machine_id != COALESCE(NEW.site_machine_id, -1);
+    
+    IF existing_assignments_count > 0 THEN
+        RAISE EXCEPTION 'Machine ID % is already assigned for site during this period', NEW.machine_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- ensure there is no work_schedule with dates not between object construction dates
 CREATE OR REPLACE TRIGGER enforce_work_schedule_date_constraints
@@ -321,64 +403,89 @@ FOR EACH ROW
 
 
 -- ensure brigade has one brigadier at a time
-CREATE TRIGGER enforce_single_brigadier
+CREATE OR REPLACE TRIGGER enforce_single_brigadier
 BEFORE INSERT OR UPDATE ON brigadier
 FOR EACH ROW
 EXECUTE FUNCTION check_single_brigadier();
 
 
 -- ensure site has one supervisor at a time
-CREATE TRIGGER enforce_single_site_supervisor
+CREATE OR REPLACE TRIGGER enforce_single_site_supervisor
 BEFORE INSERT OR UPDATE ON site_supervisor
 FOR EACH ROW
 EXECUTE FUNCTION check_single_site_supervisor();
 
 
 -- ensure department has one supervisor at a time
-CREATE TRIGGER enforce_single_department_supervisor
+CREATE OR REPLACE TRIGGER enforce_single_department_supervisor
 BEFORE INSERT OR UPDATE ON department_supervisor
 FOR EACH ROW
 EXECUTE FUNCTION check_single_department_supervisor();
 
 
 -- ensure worker is assigneed to a single brigade at a time
-CREATE TRIGGER enforce_worker_single_brigade
+CREATE OR REPLACE TRIGGER enforce_worker_single_brigade
 BEFORE INSERT OR UPDATE ON brigade_worker
 FOR EACH ROW
     EXECUTE FUNCTION check_worker_single_brigade();
 
 
 -- ensure specialist is assigneed to a single site at a time
-CREATE TRIGGER enforce_specialist_single_site
-BEFORE INSERT OR UPDATE ON brigade_worker
+CREATE OR REPLACE TRIGGER enforce_specialist_single_site
+BEFORE INSERT OR UPDATE ON site_specialist
 FOR EACH ROW
     EXECUTE FUNCTION check_specialist_single_site();
 
 
 -- ensure employee is not a brigadier and a worker at the same time
-CREATE TRIGGER enforce_brigade_worker_role_exclusivity
+CREATE OR REPLACE TRIGGER enforce_brigade_worker_role_exclusivity
 BEFORE INSERT OR UPDATE ON brigade_worker
 FOR EACH ROW
     EXECUTE FUNCTION check_brigade_worker_no_brigadier();
 
 
 -- ensure employee is not a brigadier and a worker at the same time
-CREATE TRIGGER enforce_brigadier_role_exclusivity
+CREATE OR REPLACE TRIGGER enforce_brigadier_role_exclusivity
 BEFORE INSERT OR UPDATE ON brigadier
 FOR EACH ROW
     EXECUTE FUNCTION check_brigadier_no_brigade_worker();
 
 
 -- ensure employee is not a site_supervisor and a site_specialist at the same time
-CREATE TRIGGER enforce_site_specialist_role_exclusivity
-BEFORE INSERT OR UPDATE ON brigade_worker
+CREATE OR REPLACE TRIGGER enforce_site_specialist_role_exclusivity
+BEFORE INSERT OR UPDATE ON site_specialist
 FOR EACH ROW
     EXECUTE FUNCTION check_site_specialist_no_site_supervisor();
 
 
 -- ensure employee is not a site_supervisor and a site_specialist at the same time
-CREATE TRIGGER enforce_site_supervisor_role_exclusivity
-BEFORE INSERT OR UPDATE ON brigadier
+CREATE OR REPLACE TRIGGER enforce_site_supervisor_role_exclusivity
+BEFORE INSERT OR UPDATE ON site_supervisor
 FOR EACH ROW
     EXECUTE FUNCTION check_site_supervisor_no_site_specialist();
+
+-- ensure worker is not a brigadier of > 1 brigades at a time
+CREATE TRIGGER enforce_worker_single_brigadier
+BEFORE INSERT OR UPDATE ON brigadier
+FOR EACH ROW
+EXECUTE FUNCTION check_worker_single_brigadier();
+
+-- ensure specialist is not a supervisor of > 1 sites at a time
+CREATE TRIGGER enforce_specialist_single_site_supervisor
+BEFORE INSERT OR UPDATE ON site_supervisor
+FOR EACH ROW
+EXECUTE FUNCTION check_specialist_single_site_supervisor();
+
+-- ensure specialist is not a supervisor of > 1 departments at a time
+CREATE TRIGGER enforce_specialist_single_department_supervisor
+BEFORE INSERT OR UPDATE ON department_supervisor
+FOR EACH ROW
+EXECUTE FUNCTION check_specialist_single_department_supervisor();
+
+-- ensure machine is not assigned to > 1 sites at the same time
+CREATE TRIGGER enforce_machine_single_site_assignment
+BEFORE INSERT OR UPDATE ON site_machine
+FOR EACH ROW
+EXECUTE FUNCTION check_machine_single_site_assignment();
+
 COMMIT;
