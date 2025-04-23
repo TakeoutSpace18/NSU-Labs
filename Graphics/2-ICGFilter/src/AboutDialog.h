@@ -15,7 +15,7 @@ class AboutDialog : public QDialog
 public:
     explicit AboutDialog(QWidget *parent = nullptr) : QDialog(parent)
     {
-        setWindowTitle("About ICGPaint");
+        setWindowTitle("About ICGFilter");
         setFixedSize(450, 500);
 
         QVBoxLayout *layout = new QVBoxLayout(this);
@@ -24,7 +24,7 @@ public:
             new QSvgWidget(":resources/icons/image-edit.svg", this);
         logo->setFixedSize(100, 100);
 
-        QLabel *titleLabel = new QLabel("<h2>ICGPaint</h2>");
+        QLabel *titleLabel = new QLabel("<h2>ICGFilter</h2>");
         QLabel *infoLabel = new QLabel(
             "<p>An application for filtering images.</p>"
             "<p><b>Version:</b> 1.0</p>"
