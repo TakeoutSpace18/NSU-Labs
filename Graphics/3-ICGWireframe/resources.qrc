@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>resources/icons/sphere.svg</file>
+    <file>resources/icons/file-import.svg</file>
+    <file>resources/icons/vector-curve.svg</file>
+    <file>resources/icons/content-save-all.svg</file>
+</qresource>
+</RCC>
