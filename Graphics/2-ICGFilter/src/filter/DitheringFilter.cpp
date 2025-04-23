@@ -101,8 +101,6 @@ void DitheringFilter::applyOrdered(const QImage& input, QImage& output) const
     std::vector<double> bayerG = generateBayerMatrix(matrixSizeG);
     std::vector<double> bayerB = generateBayerMatrix(matrixSizeB);
 
-    qDebug() << matrixSizeR << matrixSizeB << matrixSizeG;
-
     #pragma omp parallel for
     for (size_t i = 0; i < height; ++i) {
         for (size_t j = 0; j < width; ++j) {
@@ -111,8 +109,8 @@ void DitheringFilter::applyOrdered(const QImage& input, QImage& output) const
             int b = qBlue(inputPixels[i * width + j]);
 
             double thresholdR = bayerR[(i % matrixSizeR) * matrixSizeR + (j % matrixSizeR)];
-            double thresholdG = bayerR[(i % matrixSizeG) * matrixSizeG + (j % matrixSizeG)];
-            double thresholdB = bayerR[(i % matrixSizeB) * matrixSizeB + (j % matrixSizeB)];
+            double thresholdG = bayerG[(i % matrixSizeG) * matrixSizeG + (j % matrixSizeG)];
+            double thresholdB = bayerB[(i % matrixSizeB) * matrixSizeB + (j % matrixSizeB)];
 
             auto dither = [&](int value, int quantization, double threshold) -> int {
                 double step = 255.0 / quantization;
