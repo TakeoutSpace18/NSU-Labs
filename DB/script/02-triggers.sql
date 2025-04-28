@@ -1,5 +1,3 @@
-BEGIN;
-
 -- triggers and stored procedures
 
 CREATE OR REPLACE FUNCTION check_work_schedule_dates()
@@ -10,46 +8,54 @@ DECLARE
     obj_planned_end DATE;
     obj_actual_start DATE;
     obj_actual_end DATE;
+    obj_name VARCHAR(100);
 BEGIN
+    -- Get object details including name for better error reporting
     SELECT 
         planned_start_date, 
         planned_end_date, 
         actual_start_date, 
-        actual_end_date
+        actual_end_date,
+        name
     INTO 
         obj_planned_start, 
         obj_planned_end, 
         obj_actual_start, 
-        obj_actual_end
+        obj_actual_end,
+        obj_name
     FROM object
     WHERE object_id = NEW.object_id;
-
-    -- check planned dates
+    
+    -- Check planned dates
     IF NEW.planned_start_date IS NOT NULL AND obj_planned_start IS NOT NULL THEN
         IF NEW.planned_start_date < obj_planned_start THEN
-            RAISE EXCEPTION 'Work schedule planned start date cannot be earlier than object planned start date';
+            RAISE EXCEPTION 'Work schedule ID % for object "%" (ID: %) has planned start date (%) earlier than object planned start date (%)',
+                NEW.work_schedule_id, obj_name, NEW.object_id, NEW.planned_start_date, obj_planned_start;
         END IF;
     END IF;
-
+    
     IF NEW.planned_end_date IS NOT NULL AND obj_planned_end IS NOT NULL THEN
         IF NEW.planned_end_date > obj_planned_end THEN
-            RAISE EXCEPTION 'Work schedule planned end date cannot be later than object planned end date';
+            RAISE EXCEPTION 'Work schedule ID % for object "%" (ID: %) has planned end date (%) later than object planned end date (%)',
+                NEW.work_schedule_id, obj_name, NEW.object_id, NEW.planned_end_date, obj_planned_end;
         END IF;
     END IF;
-
-    -- check actual dates
+    
+    -- Check actual dates
     IF NEW.actual_start_date IS NOT NULL AND obj_actual_start IS NOT NULL THEN
         IF NEW.actual_start_date < obj_actual_start THEN
-            RAISE EXCEPTION 'Work schedule actual start date cannot be earlier than object actual start date';
+            RAISE EXCEPTION 'Work schedule ID % for object "%" (ID: %) has actual start date (%) earlier than object actual start date (%)',
+                NEW.work_schedule_id, obj_name, NEW.object_id, NEW.actual_start_date, obj_actual_start;
         END IF;
     END IF;
-
+    
     IF NEW.actual_end_date IS NOT NULL AND obj_actual_end IS NOT NULL THEN
         IF NEW.actual_end_date > obj_actual_end THEN
-            RAISE EXCEPTION 'Work schedule actual end date cannot be later than object actual end date';
+            RAISE EXCEPTION 'Work schedule ID % for object "%" (ID: %) has actual end date (%) later than object actual end date (%)',
+                NEW.work_schedule_id, obj_name, NEW.object_id, NEW.actual_end_date, obj_actual_end;
         END IF;
     END IF;
-
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -114,12 +120,13 @@ BEGIN
     SELECT * INTO existing_brigadier
     FROM brigadier
     WHERE brigadier_id != COALESCE(NEW.brigadier_id, -1)
+      AND brigade_id = NEW.brigade_id
       AND (end_date IS NULL OR end_date > NEW.start_date)
       AND (NEW.end_date IS NULL OR start_date < NEW.end_date);
     
     IF FOUND THEN
-        RAISE EXCEPTION 'Brigade % already has an active brigadier (ID: %) for the period % to %', 
-            NEW.brigade_id, existing_brigadier.brigadier_id, 
+        RAISE EXCEPTION 'Brigade % already has an active brigadier (worker ID: %) for the period % to %', 
+            NEW.brigade_id, existing_brigadier.worker_id, 
             existing_brigadier.start_date, 
             COALESCE(existing_brigadier.end_date::text, 'ongoing');
     END IF;
@@ -138,6 +145,7 @@ BEGIN
     SELECT * INTO existing_site_supervisor
     FROM site_supervisor
     WHERE specialist_id != COALESCE(NEW.specialist_id, -1)
+      AND site_id = NEW.site_id
       AND (end_date IS NULL OR end_date > NEW.start_date)
       AND (NEW.end_date IS NULL OR start_date < NEW.end_date);
     
@@ -162,6 +170,7 @@ BEGIN
     SELECT * INTO existing_department_supervisor
     FROM department_supervisor
     WHERE specialist_id != COALESCE(NEW.specialist_id, -1)
+      AND department_id = NEW.department_id
       AND (end_date IS NULL OR end_date > NEW.start_date)
       AND (NEW.end_date IS NULL OR start_date < NEW.end_date);
     
@@ -215,7 +224,7 @@ BEGIN
       AND site_id != NEW.site_id;
     
     IF active_site_count > 0 THEN
-        RAISE EXCEPTION 'Specialist ID % is already assigned to another site during this time period', NEW.worker_id;
+        RAISE EXCEPTION 'Specialist ID % is already assigned to another site during this time period', NEW.specialist_id;
     END IF;
     
     RETURN NEW;
@@ -487,5 +496,3 @@ CREATE TRIGGER enforce_machine_single_site_assignment
 BEFORE INSERT OR UPDATE ON site_machine
 FOR EACH ROW
 EXECUTE FUNCTION check_machine_single_site_assignment();
-
-COMMIT;

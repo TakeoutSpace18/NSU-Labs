@@ -1,4 +1,7 @@
-BEGIN;
+-- recreate roles if they are already created
+DROP ROLE IF EXISTS director;
+DROP ROLE IF EXISTS hr_manager;
+DROP ROLE IF EXISTS project_manager;
 
 CREATE ROLE director WITH LOGIN;
 CREATE ROLE hr_manager WITH LOGIN;
@@ -61,5 +64,3 @@ GRANT USAGE, SELECT ON SEQUENCE
     site_machine_site_machine_id_seq
 TO project_manager;
 
-
-COMMIT;

@@ -1,5 +1,3 @@
-BEGIN;
-
 CREATE FUNCTION is_valid_email(email TEXT)
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -162,7 +160,7 @@ CREATE TABLE material_supply (
     material_id BIGINT NOT NULL REFERENCES material(material_id) ON DELETE RESTRICT,
     work_schedule_id BIGINT NOT NULL REFERENCES work_schedule(work_schedule_id) ON DELETE CASCADE,
     planned_quantity NUMERIC(10,2) CHECK (planned_quantity > 0),
-    actual_quantity NUMERIC(10,2) CHECK (actual_quantity > 0)
+    actual_quantity NUMERIC(10,2) CHECK (actual_quantity >= 0)
 );
 
 CREATE TABLE department_supervisor (
@@ -243,5 +241,3 @@ CREATE TABLE site_machine (
 
     CHECK (start_date <= end_date)
 );
-
-COMMIT;

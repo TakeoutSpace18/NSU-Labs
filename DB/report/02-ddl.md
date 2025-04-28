@@ -190,7 +190,7 @@
 | material_id       | BIGINT       | NOT NULL, REFERENCES material(material_id) ON DELETE RESTRICT |
 | work_schedule_id  | BIGINT       | NOT NULL, REFERENCES work_schedule(work_schedule_id) ON DELETE CASCADE |
 | planned_quantity  | NUMERIC(10,2)| CHECK (planned_quantity > 0)    |
-| actual_quantity   | NUMERIC(10,2)| CHECK (actual_quantity > 0)     |
+| actual_quantity   | NUMERIC(10,2)| CHECK (actual_quantity >= 0)     |
 
 ### department_supervisor
 | Column Name           | Type    | Constraints                     |
