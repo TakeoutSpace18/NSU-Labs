@@ -14,10 +14,10 @@ public:
     struct AreaParams
     {
         // modeling area bounds
-        ValueType xa;
-        ValueType xb;
-        ValueType ya;
-        ValueType yb;
+        float xa;
+        float xb;
+        float ya;
+        float yb;
 
         // grid resolution
         int nx;
@@ -26,8 +26,8 @@ public:
 
     struct Output
     {
-        const ValueType *data;
-        ValueType max;
+        const float *data;
+        float max;
     };
 
     WaveEquation(const AreaParams& area, const Utils::Vec2i& source);
@@ -38,30 +38,36 @@ public:
 
     int nx() const { return m_area.nx; };
     int ny() const { return m_area.ny; };
+    int stride() const { return m_stride; };
 
 private:
     float hmax256(__m256 vec);
-    ValueType sourceFunc(int n);
+    float sourceFunc(int n);
+    void computeSingle(int idx);
 
     void generatePhaseSpeed();
 
-    std::vector<ValueType> m_data;
-    std::vector<ValueType> m_phaseSpeed;
+    void *m_data;
 
-    ValueType *m_buf1;
-    ValueType *m_buf2;
+    float *m_buf1;
+    float *m_buf2;
+    float *m_phaseSpeed;
 
     AreaParams m_area;
+    size_t m_stride; // m_area.nx rounded up to be divisible by 32 (for alignment) 
     Utils::Vec2i m_source;
-    Utils::Vec2<ValueType> m_gridStep;
+    Utils::Vec2f m_gridStep;
 
+    Utils::Vec2f m_stepInvariantScalar;
     __m256 m_stepInvariantX;
     __m256 m_stepInvariantY;
+
+    float m_tauSquaredScalar;
     __m256 m_tauSquared;
     __m256 m_two;
 
-    ValueType m_tau;
-    ValueType m_max;
+    float m_tau;
+    float m_max;
     int m_step;
 };
 

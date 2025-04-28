@@ -2,6 +2,8 @@
 #include <fstream>
 #include <stdexcept>
 
+#define FORCEINLINE __attribute__((always_inline))
+
 namespace Utils {
 
 template <class T>
