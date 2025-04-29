@@ -2,7 +2,7 @@
 #include <fstream>
 #include <stdexcept>
 
-#define FORCEINLINE __attribute__((always_inline))
+#define FORCEINLINE __attribute__((always_inline)) inline
 
 namespace Utils {
 
