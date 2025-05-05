@@ -81,7 +81,7 @@ LEFT JOIN department_supervisor ds ON sp.employee_id = ds.specialist_id AND d.de
 LEFT JOIN site_supervisor site_sup ON sp.employee_id = site_sup.specialist_id AND s.site_id = site_sup.site_id;
 ```
 
-### 4. 'v_department_site_objects'
+### 4. `v_department_site_objects`
 Представление возвращает список объектов с их строительным участком, управлением и заказчиком.
 
 ```sql
