@@ -32,8 +32,8 @@ public:
 
     WaveEquation(const AreaParams& area, const Utils::Vec2i& source);
 
-    Output nextIteration();
-    Output skipNIterarions(int n);
+    Output nextIteration(int skipSteps);
+    Output skipNIterarions(int n, int skipBatch);
     Output getCurrentState();
 
     int nx() const { return m_area.nx; };
@@ -41,9 +41,40 @@ public:
     int stride() const { return m_stride; };
 
 private:
+
+    struct ComputeSingleData
+    {
+        float buf1Left;
+        float buf1Right;
+        float buf1Top;
+        float buf1Bottom;
+        float buf1Cur;
+        float buf2Cur;
+        float phaseSpeedLeft;
+        float phaseSpeedCur;
+        float phaseSpeedTopLeft;
+        float phaseSpeedTop;
+    };
+
+    struct ComputeVectorData
+    {
+        __m256 buf1Prev;
+        __m256 buf1Next;
+        __m256 buf1Top;
+        __m256 buf1Bottom;
+        __m256 buf1Cur;
+        __m256 buf2Cur;
+        __m256 phaseSpeedPrev;
+        __m256 phaseSpeedCur;
+        __m256 phaseSpeedTopPrev;
+        __m256 phaseSpeedTop;
+    };
+
     float hmax256(__m256 vec);
     float sourceFunc(int n);
-    void computeSingle(int idx);
+    float computeSingle(const ComputeSingleData& d);
+    __m256 computeVector(const ComputeVectorData& d);
+    void computeRow(const float *buf1, float *buf2, const float *phaseSpeed, int rowIdx);
 
     void generatePhaseSpeed();
 
@@ -68,7 +99,8 @@ private:
 
     float m_tau;
     float m_max;
-    int m_step;
+    __m256 m_maxVector;
+    int m_stepGlobal;
 };
 
 #endif

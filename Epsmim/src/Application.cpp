@@ -34,7 +34,7 @@ void Application::nextIteration()
     m_step++;
 
     auto start = high_resolution_clock::now();
-    WaveEquation::Output out = m_equation->nextIteration();
+    WaveEquation::Output out = m_equation->nextIteration(16);
     auto end = high_resolution_clock::now();
 
     uint64_t elapsed = duration_cast<microseconds>(end - start).count();

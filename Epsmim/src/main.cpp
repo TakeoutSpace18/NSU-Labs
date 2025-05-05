@@ -1,8 +1,6 @@
 #include <QApplication>
 
 #include <cstdlib>
-#include <qcoreapplication.h>
-#include <qnamespace.h>
 #include <random>
 #include <memory>
 #include <chrono>
@@ -31,7 +29,7 @@ int benchmark_mode(int argc, char* argv[])
     using namespace std::chrono;
 
     auto start = high_resolution_clock::now();
-    equation->skipNIterarions(100);
+    equation->skipNIterarions(100, 50);
     auto end = high_resolution_clock::now();
 
     uint64_t elapsed = duration_cast<milliseconds>(end - start).count();
