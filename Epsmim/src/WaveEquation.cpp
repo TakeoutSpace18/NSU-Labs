@@ -13,28 +13,17 @@
 // makes [a7, b0, b1, ..., b6]
 static FORCEINLINE __m256 shift_left(__m256 a, __m256 b)
 {
-    __m256 b_shifted = _mm256_permutevar8x32_ps(b, _mm256_setr_epi32(
-        7, 0, 1, 2, 3, 4, 5, 6
-    ));
-
-    __m256 a_shifted = _mm256_permutevar8x32_ps(a, _mm256_setr_epi32(
-        7, 0, 1, 2, 3, 4, 5, 6
-    ));
-    return _mm256_blend_ps(a_shifted, b_shifted, 0b11111110);
+    const __m256 blended = _mm256_blend_ps(b, a, 0b10000000);
+    const __m256 shuffleMask = _mm256_set_epi32(6, 5, 4, 3, 2, 1, 0, 7);
+    return _mm256_permutevar8x32_ps(blended, shuffleMask);
 }
 
 // makes [a1, ..., a6, b0]
 static FORCEINLINE __m256 shift_right(__m256 a, __m256 b)
 {
-    __m256 b_shifted = _mm256_permutevar8x32_ps(b, _mm256_setr_epi32(
-        1, 2, 3, 4, 5, 6, 7, 0
-    ));
-
-    __m256 a_shifted = _mm256_permutevar8x32_ps(a, _mm256_setr_epi32(
-        1, 2, 3, 4, 5, 6, 7, 0
-    ));
-
-    return _mm256_blend_ps(a_shifted, b_shifted, 0b10000000);
+    const __m256 blended = _mm256_blend_ps(a, b, 0b00000001);
+    const __m256 shuffleMask = _mm256_set_epi32(0, 7, 6, 5, 4, 3, 2, 1);
+    return _mm256_permutevar8x32_ps(blended, shuffleMask);
 }
 
 WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
