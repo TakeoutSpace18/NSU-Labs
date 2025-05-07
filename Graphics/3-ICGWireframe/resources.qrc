@@ -4,5 +4,6 @@
     <file>resources/icons/file-import.svg</file>
     <file>resources/icons/vector-curve.svg</file>
     <file>resources/icons/content-save-all.svg</file>
+    <file>resources/defaultScene.json</file>
 </qresource>
 </RCC>

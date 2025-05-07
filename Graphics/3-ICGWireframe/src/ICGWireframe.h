@@ -1,11 +1,13 @@
 #ifndef ICGWIREFRAME_H
 #define ICGWIREFRAME_H
 
-#include "BSplineEditor.h"
+#include <qsharedpointer.h>
 #include <QAction>
 #include <QGraphicsScene>
 #include <QMainWindow>
 #include <QSharedPointer>
+
+#include "spline_editor/SplineEditor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -30,20 +32,21 @@ protected:
 
 private slots:
     void on_saveAction_triggered();
-
     void on_importAction_triggered();
-
     void on_aboutAction_triggered();
-
     void on_editCurveAction_toggled(bool checked);
 
 private:
     void openBSplineEditor();
     void closeBSplineEditor();
 
-    BSplineEditor *bSplineEditor = nullptr;
+    void updateViewport(QSharedPointer<SceneData> sceneData);
+
+    QSharedPointer<SceneData> m_sceneData;
+    SplineEditor *m_splineEditor = nullptr;
+
+    QString m_savePath;
 
     Ui::ICGWireframe* ui;
-    QString savePath;
 };
 #endif  // ICGWIREFRAME_H

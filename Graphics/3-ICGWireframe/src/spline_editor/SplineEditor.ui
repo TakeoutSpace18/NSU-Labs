@@ -19,18 +19,21 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QGraphicsView" name="graphicsView">
+     <widget class="SplineViewport" name="graphicsView">
       <property name="minimumSize">
        <size>
         <width>400</width>
         <height>400</height>
        </size>
       </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustToContents</enum>
+      </property>
       <property name="renderHints">
        <set>QPainter::Antialiasing|QPainter::SmoothPixmapTransform</set>
       </property>
       <property name="dragMode">
-       <enum>QGraphicsView::ScrollHandDrag</enum>
+       <enum>QGraphicsView::RubberBandDrag</enum>
       </property>
       <property name="transformationAnchor">
        <enum>QGraphicsView::AnchorUnderMouse</enum>
@@ -63,56 +66,18 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QPushButton" name="addAnchorButton">
-              <property name="text">
-               <string>Add Point</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="removeAnchorButton">
-              <property name="text">
-               <string>Remove Point</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
            <layout class="QFormLayout" name="formLayout">
             <item row="0" column="0">
-             <widget class="QLabel" name="xLabel">
+             <widget class="QLabel" name="pointsLabel">
               <property name="text">
-               <string>X:</string>
+               <string>Points:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QDoubleSpinBox" name="xSpinBox">
+             <widget class="QSpinBox" name="pointsSpinBox">
               <property name="minimum">
-               <double>-1000.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>1000.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="yLabel">
-              <property name="text">
-               <string>Y:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="ySpinBox">
-              <property name="minimum">
-               <double>-1000.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>1000.000000000000000</double>
+               <number>4</number>
               </property>
              </widget>
             </item>
@@ -127,60 +92,54 @@
        <item>
         <widget class="QGroupBox" name="splineGroupBox">
          <property name="title">
-          <string>B-Spline Properties</string>
+          <string>Properties</string>
          </property>
          <layout class="QFormLayout" name="formLayout_2">
-          <item row="0" column="0">
-           <widget class="QLabel" name="nSegmentsLabel">
+          <item row="2" column="0">
+           <widget class="QLabel" name="generatixSegmentsLabel">
             <property name="text">
-             <string>N Segments:</string>
+             <string>Generatix segments</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="nSegmentsSpinBox">
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="generatixSegmentsSpinBox">
             <property name="minimum">
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>100</number>
+             <number>99</number>
             </property>
             <property name="value">
              <number>10</number>
             </property>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="viewControlsGroupBox">
-         <property name="title">
-          <string>View Controls</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QPushButton" name="zoomInButton">
-              <property name="text">
-               <string>Zoom In</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="zoomOutButton">
-              <property name="text">
-               <string>Zoom Out</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="resetViewButton">
+          <item row="4" column="0">
+           <widget class="QLabel" name="circleSegmentsLabel">
             <property name="text">
-             <string>Reset View</string>
+             <string>Circle segments:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="circleSegmentsSpinBox">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="generatixNumberLabel">
+            <property name="text">
+             <string>Generatix number:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="generatixNumberSpinBox">
+            <property name="minimum">
+             <number>2</number>
             </property>
            </widget>
           </item>
@@ -204,6 +163,9 @@
         <widget class="QCheckBox" name="autoApplyCheckBox">
          <property name="text">
           <string>Auto Apply</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -238,6 +200,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SplineViewport</class>
+   <extends>QGraphicsView</extends>
+   <header>spline_editor/SplineViewport.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

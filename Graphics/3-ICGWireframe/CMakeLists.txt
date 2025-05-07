@@ -24,17 +24,26 @@ set(PROJECT_SOURCES
         src/SceneViewport.h
         src/SceneViewport.cpp
 
-        src/BSplineEditor.h
-        src/BSplineEditor.cpp
-        src/BSplineEditor.ui
+        src/SceneData.h
+        src/SceneData.cpp
+
+        src/BSpline.h
+        src/BSpline.cpp
+
+        src/RotationFigure.h
+        src/RotationFigure.cpp
+
+        src/spline_editor/SplineViewport.h
+        src/spline_editor/SplineViewport.cpp
+
+        src/spline_editor/SplineEditor.h
+        src/spline_editor/SplineEditor.cpp
+        src/spline_editor/SplineEditor.ui
+
+        src/spline_editor/AnchorPointItem.h
+        src/spline_editor/AnchorPointItem.cpp
 
         src/AboutDialog.h
-
-        src/util/SliderWithInput.h
-        src/util/SliderWithInput.cpp
-
-        src/util/DoubleSliderWithInput.h
-        src/util/DoubleSliderWithInput.cpp
 
         resources.qrc
 )
