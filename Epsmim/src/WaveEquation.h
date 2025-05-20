@@ -74,7 +74,11 @@ private:
     float sourceFunc(int n);
     float computeSingle(const ComputeSingleData& d);
     __m256 computeVector(const ComputeVectorData& d);
-    void computeRow(const float *buf1, float *buf2, const float *phaseSpeed, int rowIdx);
+    void computeRow(const float *buf1, float *buf2, const float *phaseSpeed, int rowIdx, __m256& maxVector, float& maxScalar);
+
+    void stepInitialize(int startRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
+    void stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
+    void stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
 
     void generatePhaseSpeed();
 

@@ -1,14 +1,18 @@
 #include "WaveEquation.h"
 
+#include <emmintrin.h>
+#include <immintrin.h>
+#include <xmmintrin.h>
+#include <omp.h>
+
 #include <cassert>
 #include <cmath>
 #include <csignal>
 #include <cstring>
-#include <emmintrin.h>
+#include <iostream>
 #include <limits>
-#include <immintrin.h>
 #include <new>
-#include <xmmintrin.h>
+#include <ostream>
 
 // makes [a7, b0, b1, ..., b6]
 static FORCEINLINE __m256 shift_left(__m256 a, __m256 b)
@@ -26,24 +30,21 @@ static FORCEINLINE __m256 shift_right(__m256 a, __m256 b)
     return _mm256_permutevar8x32_ps(blended, shuffleMask);
 }
 
-WaveEquation::WaveEquation(const AreaParams& area, const Utils::Vec2i& source)
-    : m_area(area),
-    m_source(source),
-    m_stepGlobal(0),
-    m_max(0)
+WaveEquation::WaveEquation(const AreaParams &area, const Utils::Vec2i &source)
+    : m_area(area), m_source(source), m_stepGlobal(0), m_max(0)
 {
-
     m_stride = area.nx * sizeof(float);
-    m_stride = (m_stride + 31) & ~31; // make strobe divisible by 32;
+    m_stride = (m_stride + 31) & ~31;  // make strobe divisible by 32;
     m_stride /= sizeof(float);
 
     size_t size = m_stride * sizeof(float) * area.ny;
-    m_data = ::operator new(3 * size, std::align_val_t(32)); // fit 3 buffers in one allocation
+    m_data = ::operator new(
+        3 * size, std::align_val_t(32));  // fit 3 buffers in one allocation
     std::memset(m_data, 0, 3 * size);
 
-    m_buf1 =       (float *) (m_data);
-    m_buf2 =       (float *) ((char *)(m_data) + size);
-    m_phaseSpeed = (float *) ((char *)(m_data) + 2 * size);
+    m_buf1 = (float *)(m_data);
+    m_buf2 = (float *)((char *)(m_data) + size);
+    m_phaseSpeed = (float *)((char *)(m_data) + 2 * size);
 
     if (area.nx > 1000 || area.ny > 1000) {
         m_tau = 0.001;
@@ -82,8 +83,7 @@ void WaveEquation::generatePhaseSpeed()
     }
 }
 
-
-float WaveEquation::computeSingle(const ComputeSingleData& d)
+float WaveEquation::computeSingle(const ComputeSingleData &d)
 {
     float a1 = d.buf1Right - d.buf1Cur;
     float a2 = d.phaseSpeedTop + d.phaseSpeedCur;
@@ -103,9 +103,8 @@ float WaveEquation::computeSingle(const ComputeSingleData& d)
     return ret;
 }
 
-__m256 WaveEquation::computeVector(const ComputeVectorData& d)
+__m256 WaveEquation::computeVector(const ComputeVectorData &d)
 {
-
     __m256 buf1Left = shift_left(d.buf1Prev, d.buf1Cur);
     __m256 buf1Right = shift_right(d.buf1Cur, d.buf1Next);
 
@@ -119,7 +118,7 @@ __m256 WaveEquation::computeVector(const ComputeVectorData& d)
 
     __m256 a1a2 = _mm256_mul_ps(a1, a2);
     __m256 a = _mm256_fmadd_ps(a3, a4, a1a2);
-    
+
     __m256 b1 = _mm256_sub_ps(d.buf1Bottom, d.buf1Cur);
     __m256 b2 = _mm256_add_ps(phaseSpeedLeft, d.phaseSpeedCur);
     __m256 b3 = _mm256_sub_ps(d.buf1Top, d.buf1Cur);
@@ -127,7 +126,7 @@ __m256 WaveEquation::computeVector(const ComputeVectorData& d)
 
     __m256 b1b2 = _mm256_mul_ps(b1, b2);
     __m256 b = _mm256_fmadd_ps(b3, b4, b1b2);
-    
+
     __m256 b_inv = _mm256_mul_ps(b, m_stepInvariantY);
     __m256 c = _mm256_fmadd_ps(a, m_stepInvariantX, b_inv);
 
@@ -137,13 +136,14 @@ __m256 WaveEquation::computeVector(const ComputeVectorData& d)
     return result;
 }
 
-void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phaseSpeed, int i)
+void WaveEquation::computeRow(const float *buf1, float *buf2,
+                              const float *phaseSpeed, int i, __m256 &maxVector,
+                              float &maxScalar)
 {
     const int rowIdx = i * m_stride;
 
     int j;
-    for (j = 1; j < 8 ; j += 1)
-    {
+    for (j = 1; j < 8; j += 1) {
         const int idx = rowIdx + j;
 
         ComputeSingleData data;
@@ -159,7 +159,7 @@ void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phase
         data.phaseSpeedLeft = phaseSpeed[idx - 1];
 
         buf2[idx] = computeSingle(data);
-        m_max = std::max(m_max, std::abs(buf2[idx]));
+        maxScalar = std::max(m_max, std::abs(buf2[idx]));
     }
 
     ComputeVectorData data;
@@ -168,10 +168,9 @@ void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phase
     data.buf1Next = _mm256_load_ps(&buf1[rowIdx + 8]);
 
     data.phaseSpeedCur = _mm256_load_ps(&phaseSpeed[rowIdx]);
-    data.phaseSpeedTop= _mm256_load_ps(&phaseSpeed[rowIdx - m_stride]);
+    data.phaseSpeedTop = _mm256_load_ps(&phaseSpeed[rowIdx - m_stride]);
 
-    for (; j < m_area.nx - 8; j += 8)
-    {
+    for (; j < m_area.nx - 8; j += 8) {
         const int idx = rowIdx + j;
 
         data.buf1Prev = data.buf1Cur;
@@ -182,7 +181,7 @@ void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phase
         data.phaseSpeedCur = _mm256_load_ps(&phaseSpeed[idx]);
 
         data.phaseSpeedTopPrev = data.phaseSpeedTop;
-        data.phaseSpeedTop= _mm256_load_ps(&phaseSpeed[idx - m_stride]);
+        data.phaseSpeedTop = _mm256_load_ps(&phaseSpeed[idx - m_stride]);
 
         data.buf1Top = _mm256_load_ps(&buf1[idx - m_stride]);
         data.buf1Bottom = _mm256_load_ps(&buf1[idx + m_stride]);
@@ -194,12 +193,11 @@ void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phase
         _mm256_store_ps(&buf2[idx], result);
 
         __m256 signBit = _mm256_set1_ps(-0.0f);
-        __m256 absResult = _mm256_andnot_ps(signBit, result); // clear sign bit
-        m_maxVector = _mm256_max_ps(m_maxVector, absResult);
+        __m256 absResult = _mm256_andnot_ps(signBit, result);  // clear sign bit
+        maxVector = _mm256_max_ps(maxVector, absResult);
     }
 
-    for (; j < m_area.nx - 1; j += 1)
-    {
+    for (; j < m_area.nx - 1; j += 1) {
         const int idx = rowIdx + j;
 
         ComputeSingleData data;
@@ -215,47 +213,16 @@ void WaveEquation::computeRow(const float *buf1, float *buf2, const float *phase
         data.phaseSpeedLeft = phaseSpeed[idx - 1];
 
         buf2[idx] = computeSingle(data);
-        m_max = std::max(m_max, std::abs(buf2[idx]));
+        maxScalar = std::max(m_max, std::abs(buf2[idx]));
     }
 }
 
-WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
+void WaveEquation::stepInitialize(int startRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
 {
-    m_maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
-    m_max = std::numeric_limits<float>::min();
-
-    int i;
-    for (i = 1; i < m_area.ny - 1; ++i)
-    {
-        for (int step = 0; step < skipSteps; ++step)
-        {
-            if (i - step == 0) {
-                break;
-            }
-
-            float *buf1, *buf2;
-            if ((m_stepGlobal + step) % 2 == 0) {
-                buf1 = m_buf1;
-                buf2 = m_buf2;
-            }
-            else {
-                buf1 = m_buf2;
-                buf2 = m_buf1;
-            } 
-
-            computeRow(buf1, buf2, m_phaseSpeed, i - step);
-
-            if (i - step == m_source.y) {
-                buf2[m_source.y * m_stride + m_source.x] += m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
-            }
-        }
-    }
-
-    for (; i < m_area.ny - 1 + skipSteps; ++i)
-    {
-        for (int step = 0; step < skipSteps; ++step)
-        {
-            if (i - step >= m_area.ny - 1) {
+    int w = skipSteps - 1;
+    for (int step = 0; step < skipSteps; ++step) {
+        for (int i = startRowIdx - w + step; i < startRowIdx + w - step; ++i) {
+            if (i <= 1) {
                 continue;
             }
 
@@ -267,20 +234,109 @@ WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
             else {
                 buf1 = m_buf2;
                 buf2 = m_buf1;
-            } 
+            }
 
-            computeRow(buf1, buf2, m_phaseSpeed, i - step);
+            computeRow(buf1, buf2, m_phaseSpeed, i, maxVector, maxScalar);
 
-            if (i - step == m_source.y) {
-                buf2[m_source.y * m_stride + m_source.x] += m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+            if (i == m_source.y) {
+                buf2[m_source.y * m_stride + m_source.x] +=
+                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
             }
         }
     }
+}
 
-    float maxArray[8];
-    _mm256_storeu_ps(maxArray, m_maxVector);
-    for (int i = 0; i < 8; ++i) {
-        m_max = std::max(m_max, maxArray[i]);
+void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
+{
+    int w = skipSteps - 1;
+    for (int step = 0; step < skipSteps; ++step) {
+        for (int i = startRowIdx + w - step; i < stopRowIdx - w - step; ++i) {
+
+            float *buf1, *buf2;
+            if ((m_stepGlobal + step) % 2 == 0) {
+                buf1 = m_buf1;
+                buf2 = m_buf2;
+            }
+            else {
+                buf1 = m_buf2;
+                buf2 = m_buf1;
+            }
+
+            computeRow(buf1, buf2, m_phaseSpeed, i, maxVector, maxScalar);
+
+            if (i == m_source.y) {
+                buf2[m_source.y * m_stride + m_source.x] +=
+                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+            }
+        }
+    }
+}
+
+void WaveEquation::stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
+{
+    int w = skipSteps - 1;
+    for (int step = 0; step < skipSteps; ++step) {
+        for (int i = stopRowIdx - w - step; i < stopRowIdx - w + step; ++i) {
+            if (i >= m_area.ny - 1) {
+                break;
+            }
+
+            float *buf1, *buf2;
+            if ((m_stepGlobal + step) % 2 == 0) {
+                buf1 = m_buf1;
+                buf2 = m_buf2;
+            }
+            else {
+                buf1 = m_buf2;
+                buf2 = m_buf1;
+            }
+
+            computeRow(buf1, buf2, m_phaseSpeed, i, maxVector, maxScalar);
+
+            if (i == m_source.y) {
+                buf2[m_source.y * m_stride + m_source.x] +=
+                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+            }
+        }
+    }
+}
+
+WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
+{
+    m_max = std::numeric_limits<float>::min();
+
+    #pragma omp parallel
+    {
+        __m256 maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
+        float maxScalar = std::numeric_limits<float>::min();
+
+        int threadNum = omp_get_thread_num();
+        int numThreads = omp_get_num_threads();
+        int sectionWidth = (m_area.ny - 2) / numThreads;
+
+        int startRowIdx = 1 + sectionWidth * threadNum;
+        int stopRowIdx = startRowIdx + sectionWidth;
+        if (threadNum == numThreads - 1) {
+            stopRowIdx = m_area.ny - 1;
+        }
+
+        stepInitialize(startRowIdx, skipSteps, maxVector, maxScalar);
+        stepMain(startRowIdx, stopRowIdx, skipSteps, maxVector, maxScalar);
+        #pragma omp barrier
+        stepFinalize(stopRowIdx, skipSteps, maxVector, maxScalar);
+
+        float maxArray[8];
+        _mm256_storeu_ps(maxArray, maxVector);
+        for (int i = 0; i < 8; ++i) {
+            maxScalar = std::max(maxScalar, maxArray[i]);
+        }
+
+        #pragma omp critical
+        {
+            m_max = std::max(m_max, maxScalar);
+        }
+
+        #pragma omp barrier
     }
 
     m_stepGlobal += skipSteps;
@@ -322,9 +378,8 @@ WaveEquation::ValueType WaveEquation::sourceFunc(int n)
     const ValueType f0 = 1.0;
     const ValueType t0 = 1.5;
     const ValueType gamma = 4.0;
-    
+
     const ValueType tmp = 2 * M_PI * f0 * (n * m_tau - t0);
 
     return std::exp(-(tmp * tmp) / (gamma * gamma)) * std::sin(tmp);
 }
-
