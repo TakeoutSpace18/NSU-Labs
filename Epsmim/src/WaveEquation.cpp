@@ -9,10 +9,8 @@
 #include <cmath>
 #include <csignal>
 #include <cstring>
-#include <iostream>
 #include <limits>
 #include <new>
-#include <ostream>
 
 // makes [a7, b0, b1, ..., b6]
 static FORCEINLINE __m256 shift_left(__m256 a, __m256 b)
@@ -249,8 +247,8 @@ void WaveEquation::stepInitialize(int startRowIdx, int skipSteps, __m256& maxVec
 void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
 {
     int w = skipSteps - 1;
-    for (int step = 0; step < skipSteps; ++step) {
-        for (int i = startRowIdx + w - step; i < stopRowIdx - w - step; ++i) {
+    for (int i = startRowIdx + w; i < stopRowIdx - w; ++i) {
+        for (int step = 0; step < skipSteps; ++step) {
 
             float *buf1, *buf2;
             if ((m_stepGlobal + step) % 2 == 0) {
@@ -262,9 +260,9 @@ void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m2
                 buf2 = m_buf1;
             }
 
-            computeRow(buf1, buf2, m_phaseSpeed, i, maxVector, maxScalar);
+            computeRow(buf1, buf2, m_phaseSpeed, i - step, maxVector, maxScalar);
 
-            if (i == m_source.y) {
+            if (i - step == m_source.y) {
                 buf2[m_source.y * m_stride + m_source.x] +=
                     m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
             }
@@ -317,7 +315,7 @@ WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
         int startRowIdx = 1 + sectionWidth * threadNum;
         int stopRowIdx = startRowIdx + sectionWidth;
         if (threadNum == numThreads - 1) {
-            stopRowIdx = m_area.ny - 1;
+            stopRowIdx = m_area.ny + skipSteps - 2;
         }
 
         stepInitialize(startRowIdx, skipSteps, maxVector, maxScalar);
