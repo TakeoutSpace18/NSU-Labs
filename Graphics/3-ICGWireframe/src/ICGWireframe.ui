@@ -131,10 +131,10 @@
     <string>Save</string>
    </property>
    <property name="toolTip">
-    <string>Save image</string>
+    <string>Save Scene</string>
    </property>
    <property name="statusTip">
-    <string>Save image</string>
+    <string>Save Scene</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
