@@ -19,7 +19,7 @@
 ### Сборка и запуск приложения
 1. Склонировать репозиторий
 ```bash
-git clone https://github.com/TakeoutSpace18/NSU-Labs.git
+git clone https://github.com/TakeoutSpace18/NSU-Labs.git --depth 1
 cd NSU-Labs/DB
 ```
 
