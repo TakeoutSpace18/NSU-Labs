@@ -27,7 +27,7 @@ CREATE TABLE site (
 
 CREATE TABLE customer (
     customer_id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     address VARCHAR(300),
     phone VARCHAR(20) CHECK (is_valid_phone(phone)),
     email VARCHAR(100) CHECK (is_valid_email(email))

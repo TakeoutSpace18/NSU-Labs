@@ -3,9 +3,9 @@ DROP ROLE IF EXISTS director;
 DROP ROLE IF EXISTS hr_manager;
 DROP ROLE IF EXISTS project_manager;
 
-CREATE ROLE director WITH LOGIN;
-CREATE ROLE hr_manager WITH LOGIN;
-CREATE ROLE project_manager WITH LOGIN;
+CREATE ROLE director WITH LOGIN PASSWORD 'director';
+CREATE ROLE hr_manager WITH LOGIN PASSWORD 'hr_manager';
+CREATE ROLE project_manager WITH LOGIN PASSWORD 'project_manager';
 
 GRANT CONNECT ON DATABASE cfdb TO director, hr_manager, project_manager;
 

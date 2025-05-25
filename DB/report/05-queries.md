@@ -456,8 +456,8 @@ SELECT
     machine_assignment_end_date
 FROM v_site_machines
 WHERE object_id = 2
-    AND machine_assignment_start_date <= '2025-08-19'
-    AND (machine_assignment_end_date IS NULL OR machine_assignment_end_date >= '2020-01-01');
+    AND machine_assignment_start_date <= '2025-08-19'::date
+    AND (machine_assignment_end_date IS NULL OR machine_assignment_end_date >= '2020-01-01'::date);
 ```
 
 ### Запрос 8
@@ -530,8 +530,8 @@ SELECT DISTINCT
     department_name
 FROM v_object_schedule
 WHERE work_type = 'Excavation'
-    AND work_actual_start <= '2025-03-31'
-    AND (work_actual_end IS NULL OR work_actual_end >= '2022-01-01')
+    AND work_actual_start <= '2025-03-31'::date
+    AND (work_actual_end IS NULL OR work_actual_end >= '2022-01-01'::date)
     AND department_id = 2;
 ```
 
@@ -573,8 +573,8 @@ SELECT DISTINCT
     object_name
 FROM v_object_schedule
 WHERE brigade_id = 5
-    AND work_actual_start <= '2024-12-31'
-    AND (work_actual_end IS NULL OR work_actual_end >= '2024-01-01');
+    AND work_actual_start <= '2024-12-31'::date
+    AND (work_actual_end IS NULL OR work_actual_end >= '2024-01-01'::date);
 ```
 
 ### Запрос 15
@@ -589,6 +589,6 @@ SELECT DISTINCT
     object_name
 FROM v_object_schedule os
 WHERE os.work_type = 'Excavation'
-    AND os.work_actual_start <= '2024-12-31'
-    AND (os.work_actual_end IS NULL OR os.work_actual_end >= '2024-01-01');
+    AND os.work_actual_start <= '2024-12-31'::date
+    AND (os.work_actual_end IS NULL OR os.work_actual_end >= '2024-01-01'::date);
 ```

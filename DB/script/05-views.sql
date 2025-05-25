@@ -1,5 +1,3 @@
-BEGIN;
-
 -- 1. Получить перечень строительных управлений и их руководителей.
 CREATE OR REPLACE VIEW v_departments_supervisors AS
 SELECT
@@ -299,5 +297,3 @@ FROM object o
 JOIN site s ON o.site_id = s.site_id
 JOIN department d ON s.department_id = d.department_id
 JOIN customer c ON o.customer_id = c.customer_id;
-
-COMMIT;

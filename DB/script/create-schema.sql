@@ -1,9 +1,9 @@
-BEGIN;
-CREATE DATABASE cfdb;
 \c cfdb
-\ir 01-ddl.sql
-\ir 02-triggers.sql
-\ir 03-roles.sql
-\ir 04-inserts.sql
-\ir 04-views.sql
+BEGIN;
+\i /script/01-ddl.sql
+\i /script/02-triggers.sql
+\i /script/03-roles.sql
+\i /script/04-inserts.sql
+\i /script/05-views.sql
+\i /script/07-special-procedures.sql
 COMMIT;

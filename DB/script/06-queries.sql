@@ -106,8 +106,8 @@ SELECT
     machine_assignment_end_date
 FROM v_site_machines
 WHERE object_id = 2
-    AND machine_assignment_start_date <= '2025-08-19'
-    AND (machine_assignment_end_date IS NULL OR machine_assignment_end_date >= '2020-01-01');
+    AND machine_assignment_start_date <= '2025-08-19'::date
+    AND (machine_assignment_end_date IS NULL OR machine_assignment_end_date >= '2020-01-01'::date);
 
 -- 7. Получить график на строительство указанного объекта.
 SELECT 
@@ -165,8 +165,8 @@ SELECT DISTINCT
     department_name
 FROM v_object_schedule
 WHERE work_type = 'Excavation'
-    AND work_actual_start <= '2025-03-31'
-    AND (work_actual_end IS NULL OR work_actual_end >= '2022-01-01')
+    AND work_actual_start <= '2025-03-31'::date
+    AND (work_actual_end IS NULL OR work_actual_end >= '2022-01-01'::date)
     AND department_id = 2;
 
 -- 10. Получить перечень видов строительных работ, по которым имело место
@@ -202,8 +202,8 @@ SELECT DISTINCT
     object_name
 FROM v_object_schedule
 WHERE brigade_id = 5
-    AND work_actual_start <= '2024-12-31'
-    AND (work_actual_end IS NULL OR work_actual_end >= '2024-01-01');
+    AND work_actual_start <= '2024-12-31'::date
+    AND (work_actual_end IS NULL OR work_actual_end >= '2024-01-01'::date);
 
 -- 13. Получить перечень бригад, выполненных указанный вид строительных работ в
 -- течение обозначенного периода времени с указанием объектов, где эти работы
@@ -216,6 +216,6 @@ SELECT DISTINCT
     object_name
 FROM v_object_schedule os
 WHERE os.work_type = 'Excavation'
-    AND os.work_actual_start <= '2024-12-31'
-    AND (os.work_actual_end IS NULL OR os.work_actual_end >= '2024-01-01');
+    AND os.work_actual_start<= '2024-12-31'::date
+    AND (os.work_actual_end IS NULL OR os.work_actual_end>= '2024-01-01'::date);
 
