@@ -121,6 +121,6 @@ void LoginWindow::loadConnectionSettings()
 {
     hostnameEdit->setText(settings.value("hostname", "localhost").toString());
     portEdit->setText(settings.value("port", "5432").toString());
-    databaseNameEdit->setText(settings.value("database", "construction_db").toString());
+    databaseNameEdit->setText(settings.value("database", "cfdb").toString());
     roleComboBox->setCurrentIndex(settings.value("role", 0).toInt());
 }
