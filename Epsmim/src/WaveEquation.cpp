@@ -299,51 +299,54 @@ void WaveEquation::stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector
     }
 }
 
+void WaveEquation::parallelSection(int skipSteps)
+{
+    __m256 maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
+    float maxScalar = std::numeric_limits<float>::min();
+
+    int threadNum = omp_get_thread_num();
+    int numThreads = omp_get_num_threads();
+
+    int sectionWidth = (m_area.ny - 2) / numThreads;
+
+    int startRowIdx = 1 + sectionWidth * threadNum;
+
+    int stopRowIdx = startRowIdx + sectionWidth;
+    if (threadNum == numThreads - 1) {
+        stopRowIdx = m_area.ny + skipSteps - 2;
+    }
+
+    stepInitialize(startRowIdx, skipSteps, maxVector, maxScalar);
+    stepMain(startRowIdx, stopRowIdx, skipSteps, maxVector, maxScalar);
+    #pragma omp barrier
+    stepFinalize(stopRowIdx, skipSteps, maxVector, maxScalar);
+
+    float maxArray[8];
+    _mm256_storeu_ps(maxArray, maxVector);
+    for (int i = 0; i < 8; ++i) {
+        maxScalar = std::max(maxScalar, maxArray[i]);
+    }
+
+    #pragma omp critical
+    {
+        m_max = std::max(m_max, maxScalar);
+    }
+
+    #pragma omp barrier
+}
+
 WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
 {
     m_max = std::numeric_limits<float>::min();
 
     #pragma omp parallel
     {
-        __m256 maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
-        float maxScalar = std::numeric_limits<float>::min();
-
-        int threadNum = omp_get_thread_num();
-        int numThreads = omp_get_num_threads();
-        int sectionWidth = (m_area.ny - 2) / numThreads;
-
-        int startRowIdx = 1 + sectionWidth * threadNum;
-        int stopRowIdx = startRowIdx + sectionWidth;
-        if (threadNum == numThreads - 1) {
-            stopRowIdx = m_area.ny + skipSteps - 2;
-        }
-
-        stepInitialize(startRowIdx, skipSteps, maxVector, maxScalar);
-        stepMain(startRowIdx, stopRowIdx, skipSteps, maxVector, maxScalar);
-        #pragma omp barrier
-        stepFinalize(stopRowIdx, skipSteps, maxVector, maxScalar);
-
-        float maxArray[8];
-        _mm256_storeu_ps(maxArray, maxVector);
-        for (int i = 0; i < 8; ++i) {
-            maxScalar = std::max(maxScalar, maxArray[i]);
-        }
-
-        #pragma omp critical
-        {
-            m_max = std::max(m_max, maxScalar);
-        }
-
-        #pragma omp barrier
+        parallelSection(skipSteps);
     }
 
     m_stepGlobal += skipSteps;
-    if (m_stepGlobal % 2 == 0) {
-        return {m_buf2, m_max};
-    }
-    else {
-        return {m_buf1, m_max};
-    }
+
+    return getCurrentState();
 }
 
 WaveEquation::Output WaveEquation::getCurrentState()
@@ -360,12 +363,19 @@ WaveEquation::Output WaveEquation::skipNIterarions(int n, int skipBatch)
 {
     int nBatches = n / skipBatch;
 
-    for (int i = 0; i < nBatches; ++i) {
-        nextIteration(skipBatch);
-    }
+    #pragma omp parallel
+    {
+        for (int i = 0; i < nBatches; ++i) {
+            m_max = std::numeric_limits<float>::min();
+            parallelSection(skipBatch);
+            m_stepGlobal += skipBatch;
+        }
 
-    if (nBatches * skipBatch != n) {
-        nextIteration(n - nBatches * skipBatch);
+        if (nBatches * skipBatch != n) {
+            m_max = std::numeric_limits<float>::min();
+            parallelSection(n - nBatches * skipBatch);
+            m_stepGlobal += skipBatch;
+        }
     }
 
     return getCurrentState();
