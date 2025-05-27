@@ -308,24 +308,27 @@ void WaveEquation::parallelSection(int batchSize, int startRowIdx, int stopRowId
     __m256 maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
     float maxScalar = std::numeric_limits<float>::min();
 
+    int localProgress = m_sectionProgress[threadNum].load();
+
     if (threadNum > 0) {
         // wait for previous section to finish finalize step
-        while (m_sectionProgress[threadNum - 1].load() < m_sectionProgress[threadNum].load());
+        while (m_sectionProgress[threadNum - 1].load() < localProgress);
     }
 
     stepInitialize(startRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
     m_sectionProgress[threadNum].fetch_add(1);
+    localProgress++;
 
     stepMain(startRowIdx, stopRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
-    m_sectionProgress[threadNum].fetch_add(1);
 
     if (threadNum < NUM_THREADS - 1) {
         // wait for next section to finish initialize step
-        while (m_sectionProgress[threadNum + 1].load() < m_sectionProgress[threadNum].load() - 1);
+        while (m_sectionProgress[threadNum + 1].load() < localProgress);
     }
 
     stepFinalize(stopRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
     m_sectionProgress[threadNum].fetch_add(1);
+    localProgress++;
 
     threadStep += batchSize;
 
