@@ -1,10 +1,12 @@
 #ifndef WAVE_EQUATION_H
 #define WAVE_EQUATION_H
 
-#include <vector>
+#include <atomic>
 #include <immintrin.h>
 
 #include "Utils.h"
+
+#define NUM_THREADS 12
 
 class WaveEquation
 {
@@ -75,11 +77,11 @@ private:
     float computeSingle(const ComputeSingleData& d);
     __m256 computeVector(const ComputeVectorData& d);
     void computeRow(const float *buf1, float *buf2, const float *phaseSpeed, int rowIdx, __m256& maxVector, float& maxScalar);
-    void parallelSection(int skipSteps);
+    void parallelSection(int skipSteps, int startRowIdx, int stopRowIdx, int threadNum, int& threadStep);
 
-    void stepInitialize(int startRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
-    void stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
-    void stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar);
+    void stepInitialize(int startRowIdx, int skipSteps, __m256& maxVector, float& maxScalar, int& threadStep);
+    void stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar, int& threadStep);
+    void stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar, int& threadStep);
 
     void generatePhaseSpeed();
 
@@ -106,6 +108,8 @@ private:
     float m_max;
     __m256 m_maxVector;
     int m_stepGlobal;
+
+    std::atomic_int32_t m_sectionProgress[NUM_THREADS];
 };
 
 #endif

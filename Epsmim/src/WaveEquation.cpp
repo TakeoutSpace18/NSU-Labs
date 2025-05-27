@@ -64,6 +64,10 @@ WaveEquation::WaveEquation(const AreaParams &area, const Utils::Vec2i &source)
 
     m_two = _mm256_set1_ps(2.0f);
 
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        m_sectionProgress[i] = 0;
+    }
+
     generatePhaseSpeed();
 }
 
@@ -215,17 +219,17 @@ void WaveEquation::computeRow(const float *buf1, float *buf2,
     }
 }
 
-void WaveEquation::stepInitialize(int startRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
+void WaveEquation::stepInitialize(int startRowIdx, int batchSize, __m256& maxVector, float& maxScalar, int& threadStep)
 {
-    int w = skipSteps - 1;
-    for (int step = 0; step < skipSteps; ++step) {
+    int w = batchSize - 1;
+    for (int step = 0; step < batchSize; ++step) {
         for (int i = startRowIdx - w + step; i < startRowIdx + w - step; ++i) {
             if (i <= 1) {
                 continue;
             }
 
             float *buf1, *buf2;
-            if ((m_stepGlobal + step) % 2 == 0) {
+            if ((threadStep + step) % 2 == 0) {
                 buf1 = m_buf1;
                 buf2 = m_buf2;
             }
@@ -238,20 +242,20 @@ void WaveEquation::stepInitialize(int startRowIdx, int skipSteps, __m256& maxVec
 
             if (i == m_source.y) {
                 buf2[m_source.y * m_stride + m_source.x] +=
-                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+                    m_tauSquaredScalar * sourceFunc(threadStep + step);
             }
         }
     }
 }
 
-void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
+void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int batchSize, __m256& maxVector, float& maxScalar, int& threadStep)
 {
-    int w = skipSteps - 1;
+    int w = batchSize - 1;
     for (int i = startRowIdx + w; i < stopRowIdx - w; ++i) {
-        for (int step = 0; step < skipSteps; ++step) {
+        for (int step = 0; step < batchSize; ++step) {
 
             float *buf1, *buf2;
-            if ((m_stepGlobal + step) % 2 == 0) {
+            if ((threadStep + step) % 2 == 0) {
                 buf1 = m_buf1;
                 buf2 = m_buf2;
             }
@@ -264,23 +268,23 @@ void WaveEquation::stepMain(int startRowIdx, int stopRowIdx, int skipSteps, __m2
 
             if (i - step == m_source.y) {
                 buf2[m_source.y * m_stride + m_source.x] +=
-                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+                    m_tauSquaredScalar * sourceFunc(threadStep + step);
             }
         }
     }
 }
 
-void WaveEquation::stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector, float& maxScalar)
+void WaveEquation::stepFinalize(int stopRowIdx, int batchSize, __m256& maxVector, float& maxScalar, int& threadStep)
 {
-    int w = skipSteps - 1;
-    for (int step = 0; step < skipSteps; ++step) {
+    int w = batchSize - 1;
+    for (int step = 0; step < batchSize; ++step) {
         for (int i = stopRowIdx - w - step; i < stopRowIdx - w + step; ++i) {
             if (i >= m_area.ny - 1) {
                 break;
             }
 
             float *buf1, *buf2;
-            if ((m_stepGlobal + step) % 2 == 0) {
+            if ((threadStep + step) % 2 == 0) {
                 buf1 = m_buf1;
                 buf2 = m_buf2;
             }
@@ -293,33 +297,37 @@ void WaveEquation::stepFinalize(int stopRowIdx, int skipSteps, __m256& maxVector
 
             if (i == m_source.y) {
                 buf2[m_source.y * m_stride + m_source.x] +=
-                    m_tauSquaredScalar * sourceFunc(m_stepGlobal + step);
+                    m_tauSquaredScalar * sourceFunc(threadStep + step);
             }
         }
     }
 }
 
-void WaveEquation::parallelSection(int skipSteps)
+void WaveEquation::parallelSection(int batchSize, int startRowIdx, int stopRowIdx, int threadNum, int& threadStep)
 {
     __m256 maxVector = _mm256_set1_ps(std::numeric_limits<float>::min());
     float maxScalar = std::numeric_limits<float>::min();
 
-    int threadNum = omp_get_thread_num();
-    int numThreads = omp_get_num_threads();
-
-    int sectionWidth = (m_area.ny - 2) / numThreads;
-
-    int startRowIdx = 1 + sectionWidth * threadNum;
-
-    int stopRowIdx = startRowIdx + sectionWidth;
-    if (threadNum == numThreads - 1) {
-        stopRowIdx = m_area.ny + skipSteps - 2;
+    if (threadNum > 0) {
+        // wait for previous section to finish finalize step
+        while (m_sectionProgress[threadNum - 1].load() < m_sectionProgress[threadNum].load());
     }
 
-    stepInitialize(startRowIdx, skipSteps, maxVector, maxScalar);
-    stepMain(startRowIdx, stopRowIdx, skipSteps, maxVector, maxScalar);
-    #pragma omp barrier
-    stepFinalize(stopRowIdx, skipSteps, maxVector, maxScalar);
+    stepInitialize(startRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
+    m_sectionProgress[threadNum].fetch_add(1);
+
+    stepMain(startRowIdx, stopRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
+    m_sectionProgress[threadNum].fetch_add(1);
+
+    if (threadNum < NUM_THREADS - 1) {
+        // wait for next section to finish initialize step
+        while (m_sectionProgress[threadNum + 1].load() < m_sectionProgress[threadNum].load() - 1);
+    }
+
+    stepFinalize(stopRowIdx, batchSize, std::ref(maxVector), std::ref(maxScalar), std::ref(threadStep));
+    m_sectionProgress[threadNum].fetch_add(1);
+
+    threadStep += batchSize;
 
     float maxArray[8];
     _mm256_storeu_ps(maxArray, maxVector);
@@ -331,22 +339,11 @@ void WaveEquation::parallelSection(int skipSteps)
     {
         m_max = std::max(m_max, maxScalar);
     }
-
-    #pragma omp barrier
 }
 
-WaveEquation::Output WaveEquation::nextIteration(int skipSteps)
+WaveEquation::Output WaveEquation::nextIteration(int batchSize)
 {
-    m_max = std::numeric_limits<float>::min();
-
-    #pragma omp parallel
-    {
-        parallelSection(skipSteps);
-    }
-
-    m_stepGlobal += skipSteps;
-
-    return getCurrentState();
+    return skipNIterarions(batchSize, batchSize);
 }
 
 WaveEquation::Output WaveEquation::getCurrentState()
@@ -359,24 +356,37 @@ WaveEquation::Output WaveEquation::getCurrentState()
     }
 }
 
-WaveEquation::Output WaveEquation::skipNIterarions(int n, int skipBatch)
+WaveEquation::Output WaveEquation::skipNIterarions(int totalIterataions, int batchSize)
 {
-    int nBatches = n / skipBatch;
+    int nBatches = totalIterataions / batchSize;
+    m_max = std::numeric_limits<float>::min();
 
-    #pragma omp parallel
+    #pragma omp parallel num_threads(NUM_THREADS) proc_bind(spread)
     {
-        for (int i = 0; i < nBatches; ++i) {
-            m_max = std::numeric_limits<float>::min();
-            parallelSection(skipBatch);
-            m_stepGlobal += skipBatch;
+        int threadStep = m_stepGlobal;
+        int threadNum = omp_get_thread_num();
+        int numThreads = omp_get_num_threads();
+
+        int sectionWidth = (m_area.ny - 2) / numThreads;
+
+        int startRowIdx = 1 + sectionWidth * threadNum;
+
+        int stopRowIdx = startRowIdx + sectionWidth;
+        if (threadNum == numThreads - 1) {
+            stopRowIdx = m_area.ny + batchSize - 2;
         }
 
-        if (nBatches * skipBatch != n) {
-            m_max = std::numeric_limits<float>::min();
-            parallelSection(n - nBatches * skipBatch);
-            m_stepGlobal += skipBatch;
+        for (int i = 0; i < nBatches; ++i) {
+            parallelSection(batchSize, startRowIdx, stopRowIdx, threadNum, std::ref(threadStep));
+        }
+
+        if (nBatches * batchSize != totalIterataions) {
+            int tail = totalIterataions - nBatches * batchSize;
+            parallelSection(tail, startRowIdx, stopRowIdx, threadNum, std::ref(threadStep));
         }
     }
+
+    m_stepGlobal += totalIterataions;
 
     return getCurrentState();
 }
