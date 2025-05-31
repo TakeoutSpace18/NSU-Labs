@@ -11,6 +11,7 @@
 #include <QInputDialog>
 #include <QSqlDatabase>
 #include "permissioncontroller.h"
+#include "views/queryview.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -78,6 +79,7 @@ void MainWindow::setupTabs()
     workView = new WorkView(this);
     materialsView = new MaterialsView(this);
     machinesView = new MachinesView(this);
+    queryView = new QueryView(this);
     
     // Add tabs
     tabWidget->addTab(departmentView, tr("Departments"));
@@ -99,6 +101,7 @@ void MainWindow::setupTabs()
     tabWidget->addTab(workView, tr("Work Schedules"));
     tabWidget->addTab(materialsView, tr("Materials"));
     tabWidget->addTab(machinesView, tr("Machines"));
+    tabWidget->addTab(queryView, tr("Queries"));
     
     setCentralWidget(tabWidget);
 }

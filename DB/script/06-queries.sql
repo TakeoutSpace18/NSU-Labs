@@ -56,7 +56,7 @@ SELECT
     actual_start_date,
     actual_end_date
 FROM v_department_site_objects
-WHERE site_id = 20;
+WHERE department_id = 20;
 
 -- 4. Получить состав бригад, работавших (работающих) на строительстве
 -- указанного объекта.

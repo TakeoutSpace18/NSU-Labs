@@ -59,7 +59,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -70,6 +70,7 @@ protected:
             
             QSqlRecord newRecord = model->record();
             newRecord.setValue("name", nameEdit->text());
+            newRecord.setGenerated(0, false);
             
             if (!descriptionEdit->toPlainText().isEmpty()) {
                 newRecord.setValue("description", descriptionEdit->toPlainText());
@@ -87,7 +88,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -298,7 +299,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -315,6 +316,7 @@ protected:
             QCheckBox *actualEndCheckBox = dialog->findChild<QCheckBox*>("actual_end_check");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("object_id", objectCombo->currentData().toInt());
             newRecord.setValue("work_type_id", workTypeCombo->currentData().toInt());
             
@@ -345,7 +347,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {

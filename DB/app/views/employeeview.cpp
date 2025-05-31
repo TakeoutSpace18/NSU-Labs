@@ -101,7 +101,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -115,6 +115,7 @@ protected:
             QDoubleSpinBox *salarySpinBox = dialog->findChild<QDoubleSpinBox*>("salary");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("name", nameEdit->text());
             newRecord.setValue("surname", surnameEdit->text());
             
@@ -144,7 +145,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -255,7 +256,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -265,6 +266,7 @@ protected:
             QTextEdit *descriptionEdit = dialog->findChild<QTextEdit*>("description");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("type", typeEdit->text());
             
             if (!descriptionEdit->toPlainText().isEmpty()) {
@@ -283,7 +285,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -375,7 +377,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -385,6 +387,7 @@ protected:
             QTextEdit *descriptionEdit = dialog->findChild<QTextEdit*>("description");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("type", typeEdit->text());
             
             if (!descriptionEdit->toPlainText().isEmpty()) {
@@ -403,7 +406,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -522,7 +525,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -532,6 +535,7 @@ protected:
             QComboBox *workerTypeCombo = dialog->findChild<QComboBox*>("worker_type_id");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("employee_id", employeeCombo->currentData().toInt());
             newRecord.setValue("worker_type_id", workerTypeCombo->currentData().toInt());
             
@@ -547,7 +551,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -659,7 +663,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -669,6 +673,7 @@ protected:
             QComboBox *specialistTypeCombo = dialog->findChild<QComboBox*>("specialist_type_id");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("employee_id", employeeCombo->currentData().toInt());
             newRecord.setValue("specialist_type_id", specialistTypeCombo->currentData().toInt());
             
@@ -684,7 +689,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -777,7 +782,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -787,6 +792,7 @@ protected:
             QDoubleSpinBox *bonusSpinBox = dialog->findChild<QDoubleSpinBox*>("bonus_payment");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("grade", gradeEdit->text());
             newRecord.setValue("bonus_payment", QString("$%1").arg(bonusSpinBox->value(), 0, 'f', 2));
             
@@ -802,7 +808,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {

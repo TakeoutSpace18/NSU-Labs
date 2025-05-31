@@ -49,7 +49,7 @@ protected:
         return dialog;
     }
 
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -58,6 +58,7 @@ protected:
             QLineEdit *nameEdit = dialog->findChild<QLineEdit *>("name");
 
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("name", nameEdit->text());
 
             if (model->insertRecord(-1, newRecord)) {
@@ -74,7 +75,7 @@ protected:
         refreshView();
     }
 
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -227,7 +228,7 @@ protected:
         return dialog;
     }
 
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -240,6 +241,7 @@ protected:
             QCheckBox *endDateCheckBox = dialog->findChild<QCheckBox *>("end_date_check");
 
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("brigade_id", brigadeCombo->currentData().toInt());
             newRecord.setValue("worker_id", workerCombo->currentData().toInt());
             newRecord.setValue("start_date", startDateEdit->date());
@@ -262,7 +264,7 @@ protected:
         refreshView();
     }
 
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -432,7 +434,7 @@ protected:
         return dialog;
     }
 
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -445,6 +447,7 @@ protected:
             QCheckBox *endDateCheckBox = dialog->findChild<QCheckBox *>("end_date_check");
 
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("brigade_id", brigadeCombo->currentData().toInt());
             newRecord.setValue("worker_id", workerCombo->currentData().toInt());
             newRecord.setValue("start_date", startDateEdit->date());
@@ -467,7 +470,7 @@ protected:
         refreshView();
     }
 
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {

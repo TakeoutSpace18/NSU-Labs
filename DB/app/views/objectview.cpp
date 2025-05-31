@@ -184,7 +184,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -202,6 +202,7 @@ protected:
             QCheckBox *actualEndCheckBox = dialog->findChild<QCheckBox*>("actual_end_check");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("name", nameEdit->text());
             newRecord.setValue("type", typeCombo->currentData().toString());
             newRecord.setValue("site_id", siteCombo->currentData().toInt());
@@ -229,7 +230,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -372,7 +373,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -383,6 +384,7 @@ protected:
             QDoubleSpinBox *widthSpinBox = dialog->findChild<QDoubleSpinBox*>("width_m");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("object_id", objectCombo->currentData().toLongLong());
             newRecord.setValue("length_m", lengthSpinBox->value());
             newRecord.setValue("width_m", widthSpinBox->value());
@@ -399,7 +401,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {

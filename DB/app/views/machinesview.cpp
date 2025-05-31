@@ -61,7 +61,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -71,6 +71,7 @@ protected:
             QTextEdit *descriptionEdit = dialog->findChild<QTextEdit*>("description");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("type", typeEdit->text());
             
             if (!descriptionEdit->toPlainText().isEmpty()) {
@@ -89,7 +90,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -194,7 +195,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -204,6 +205,7 @@ protected:
             QComboBox *machineTypeCombo = dialog->findChild<QComboBox*>("machine_type_id");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("model", modelEdit->text());
             newRecord.setValue("machine_type_id", machineTypeCombo->currentData().toInt());
             
@@ -219,7 +221,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -349,7 +351,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -360,6 +362,7 @@ protected:
             QSpinBox *yearSpinBox = dialog->findChild<QSpinBox*>("production_year");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("machine_model_id", modelCombo->currentData().toInt());
             newRecord.setValue("department_id", deptCombo->currentData().toInt());
             newRecord.setValue("production_year", yearSpinBox->value());
@@ -376,7 +379,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {
@@ -538,7 +541,7 @@ protected:
         return dialog;
     }
     
-    void _addRecord() override
+    void addRecord() override
     {
         QSqlRecord record = model->record();
         QDialog *dialog = createRecordDialog(record, true);
@@ -551,6 +554,7 @@ protected:
             QCheckBox *endDateCheckBox = dialog->findChild<QCheckBox*>("end_date_check");
             
             QSqlRecord newRecord = model->record();
+            newRecord.setGenerated(0, false);
             newRecord.setValue("site_id", siteCombo->currentData().toInt());
             newRecord.setValue("machine_id", machineCombo->currentData().toInt());
             newRecord.setValue("start_date", startDateEdit->date());
@@ -571,7 +575,7 @@ protected:
         refreshView();
     }
     
-    void _editRecord() override
+    void editRecord() override
     {
         QModelIndex index = tableView->currentIndex();
         if (!index.isValid()) {

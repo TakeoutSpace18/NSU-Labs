@@ -28,6 +28,7 @@ set(SOURCES
     views/workview.cpp
     views/materialsview.cpp
     views/machinesview.cpp
+    views/queryview.cpp
 )
 
 set(HEADERS
@@ -44,6 +45,7 @@ set(HEADERS
     views/workview.h
     views/materialsview.h
     views/machinesview.h
+    views/queryview.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

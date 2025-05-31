@@ -17,6 +17,7 @@
 #include "views/workview.h"
 #include "views/materialsview.h"
 #include "views/machinesview.h"
+#include "views/queryview.h"
 
 class MainWindow : public QMainWindow
 {
@@ -49,6 +50,7 @@ private:
     WorkView *workView;
     MaterialsView *materialsView;
     MachinesView *machinesView;
+    QueryView *queryView;
 };
 
 #endif // MAINWINDOW_H
