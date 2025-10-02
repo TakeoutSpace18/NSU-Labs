@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-StepwiseSimulation", "1-StepwiseSimulation", "{05760054-8B45-426C-9B1C-79B0BF658CBA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation", "1-StepwiseSimulation\Simulation\Simulation.csproj", "{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract", "1-StepwiseSimulation\Contract\Contract.csproj", "{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrategyImpl", "1-StepwiseSimulation\StrategyImpl\StrategyImpl.csproj", "{FD024A68-48B2-4C25-B4ED-B390EA55A279}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
+		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
+		{FD024A68-48B2-4C25-B4ED-B390EA55A279} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
+	EndGlobalSection
+EndGlobal
