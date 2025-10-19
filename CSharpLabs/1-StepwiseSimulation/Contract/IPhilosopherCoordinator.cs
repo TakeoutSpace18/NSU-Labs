@@ -1,6 +1,6 @@
 namespace Contract;
 
-public interface ICoordinator
+public interface IPhilosopherCoordinator
 {
     enum Action
     {

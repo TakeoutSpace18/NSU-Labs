@@ -1,6 +1,6 @@
 namespace Contract;
 
-public interface IStrategy
+public interface IPhilosopherStrategy
 {
     void DoAction(IPhilosopher philosopher);
 }

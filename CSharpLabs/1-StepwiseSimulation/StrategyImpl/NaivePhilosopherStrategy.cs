@@ -2,7 +2,7 @@ using Contract;
 
 namespace StrategyImpl;
 
-public class NaiveStrategy : IStrategy
+public class NaivePhilosopherStrategy : IPhilosopherStrategy
 {
     public void DoAction(IPhilosopher philosopher)
     {

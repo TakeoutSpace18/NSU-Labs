@@ -1,6 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-StepwiseSimulation", "1-StepwiseSimulation", "{05760054-8B45-426C-9B1C-79B0BF658CBA}"
+	ProjectSection(SolutionItems) = preProject
+		1-StepwiseSimulation\appsettings.json = 1-StepwiseSimulation\appsettings.json
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation", "1-StepwiseSimulation\Simulation\Simulation.csproj", "{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}"
 EndProject

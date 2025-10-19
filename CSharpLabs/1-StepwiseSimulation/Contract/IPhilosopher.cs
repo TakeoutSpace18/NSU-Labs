@@ -2,6 +2,8 @@ namespace Contract;
 
 public interface IPhilosopher
 {
+    bool NextStep();
+    
     IFork LeftFork { get; }
     IFork RightFork { get; }
     
@@ -11,6 +13,17 @@ public interface IPhilosopher
     void TakeLeftFork();
     void TakeRightFork();
     
-    void ReleaseLeftFork();
-    void ReleaseRightFork();
+    bool TryTakeLeftFork();
+    bool TryTakeRightFork();
+    
+    void PutLeftFork();
+    void PutRightFork();
+    
+    void SetStrategy(IPhilosopherStrategy strategy);
+    void SetCoordinator(IPhilosopherCoordinator philosopherCoordinator);
+    
+    int Eaten { get; }
+    int WaitingTime { get; }
+    string Name { get; }
+    string StateString { get; }
 }
