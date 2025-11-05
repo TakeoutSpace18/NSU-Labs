@@ -2,7 +2,7 @@ using Contract;
 
 namespace StrategyImpl;
 
-public class PhilosopherCoordinatorFactory
+public static class PhilosopherCoordinatorFactory
 {
     public static IPhilosopherCoordinator Create(string name, ITableManager tableManager)
     {

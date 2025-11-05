@@ -2,16 +2,15 @@ namespace Contract;
 
 public interface IPhilosopher
 {
-    bool NextStep();
-    
-    IFork LeftFork { get; }
-    IFork RightFork { get; }
+    bool NextStep(CancellationToken? token = null);
     
     bool HasLeftFork { get; }
     bool HasRightFork { get; }
+    bool WaitsLeftFork { get;  }
+    bool WaitsRightFork { get;  }
    
-    void TakeLeftFork();
-    void TakeRightFork();
+    void TakeLeftFork(CancellationToken? token = null);
+    void TakeRightFork(CancellationToken? token = null);
     
     bool TryTakeLeftFork();
     bool TryTakeRightFork();
@@ -20,10 +19,10 @@ public interface IPhilosopher
     void PutRightFork();
     
     void SetStrategy(IPhilosopherStrategy strategy);
-    void SetCoordinator(IPhilosopherCoordinator philosopherCoordinator);
     
-    int Eaten { get; }
-    int WaitingTime { get; }
+    long Eaten { get; }
+    long WaitingTime { get; }
     string Name { get; }
+    uint Id { get; }
     string StateString { get; }
 }

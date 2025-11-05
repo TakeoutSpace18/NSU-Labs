@@ -1,5 +1,6 @@
 using Simulation;
+using Simulation.Multithreaded;
 using Simulation.Stepwise;
 
-var simulation = new StepwiseSimulation();
-simulation.Run(1000000);
+var simulation = new MultithreadedSimulation();
+simulation.Run(300_000);

@@ -18,9 +18,9 @@ public class StepwiseFork(string name) : IFork
 
     private IPhilosopher? _takenBy = null;
 
-    public int AvailableTime { get; private set; }
-    public int TakenTime { get; private set; }
-    public int InUseTime { get; private set; }
+    public long AvailableTime { get; private set; }
+    public long TakenTime { get; private set; }
+    public long InUseTime { get; private set; }
 
     public bool TryTake(IPhilosopher philosopher)
     {
@@ -30,7 +30,7 @@ public class StepwiseFork(string name) : IFork
         return true;
     }
 
-    public void Take(IPhilosopher philosopher)
+    public void Take(IPhilosopher philosopher, CancellationToken? token = null)
     {
         Debug.Assert(_state == State.Available);
         Debug.Assert(_takenBy == null);

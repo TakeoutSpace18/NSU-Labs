@@ -7,9 +7,8 @@ public interface ITableManager
     
     int PhilosopherCount { get; }
     
-    List<IPhilosopher> Philosophers { get; }
-    List<IFork> Forks { get; }
+    IEnumerable<IPhilosopher> Philosophers { get; }
+    IEnumerable<IFork> Forks { get; }
     
     void SetStrategy(IPhilosopherStrategy strategy);
-    void SetCoordinator(IPhilosopherCoordinator coordinator);
 }

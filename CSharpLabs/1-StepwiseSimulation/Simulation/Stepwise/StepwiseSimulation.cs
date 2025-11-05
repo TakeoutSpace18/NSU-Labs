@@ -1,5 +1,6 @@
 using System.Reflection;
 using Contract;
+using Simulation.Multithreaded;
 using StrategyImpl;
 
 namespace Simulation.Stepwise;
@@ -8,8 +9,8 @@ public class StepwiseSimulation : AbstractSimulation
 {
     private int _currentStep = 0;
 
-    private readonly TableManager _tableManager
-        = new("names.txt", new StepwisePhilosopherCreator(), new StepwisetForkCreator());
+    private readonly StepwiseTableManager _tableManager
+        = new("names.txt");
 
     public StepwiseSimulation()
     {
@@ -37,7 +38,10 @@ public class StepwiseSimulation : AbstractSimulation
             var stateChanged =
                 _tableManager.Philosophers.Aggregate(false, (changed, philosopher) => changed | philosopher.NextStep());
 
-            _tableManager.Forks.ForEach(f => f.NextStep());
+            foreach (var fork in _tableManager.Forks)
+            {
+                fork.NextStep();
+            }
 
             _currentStep++;
 
@@ -57,10 +61,17 @@ public class StepwiseSimulation : AbstractSimulation
     private void PrintState()
     {
         Console.WriteLine($"===== ШАГ {_currentStep} ===== ");
+        
         Console.WriteLine("Философы:");
-        _tableManager.Philosophers.ForEach(p => Console.WriteLine($"\t{p.StateString}"));
-
+        foreach (var p in _tableManager.Philosophers)
+        {
+            Console.WriteLine($"\t{p.StateString}");
+        }
+        
         Console.WriteLine("Вилки:");
-        _tableManager.Forks.ForEach(f => Console.WriteLine($"\t{f.StateString}"));
+        foreach (var f in _tableManager.Forks)
+        {
+            Console.WriteLine($"\t{f.StateString}");
+        }
     }
 }

@@ -7,8 +7,8 @@ public class MetricsCollector
 {
     private class PhilosopherMetrics
     {
-        public int Throughput;
-        public int WaitingTime;
+        public long Throughput;
+        public long WaitingTime;
     }
 
     private class ForkMetrics
@@ -20,9 +20,9 @@ public class MetricsCollector
 
     private readonly Dictionary<IPhilosopher, PhilosopherMetrics> _philosopherMetricsMap = new();
 
-    private readonly int _avgThroughput;
-    private readonly int _avgWaitingTime;
-    private readonly int _maxWaitingTime;
+    private readonly long _avgThroughput;
+    private readonly long _avgWaitingTime;
+    private readonly long _maxWaitingTime;
     private readonly IPhilosopher _maxWaitingPhilosopher = null!;
 
     private readonly Dictionary<IFork, ForkMetrics> _forkMetricsMap = new();
@@ -31,7 +31,7 @@ public class MetricsCollector
     {
         foreach (var p in tableManager.Philosophers)
         {
-            _philosopherMetricsMap.Add(p, new MetricsCollector.PhilosopherMetrics());
+            _philosopherMetricsMap.Add(p, new PhilosopherMetrics());
 
             _philosopherMetricsMap[p].Throughput = p.Eaten * 1000 / totalTime;
             _avgThroughput += _philosopherMetricsMap[p].Throughput;
@@ -39,7 +39,7 @@ public class MetricsCollector
             _philosopherMetricsMap[p].WaitingTime = p.WaitingTime;
             _avgWaitingTime += _philosopherMetricsMap[p].WaitingTime;
 
-            if (_philosopherMetricsMap[p].WaitingTime > _maxWaitingTime)
+            if (_philosopherMetricsMap[p].WaitingTime >= _maxWaitingTime)
             {
                 _maxWaitingTime = _philosopherMetricsMap[p].WaitingTime;
                 _maxWaitingPhilosopher = p;
@@ -79,9 +79,9 @@ public class MetricsCollector
         foreach (var kvp in _forkMetricsMap)
         {
             sb.AppendLine($"{kvp.Key.Name}");
-            sb.AppendLine($"\tAvailable: {kvp.Value.AvailablePercentage}%");
-            sb.AppendLine($"\tTaken: {kvp.Value.TakenPercentage}%");
-            sb.AppendLine($"\tInUse: {kvp.Value.InUsePercentage}%");
+            sb.AppendLine($"\tAvailable: {kvp.Value.AvailablePercentage:0.##}%");
+            sb.AppendLine($"\tTaken: {kvp.Value.TakenPercentage:0.##}%");
+            sb.AppendLine($"\tInUse: {kvp.Value.InUsePercentage:0.##}%");
         }
 
         return sb.ToString();

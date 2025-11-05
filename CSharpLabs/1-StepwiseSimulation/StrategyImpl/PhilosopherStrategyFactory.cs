@@ -2,7 +2,7 @@ using Contract;
 
 namespace StrategyImpl;
 
-public class PhilosopherStrategyFactory
+public static class PhilosopherStrategyFactory
 {
     public static IPhilosopherStrategy Create(string name)
     {

@@ -3,16 +3,15 @@ namespace Contract;
 public interface IFork
 {
     bool NextStep();
-    bool IsAvailable { get; }
     
-    int AvailableTime { get; }
-    int TakenTime { get; }
-    int InUseTime { get; }
+    long AvailableTime { get; }
+    long TakenTime { get; }
+    long InUseTime { get; }
     
     string Name { get; }
 
     bool TryTake(IPhilosopher philosopher);
-    void Take(IPhilosopher philosopher);
+    void Take(IPhilosopher philosopher, CancellationToken? token = null);
     void Use(IPhilosopher philosopher);
     void Put();
 
