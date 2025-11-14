@@ -5,16 +5,6 @@ namespace Simulation.Multithreaded;
 
 public class MultithreadedPhilosopher : IPhilosopher
 {
-    private class TimeRange(int start, int end)
-    {
-        public int Start { get; } = start;
-        public int End { get; } = end;
-    }
-
-    private static readonly TimeRange ThinkingTimeRangeMs = new(30, 100);
-    private static readonly TimeRange EatingTimeRangeMs = new(40, 50);
-    private const int TakingForkTimeMs = 20;
-
     private enum State
     {
         Thinking,
@@ -27,11 +17,14 @@ public class MultithreadedPhilosopher : IPhilosopher
     private static readonly Random random = new Random();
     private readonly Stopwatch _stopwatch = new Stopwatch();
 
-    private int _currentState; 
+    private readonly ActionTimes _actionTimes;
+
+    private int _currentState;
+
     private State CurrentState
     {
-        get => (State) Interlocked.CompareExchange(ref _currentState, 0, 0);
-        set => Interlocked.Exchange(ref _currentState, (int) value);
+        get => (State)Interlocked.CompareExchange(ref _currentState, 0, 0);
+        set => Interlocked.Exchange(ref _currentState, (int)value);
     }
 
     // metrics
@@ -43,21 +36,25 @@ public class MultithreadedPhilosopher : IPhilosopher
     private IPhilosopherStrategy? _strategy;
 
     private bool _hasLeftFork, _hasRightFork, _waitsLeftFork, _waitsRightFork;
+
     public bool HasLeftFork
     {
         get => Interlocked.CompareExchange(ref _hasLeftFork, false, false);
         private set => Interlocked.Exchange(ref _hasLeftFork, value);
     }
+
     public bool HasRightFork
     {
         get => Interlocked.CompareExchange(ref _hasRightFork, false, false);
         private set => Interlocked.Exchange(ref _hasRightFork, value);
     }
+
     public bool WaitsLeftFork
     {
         get => Interlocked.CompareExchange(ref _waitsLeftFork, false, false);
         private set => Interlocked.Exchange(ref _waitsLeftFork, value);
     }
+
     public bool WaitsRightFork
     {
         get => Interlocked.CompareExchange(ref _waitsRightFork, false, false);
@@ -70,8 +67,11 @@ public class MultithreadedPhilosopher : IPhilosopher
     public string Name { get; }
     public uint Id { get; }
 
-    public MultithreadedPhilosopher(string name, uint id, MultithreadedFork leftFork, MultithreadedFork rightFork)
+    public MultithreadedPhilosopher(string name, uint id, MultithreadedFork leftFork, MultithreadedFork rightFork,
+        IPhilosopherStrategy strategy, ActionTimes actionTimes)
     {
+        _actionTimes = actionTimes;
+
         Name = name;
         Id = id;
         _leftFork = leftFork;
@@ -80,30 +80,28 @@ public class MultithreadedPhilosopher : IPhilosopher
         HasLeftFork = false;
         HasRightFork = false;
 
+        _strategy = strategy;
+
         CurrentState = State.Thinking;
     }
 
-    public void SetStrategy(IPhilosopherStrategy philosopherStrategy)
-    {
-        _strategy = philosopherStrategy;
-    }
-    
     public bool NextStep(CancellationToken? token = null)
     {
         switch (CurrentState)
         {
             case State.Thinking:
-                Task.Delay(random.Next(ThinkingTimeRangeMs.Start, ThinkingTimeRangeMs.End)).Wait();
+                Task.Delay(random.Next(_actionTimes.ThinkingMinMs, _actionTimes.ThinkingMaxMs)).Wait();
                 _stopwatch.Restart();
                 CurrentState = State.Hungry;
                 return true;
+            
             case State.Hungry:
                 if (HasLeftFork && HasRightFork)
                 {
                     CurrentState = State.Eating;
                     _leftFork.Use(this);
                     _rightFork.Use(this);
-        
+
                     Interlocked.Increment(ref _eaten);
                 }
                 else
@@ -115,20 +113,20 @@ public class MultithreadedPhilosopher : IPhilosopher
 
                 break;
             case State.TakingLeftFork:
-                Task.Delay(TakingForkTimeMs).Wait();
+                Task.Delay(_actionTimes.ForkAcquisitionMs).Wait();
                 HasLeftFork = true;
                 WaitsLeftFork = false;
                 CurrentState = State.Hungry;
                 break;
             case State.TakingRightFork:
-                Task.Delay(TakingForkTimeMs).Wait();
+                Task.Delay(_actionTimes.ForkAcquisitionMs).Wait();
                 HasRightFork = true;
                 WaitsRightFork = false;
                 CurrentState = State.Hungry;
                 break;
             case State.Eating:
                 Interlocked.Add(ref _waitingTime, _stopwatch.ElapsedMilliseconds);
-                Task.Delay(random.Next(EatingTimeRangeMs.Start, EatingTimeRangeMs.End)).Wait();
+                Task.Delay(random.Next(_actionTimes.EatingMinMs, _actionTimes.EatingMaxMs)).Wait();
                 PutLeftFork();
                 PutRightFork();
                 CurrentState = State.Thinking;
@@ -148,7 +146,7 @@ public class MultithreadedPhilosopher : IPhilosopher
 
         WaitsLeftFork = true;
         _leftFork.Take(this, token);
-        
+
         CurrentState = State.TakingLeftFork;
     }
 
@@ -158,7 +156,7 @@ public class MultithreadedPhilosopher : IPhilosopher
 
         WaitsRightFork = true;
         _rightFork.Take(this, token);
-        
+
         WaitsRightFork = false;
         CurrentState = State.TakingRightFork;
     }
@@ -166,10 +164,10 @@ public class MultithreadedPhilosopher : IPhilosopher
     public bool TryTakeLeftFork()
     {
         Debug.Assert(CurrentState is State.Hungry);
-        
+
         var success = _leftFork.TryTake(this);
         if (!success) return false;
-        
+
         CurrentState = State.TakingLeftFork;
         return true;
     }
@@ -177,10 +175,10 @@ public class MultithreadedPhilosopher : IPhilosopher
     public bool TryTakeRightFork()
     {
         Debug.Assert(CurrentState is State.Hungry);
-        
+
         var success = _rightFork.TryTake(this);
         if (!success) return false;
-        
+
         CurrentState = State.TakingRightFork;
         return true;
     }

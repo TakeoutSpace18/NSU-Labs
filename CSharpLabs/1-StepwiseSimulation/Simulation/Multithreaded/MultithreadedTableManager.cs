@@ -1,4 +1,5 @@
 using Contract;
+using StrategyImpl;
 
 namespace Simulation.Multithreaded;
 
@@ -9,25 +10,22 @@ public class MultithreadedTableManager : ITableManager
     public IEnumerable<IPhilosopher> Philosophers => _philosophers;
     public IEnumerable<IFork> Forks => _forks;
 
-    public MultithreadedTableManager(string namesFilePath)
+    public MultithreadedTableManager(SimulationSettings simulationSettings)
     {
-        var names = new List<string>(File.ReadAllLines(namesFilePath));
+        var names = simulationSettings.PhilosopherNames;
         var count = names.Count;
 
-        for (var i = 0; i < names.Count; i++)
+        for (var i = 0; i < count; i++)
         {
             _forks.Add(new MultithreadedFork($"Fork-{i + 1}"));
         }
 
-        for (var i = 0; i < names.Count; i++)
+        for (var i = 0; i < count; i++)
         {
-            _philosophers.Add(new MultithreadedPhilosopher(names[i], (uint)i, _forks[i % count], _forks[(i + 1) % count]));
+            var strategy = PhilosopherStrategyFactory.Create(simulationSettings.PhilosopherStrategy);
+            _philosophers.Add(new MultithreadedPhilosopher(names[i], (uint)i, _forks[i % count],
+                _forks[(i + 1) % count], strategy, simulationSettings.ActionTimes));
         }
-    }
-
-    public void SetStrategy(IPhilosopherStrategy strategy)
-    {
-        _philosophers.ForEach(p => p.SetStrategy(strategy));
     }
 
     public IPhilosopher GetPhilosopherAtIndex(int index)

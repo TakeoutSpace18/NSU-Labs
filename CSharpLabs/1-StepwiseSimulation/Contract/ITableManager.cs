@@ -9,6 +9,4 @@ public interface ITableManager
     
     IEnumerable<IPhilosopher> Philosophers { get; }
     IEnumerable<IFork> Forks { get; }
-    
-    void SetStrategy(IPhilosopherStrategy strategy);
 }

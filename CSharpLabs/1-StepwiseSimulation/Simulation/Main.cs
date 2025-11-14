@@ -1,6 +1,5 @@
-using Simulation;
-using Simulation.Multithreaded;
-using Simulation.Stepwise;
+using Microsoft.Extensions.Hosting;
+using Simulation.GenericHost;
 
-var simulation = new MultithreadedSimulation();
-simulation.Run(300_000);
+var host = HostSetup.Build(args);
+await host.RunAsync();
