@@ -9,6 +9,7 @@ public static class PhilosopherStrategyFactory
         return name switch
         {
             "naive" => new NaivePhilosopherStrategy(),
+            "resource_hierarchy" => new ResourceHierarchyPhilosopherStrategy(),
             _ => throw new ArgumentOutOfRangeException(nameof(name))
         };
     }

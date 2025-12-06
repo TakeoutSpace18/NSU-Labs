@@ -27,7 +27,7 @@ public class MetricsCollector
 
     private readonly Dictionary<IFork, ForkMetrics> _forkMetricsMap = new();
 
-    public MetricsCollector(ITableManager tableManager, int totalTime)
+    public MetricsCollector(ITableManager tableManager, long totalTime)
     {
         foreach (var p in tableManager.Philosophers)
         {

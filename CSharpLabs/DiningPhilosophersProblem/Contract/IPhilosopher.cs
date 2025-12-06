@@ -18,8 +18,6 @@ public interface IPhilosopher
     void PutLeftFork();
     void PutRightFork();
     
-    void SetStrategy(IPhilosopherStrategy strategy);
-    
     long Eaten { get; }
     long WaitingTime { get; }
     string Name { get; }

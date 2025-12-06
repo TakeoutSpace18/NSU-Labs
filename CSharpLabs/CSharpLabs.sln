@@ -1,15 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-StepwiseSimulation", "1-StepwiseSimulation", "{05760054-8B45-426C-9B1C-79B0BF658CBA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DiningPhilosophersProblem", "DiningPhilosophersProblem", "{05760054-8B45-426C-9B1C-79B0BF658CBA}"
 	ProjectSection(SolutionItems) = preProject
-		1-StepwiseSimulation\appsettings.json = 1-StepwiseSimulation\appsettings.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation", "1-StepwiseSimulation\Simulation\Simulation.csproj", "{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simulation", "DiningPhilosophersProblem\Simulation\Simulation.csproj", "{2D100934-07EF-4460-B6B9-FAD9C7E6C34F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract", "1-StepwiseSimulation\Contract\Contract.csproj", "{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract", "DiningPhilosophersProblem\Contract\Contract.csproj", "{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrategyImpl", "1-StepwiseSimulation\StrategyImpl\StrategyImpl.csproj", "{FD024A68-48B2-4C25-B4ED-B390EA55A279}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrategyImpl", "DiningPhilosophersProblem\StrategyImpl\StrategyImpl.csproj", "{FD024A68-48B2-4C25-B4ED-B390EA55A279}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "DiningPhilosophersProblem\Test\Test.csproj", "{334904D9-3CBD-40AD-A555-BF6BB734887B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +30,15 @@ Global
 		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD024A68-48B2-4C25-B4ED-B390EA55A279}.Release|Any CPU.Build.0 = Release|Any CPU
+		{334904D9-3CBD-40AD-A555-BF6BB734887B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{334904D9-3CBD-40AD-A555-BF6BB734887B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{334904D9-3CBD-40AD-A555-BF6BB734887B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{334904D9-3CBD-40AD-A555-BF6BB734887B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2D100934-07EF-4460-B6B9-FAD9C7E6C34F} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
 		{71B68B08-26AC-45EB-ADDF-7AB1F554A8C2} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
 		{FD024A68-48B2-4C25-B4ED-B390EA55A279} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
+		{334904D9-3CBD-40AD-A555-BF6BB734887B} = {05760054-8B45-426C-9B1C-79B0BF658CBA}
 	EndGlobalSection
 EndGlobal

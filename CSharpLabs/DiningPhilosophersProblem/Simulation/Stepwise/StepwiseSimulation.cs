@@ -45,7 +45,7 @@ public class StepwiseSimulation : AbstractSimulation
 
             _currentStep++;
 
-            if (!SimulationSettings.PrintStateChanges) continue;
+            if (!SimulationSettings.DisplayStatus) continue;
 
             if (!stateChanged) continue;
 
@@ -56,7 +56,6 @@ public class StepwiseSimulation : AbstractSimulation
         var metrics = new MetricsCollector(_tableManager, _currentStep);
         Console.Write(metrics.ToString());
     }
-
 
     private void PrintState()
     {

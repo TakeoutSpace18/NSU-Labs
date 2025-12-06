@@ -5,7 +5,7 @@ namespace Simulation.Multithreaded;
 
 public class MultithreadedFork : IFork
 {
-    private enum State
+    public enum State
     {
         Available,
         Taken,
@@ -15,7 +15,8 @@ public class MultithreadedFork : IFork
     private readonly SemaphoreSlim _takenSemaphore = new(1, 1);
     private readonly Stopwatch _stopwatch = new();
 
-    private State _state = State.Available;
+    public State CurrentState { get; private set; } = State.Available;
+
     public string Name { get; }
 
     private IPhilosopher? _takenBy;
@@ -50,11 +51,11 @@ public class MultithreadedFork : IFork
     private void TakeImpl(IPhilosopher philosopher)
     {
         Debug.Assert(_takenSemaphore.CurrentCount == 0);
-        Debug.Assert(_state == State.Available);
+        Debug.Assert(CurrentState == State.Available);
         Debug.Assert(_takenBy == null);
 
         _takenBy = philosopher;
-        _state = State.Taken;
+        CurrentState = State.Taken;
 
         Interlocked.Add(ref _availableTime, _stopwatch.ElapsedMilliseconds);
         _stopwatch.Restart();
@@ -63,10 +64,10 @@ public class MultithreadedFork : IFork
     public void Use(IPhilosopher philosopher)
     {
         Debug.Assert(_takenSemaphore.CurrentCount == 0);
-        Debug.Assert(_state == State.Taken);
+        Debug.Assert(CurrentState == State.Taken);
         Debug.Assert(_takenBy == philosopher);
 
-        _state = State.InUse;
+        CurrentState = State.InUse;
 
         Interlocked.Add(ref _takenTime, _stopwatch.ElapsedMilliseconds);
         _stopwatch.Restart();
@@ -76,9 +77,9 @@ public class MultithreadedFork : IFork
     {
         Debug.Assert(_takenSemaphore.CurrentCount == 0);
         Debug.Assert(_takenBy != null);
-        Debug.Assert(_state is State.InUse or State.Taken);
+        Debug.Assert(CurrentState is State.InUse or State.Taken);
 
-        switch (_state)
+        switch (CurrentState)
         {
             case State.Taken:
                 Interlocked.Add(ref _takenTime, _stopwatch.ElapsedMilliseconds);
@@ -94,7 +95,7 @@ public class MultithreadedFork : IFork
         _stopwatch.Restart();
 
         _takenBy = null;
-        _state = State.Available;
+        CurrentState = State.Available;
 
         _takenSemaphore.Release();
     }
@@ -104,7 +105,7 @@ public class MultithreadedFork : IFork
     {
         get
         {
-            var str = $"{Name}: {_state.ToString()}";
+            var str = $"{Name}: {CurrentState.ToString()}";
             if (_takenBy != null)
             {
                 str += $" (Используется: {_takenBy.Name})";

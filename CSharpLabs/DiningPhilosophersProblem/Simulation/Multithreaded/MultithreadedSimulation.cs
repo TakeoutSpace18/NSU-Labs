@@ -6,18 +6,14 @@ namespace Simulation.Multithreaded;
 
 public class MultithreadedSimulation : AbstractSimulation
 {
-    private readonly MultithreadedTableManager _tableManager
-        = new("names.txt");
+    private readonly MultithreadedTableManager _tableManager;
 
     public MultithreadedSimulation()
     {
         if (SimulationSettings.PreferCoordinator)
             throw new NotImplementedException("Coordinator is not supported in multithreaded simulation");
-
-        var name = SimulationSettings.PhilosopherStrategy;
-        var strategy = PhilosopherStrategyFactory.Create(name);
-
-        _tableManager.SetStrategy(strategy);
+        
+        _tableManager = new MultithreadedTableManager(SimulationSettings);
     }
 
     public override void Run(int time)
@@ -57,7 +53,7 @@ public class MultithreadedSimulation : AbstractSimulation
             }
         }, token);
 
-        if (SimulationSettings.PrintStateChanges)
+        if (SimulationSettings.DisplayStatus)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
