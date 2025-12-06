@@ -5,7 +5,7 @@ namespace Simulation.Multithreaded;
 
 public class MultithreadedPhilosopher : IPhilosopher
 {
-    private enum State
+    public enum State
     {
         Thinking,
         Hungry,
@@ -21,7 +21,7 @@ public class MultithreadedPhilosopher : IPhilosopher
 
     private int _currentState;
 
-    private State CurrentState
+    public State CurrentState
     {
         get => (State)Interlocked.CompareExchange(ref _currentState, 0, 0);
         set => Interlocked.Exchange(ref _currentState, (int)value);
@@ -33,7 +33,7 @@ public class MultithreadedPhilosopher : IPhilosopher
     public long WaitingTime => Interlocked.Read(ref _waitingTime);
     public long Eaten => Interlocked.Read(ref _eaten);
 
-    private IPhilosopherStrategy? _strategy;
+    private readonly IPhilosopherStrategy? _strategy;
 
     private bool _hasLeftFork, _hasRightFork, _waitsLeftFork, _waitsRightFork;
 
