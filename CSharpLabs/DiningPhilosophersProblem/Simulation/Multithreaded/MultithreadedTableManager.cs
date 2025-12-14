@@ -1,4 +1,5 @@
 using Contract;
+using Simulation.Database;
 using StrategyImpl;
 
 namespace Simulation.Multithreaded;
@@ -17,14 +18,14 @@ public class MultithreadedTableManager : ITableManager
 
         for (var i = 0; i < count; i++)
         {
-            _forks.Add(new MultithreadedFork($"Fork-{i + 1}"));
+            _forks.Add(new MultithreadedFork($"Fork-{i + 1}", (uint)i, null));
         }
 
         for (var i = 0; i < count; i++)
         {
             var strategy = PhilosopherStrategyFactory.Create(simulationSettings.PhilosopherStrategy);
             _philosophers.Add(new MultithreadedPhilosopher(names[i], (uint)i, _forks[i % count],
-                _forks[(i + 1) % count], strategy, simulationSettings.ActionTimes));
+                _forks[(i + 1) % count], strategy, simulationSettings.ActionTimes, null));
         }
     }
 

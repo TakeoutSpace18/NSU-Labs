@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Contract;
+using Simulation.Database;
 
 namespace Simulation.Multithreaded;
 
@@ -24,7 +25,11 @@ public class MultithreadedPhilosopher : IPhilosopher
     public State CurrentState
     {
         get => (State)Interlocked.CompareExchange(ref _currentState, 0, 0);
-        set => Interlocked.Exchange(ref _currentState, (int)value);
+        private set
+        {
+            Interlocked.Exchange(ref _currentState, (int)value);
+            _ = LogStateChangeAsync(CurrentState);
+        }
     }
 
     // metrics
@@ -64,11 +69,13 @@ public class MultithreadedPhilosopher : IPhilosopher
     private readonly MultithreadedFork _leftFork;
     private readonly MultithreadedFork _rightFork;
 
+    private readonly SimulationDbManager? _simulationDbManager;
+
     public string Name { get; }
     public uint Id { get; }
 
     public MultithreadedPhilosopher(string name, uint id, MultithreadedFork leftFork, MultithreadedFork rightFork,
-        IPhilosopherStrategy strategy, ActionTimes actionTimes)
+        IPhilosopherStrategy strategy, ActionTimes actionTimes, SimulationDbManager? simulationDbManager)
     {
         _actionTimes = actionTimes;
 
@@ -81,8 +88,24 @@ public class MultithreadedPhilosopher : IPhilosopher
         HasRightFork = false;
 
         _strategy = strategy;
+        _simulationDbManager = simulationDbManager;
+
+        _simulationDbManager?.RegisterPhilosopherAsync(Id, Name).Wait();
 
         CurrentState = State.Thinking;
+    }
+    
+    private async Task LogStateChangeAsync(State newState)
+    {
+        try
+        {
+            if (_simulationDbManager != null)
+                await _simulationDbManager.LogPhilosopherStateAsync(Id, CurrentState.ToString(), Eaten, DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error logging state for {Name}: {ex.Message}");
+        }
     }
 
     public bool NextStep(CancellationToken? token = null)
@@ -93,8 +116,8 @@ public class MultithreadedPhilosopher : IPhilosopher
                 Task.Delay(random.Next(_actionTimes.ThinkingMinMs, _actionTimes.ThinkingMaxMs)).Wait();
                 _stopwatch.Restart();
                 CurrentState = State.Hungry;
-                return true;
-            
+                break;
+
             case State.Hungry:
                 if (HasLeftFork && HasRightFork)
                 {
@@ -130,7 +153,7 @@ public class MultithreadedPhilosopher : IPhilosopher
                 PutLeftFork();
                 PutRightFork();
                 CurrentState = State.Thinking;
-                return true;
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }

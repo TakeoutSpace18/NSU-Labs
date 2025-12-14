@@ -9,6 +9,7 @@ public interface IFork
     long InUseTime { get; }
     
     string Name { get; }
+    uint Id { get; }
 
     bool TryTake(IPhilosopher philosopher);
     void Take(IPhilosopher philosopher, CancellationToken? token = null);

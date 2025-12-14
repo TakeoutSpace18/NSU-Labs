@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Contract;
+using Simulation.Database;
 
 namespace Simulation.Multithreaded;
 
@@ -15,23 +16,54 @@ public class MultithreadedFork : IFork
     private readonly SemaphoreSlim _takenSemaphore = new(1, 1);
     private readonly Stopwatch _stopwatch = new();
 
-    public State CurrentState { get; private set; } = State.Available;
+    public State CurrentState
+    {
+        get => _currentState;
+        private set
+        {
+            _currentState = value;
+            _ = LogStateChangeAsync(CurrentState);
+        }
+    }
 
     public string Name { get; }
+    public uint Id { get; }
 
     private IPhilosopher? _takenBy;
 
     private long _availableTime;
     private long _takenTime;
     private long _inUseTime;
+    private State _currentState;
+    private readonly SimulationDbManager? _simulationDbManager;
     public long AvailableTime => Interlocked.Read(ref _availableTime);
     public long TakenTime => Interlocked.Read(ref _takenTime);
     public long InUseTime => Interlocked.Read(ref _inUseTime);
 
-    public MultithreadedFork(string name)
+    public MultithreadedFork(string name, uint id, SimulationDbManager? simulationDbManager)
     {
         Name = name;
+        Id = id;
+        _simulationDbManager = simulationDbManager;
         _stopwatch.Start();
+        
+        _simulationDbManager?.RegisterForkAsync(Id, Name).Wait();
+        
+        CurrentState = State.Available;
+    }
+
+
+    private async Task LogStateChangeAsync(State newState)
+    {
+        try
+        {
+            if (_simulationDbManager != null)
+                await _simulationDbManager.LogForkStateAsync(Id, newState.ToString(), _takenBy?.Id, DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error logging state for {Name}: {ex.Message}");
+        }
     }
 
     public bool TryTake(IPhilosopher philosopher)

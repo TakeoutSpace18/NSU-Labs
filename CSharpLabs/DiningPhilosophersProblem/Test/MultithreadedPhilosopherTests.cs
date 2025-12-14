@@ -10,11 +10,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void NextStep_FromThinking_ShouldTransitionToHungry()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         Assert.True(p.NextStep()); // Thinking -> Hungry
         Assert.Equal(MultithreadedPhilosopher.State.Hungry, p.CurrentState);
@@ -23,11 +23,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void NextStep_Hungry_ShouldCallStrategy_IfNoForks()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         p.NextStep(); // Thinking -> Hungry
         p.NextStep(); // Hungry -> strategy.DoAction()
@@ -38,11 +38,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void TakeLeftFork_ShouldTransitionToTakingLeftFork_ThenHungry()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         p.NextStep(); // Thinking -> Hungry
         p.TakeLeftFork();
@@ -58,11 +58,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void TakeRightFork_ShouldTransitionToTakingRightFork_ThenHungry()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         p.NextStep(); // Thinking -> Hungry
         p.TakeRightFork();
@@ -78,11 +78,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void NextStep_Hungry_AndHasBothForks_ShouldTransitionToEating()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         p.NextStep(); // Thinking -> Hungry
 
@@ -101,11 +101,11 @@ public class MultithreadedPhilosopherTests
     [Fact]
     public void NextStep_Eating_ShouldReturnToThinking_AndReleaseForks()
     {
-        var left = new MultithreadedFork("L");
-        var right = new MultithreadedFork("R");
+        var left = new MultithreadedFork("L", 0, null);
+        var right = new MultithreadedFork("R", 0, null);
         var strategy = new Mock<IPhilosopherStrategy>();
         var p = new MultithreadedPhilosopher(
-            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast);
+            "P1", 1, left, right, strategy.Object, TestActionTimes.Fast, null);
 
         p.NextStep(); // Thinking -> Hungry
 

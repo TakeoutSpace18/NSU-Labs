@@ -3,7 +3,7 @@ using Contract;
 
 namespace Simulation.Stepwise;
 
-public class StepwiseFork(string name) : IFork
+public class StepwiseFork(string name, uint id) : IFork
 {
     private enum State
     {
@@ -15,8 +15,9 @@ public class StepwiseFork(string name) : IFork
     private State _state = State.Available;
     public bool IsAvailable => _state == State.Available;
     public string Name { get; } = name;
+    public uint Id { get; } = id;
 
-    private IPhilosopher? _takenBy = null;
+    private IPhilosopher? _takenBy;
 
     public long AvailableTime { get; private set; }
     public long TakenTime { get; private set; }

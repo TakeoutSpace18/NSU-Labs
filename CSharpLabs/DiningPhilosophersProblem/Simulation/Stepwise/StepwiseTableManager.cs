@@ -17,7 +17,7 @@ public class StepwiseTableManager : ITableManager
 
         for (var i = 0; i < names.Count; i++)
         {
-            _forks.Add(new StepwiseFork($"Fork-{i + 1}"));
+            _forks.Add(new StepwiseFork($"Fork-{i + 1}", (uint)i));
         }
 
         for (var i = 0; i < names.Count; i++)

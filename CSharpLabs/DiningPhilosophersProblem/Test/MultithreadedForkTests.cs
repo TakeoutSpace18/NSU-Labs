@@ -11,7 +11,7 @@ public class MultithreadedForkTests
     [Fact]
     public void TryTake_WhenAvailable_ShouldReturnTrue_AndChangeStateToTaken()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var p = Mock.Of<IPhilosopher>();
 
         var result = fork.TryTake(p);
@@ -23,7 +23,7 @@ public class MultithreadedForkTests
     [Fact]
     public void TryTake_WhenUnavailable_ShouldReturnFalse()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var p = Mock.Of<IPhilosopher>();
 
         // first take
@@ -38,7 +38,7 @@ public class MultithreadedForkTests
     [Fact]
     public void Use_AfterTake_ShouldChangeStateToInUse()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var p = Mock.Of<IPhilosopher>();
 
         var result = fork.TryTake(p);
@@ -51,7 +51,7 @@ public class MultithreadedForkTests
     [Fact]
     public void Put_AfterUse_ShouldResetStateToAvailable_AndReleaseSemaphore()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var p = Mock.Of<IPhilosopher>();
 
         fork.TryTake(p);
@@ -66,7 +66,7 @@ public class MultithreadedForkTests
     [Fact]
     public void Take_ShouldAcquireForkAndSetStateToTaken()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var philosopher = new Mock<IPhilosopher>().Object;
 
         fork.Take(philosopher);
@@ -77,7 +77,7 @@ public class MultithreadedForkTests
     [Fact]
     public void Take_WithCancellation_ShouldThrowIfTokenCancelled()
     {
-        var fork = new MultithreadedFork("F1");
+        var fork = new MultithreadedFork("F1", 0, null);
         var philosopher = new Mock<IPhilosopher>().Object;
 
         fork.Take(philosopher); // first take

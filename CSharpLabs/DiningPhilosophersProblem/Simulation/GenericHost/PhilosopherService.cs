@@ -1,6 +1,7 @@
 using Contract;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Simulation.Database;
 using Simulation.Multithreaded;
 
 namespace Simulation.GenericHost;
@@ -11,8 +12,10 @@ public class PhilosopherService(
     MultithreadedFork leftFork,
     MultithreadedFork rightFork,
     IPhilosopherStrategy strategy,
-    ActionTimes actionTimes)
-    : MultithreadedPhilosopher(name, id, leftFork, rightFork, strategy, actionTimes), IHostedService, IDisposable
+    ActionTimes actionTimes,
+    SimulationDbManager dbManager)
+    : MultithreadedPhilosopher(name, id, leftFork, rightFork, strategy, actionTimes, dbManager), IHostedService,
+        IDisposable
 {
     private CancellationTokenSource? _stoppingCts;
 
