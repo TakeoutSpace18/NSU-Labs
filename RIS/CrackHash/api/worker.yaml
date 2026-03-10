@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: CrackHash Worker API
+  version: 0.0.1
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8081
+    description: Development server
+
+tags:
+  - name: internal
+    description: Internal APIs for workers
+
+paths:
+  /internal/api/worker/hash/crack/task:
+    post:
+      tags:
+        - internal
+      summary: Submit task to worker 
+      operationId: submitTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTaskRequest'
+            examples:
+              example1:
+                summary: Task 1
+                value:
+                  requestId: "730a04e6-4de9-41f9-9d5b-53b88b17afac"
+                  hash: "5d41402abc4b2a76b9719d911017c592"
+                  maxLength: 5
+                  partNumber: 0
+                  partCount: 1
+                  alphabet: "abchelo"
+              example2:
+                summary: Task 2
+                value:
+                  requestId: "730a04e6-4de9-41f9-9d5b-53b88b17afac"
+                  hash: "5d41402abc4b2a76b9719d911017c592"
+                  maxLength: 6
+                  partNumber: 0
+                  partCount: 1
+                  alphabet: "abcheblo"
+      responses:
+        '200':
+          description: Task sumbitted successfully
+        '400':
+          description: Invalid task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    SubmitTaskRequest:
+      type: object
+      required:
+        - requestId
+        - partNumber
+        - partCount
+        - hash
+        - maxLength
+        - alphabet
+      properties:
+
+        requestId:
+          type: string
+          format: uuid
+          description: GUID of the request
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+        partNumber:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Part number of the request (must be less than PartCount)
+          example: 0
+
+        partCount:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Total number of parts (must be > 0)
+          example: 10
+
+        hash:
+          type: string
+          description: Hex-encoded MD5 hash value
+          pattern: '^[a-fA-F0-9]{32}'
+          minLength: 32
+          maxLength: 32
+          example: "5d41402abc4b2a76b9719d911017c592"
+
+        maxLength:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 32
+          description: Maximum length of generated strings
+          example: 5
+
+        alphabet:
+          type: string
+          description: Allowed symbols for brute-force generation
+          minLength: 1
+          example: "abc123"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "BAD_REQUEST"
+        message:
+          type: string
+          description: Error description
+          example: "Invalid hash format"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2026-02-15T10:30:00Z"

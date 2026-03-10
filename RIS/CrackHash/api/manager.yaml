@@ -1,0 +1,235 @@
+openapi: 3.0.0
+info:
+  title: CrackHash Manager API
+  version: 0.0.1
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+tags:
+  - name: hash
+    description: Operations for hash cracking
+  - name: internal
+    description: Internal APIs for workers
+
+paths:
+  /api/hash/crack:
+    post:
+      tags:
+        - hash
+      summary: Create hash cracking request
+      description: Submits a request to crack an MD5 hash using brute force
+      operationId: crackHash
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrackHashRequest'
+            examples:
+              example1:
+                summary: Crack hash for word "abcd"
+                value:
+                  hash: "e2fc714c4727ee9395f324cd2e7f331f"
+                  maxLength: 5
+              example2:
+                summary: Crack hash for word "xyz24"
+                value:
+                  hash: "ea138386344970140e9a7d77830c1abd"
+                  maxLength: 5
+      responses:
+        '200':
+          description: Request successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrackHashResponse'
+              examples:
+                example1:
+                  value:
+                    requestId: "730a04e6-4de9-41f9-9d5b-53b88b17afac"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/hash/status:
+    get:
+      tags:
+        - hash
+      summary: Get request status
+      description: Returns the current status of hash cracking request
+      operationId: getCrackStatus
+      parameters:
+        - name: requestId
+          in: query
+          required: true
+          description: Request identifier
+          schema:
+            type: string
+            format: uuid
+          example: "730a04e6-4de9-41f9-9d5b-53b88b17afac"
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              examples:
+                inProgress:
+                  summary: Request in progress
+                  value:
+                    status: "IN_PROGRESS"
+                    data: null
+                ready:
+                  summary: Result ready
+                  value:
+                    status: "READY"
+                    data: ["abcd"]
+                error:
+                  summary: Processing error
+                  value:
+                    status: "ERROR"
+                    data: null
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /internal/api/manager/hash/crack/request:
+    patch:
+      tags:
+        - internal
+      summary: Handle found words 
+      operationId: handleFoundWords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoundWordsRequest'
+            example:
+              requestId: "550e8400-e29b-41d4-a716-446655440000"
+              partNumber: 1
+              answers:
+                - "password"
+                - "123456"
+      responses:
+        '200':
+          description: Task processed successfully
+        '400':
+          description: Invalid task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CrackHashRequest:
+      type: object
+      required:
+        - hash
+        - maxLength
+      properties:
+        hash:
+          type: string
+          description: MD5 hash to crack (32 characters in hex format)
+          pattern: '^[a-fA-F0-9]{32}$'
+          example: "e2fc714c4727ee9395f324cd2e7f331f"
+        maxLength:
+          type: integer
+          description: Maximum length of the target word
+          minimum: 1
+          maximum: 32
+          example: 4
+
+    CrackHashResponse:
+      type: object
+      required:
+        - requestId
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Unique request identifier
+          example: "730a04e6-4de9-41f9-9d5b-53b88b17afac"
+
+    StatusResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - IN_PROGRESS
+            - READY
+            - ERROR
+          description: Request processing status
+          example: "READY"
+        data:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Array of found words (null if status is not READY)
+          example: ["abcd"]
+
+    FoundWordsRequest:
+      type: object
+      description: Worker response containing words with matching hash.
+      required:
+        - requestId
+        - partNumber
+        - answers
+      properties:
+        requestId:
+          type: string
+          description: Request GUID
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+        partNumber:
+          type: integer
+          format: int32
+          description: Request part number
+          example: 1
+
+        answers:
+          type: array
+          description: List of matched words
+          items:
+            type: string
+          example:
+            - "password"
+            - "123456"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "BAD_REQUEST"
+        message:
+          type: string
+          description: Error description
+          example: "Invalid hash format"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2026-02-15T10:30:00Z"

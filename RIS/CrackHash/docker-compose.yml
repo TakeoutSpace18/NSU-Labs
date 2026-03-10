@@ -1,0 +1,103 @@
+services:
+  manager:
+    build:
+      context: .
+      dockerfile: manager/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - WORKER_URL=http://worker1:8081,http://worker2:8081,http://worker3:8081,http://worker4:8081,http://worker5:8081
+    networks:
+      - microservices
+    depends_on:
+      - worker1
+      - worker2
+      - worker3
+      - worker4
+      - worker5
+    develop:
+      watch:
+        - action: rebuild
+          path: ./manager
+          target: /app
+
+  worker1:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - MANAGER_URL=http://manager:8080
+    networks:
+      - microservices
+
+  worker2:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    ports:
+      - "8082:8081"
+    environment:
+      - PORT=8081
+      - MANAGER_URL=http://manager:8080
+    networks:
+      - microservices
+
+  worker3:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    ports:
+      - "8083:8081"
+    environment:
+      - PORT=8081
+      - MANAGER_URL=http://manager:8080
+    networks:
+      - microservices
+
+  worker4:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    ports:
+      - "8084:8081"
+    environment:
+      - PORT=8081
+      - MANAGER_URL=http://manager:8080
+    networks:
+      - microservices
+
+  worker5:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    ports:
+      - "8085:8081"
+    environment:
+      - PORT=8081
+      - MANAGER_URL=http://manager:8080
+    networks:
+      - microservices
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8090:8080"
+    environment:
+      URLS: >
+        [
+          { "name": "Manager API", "url": "http://localhost:8080/openapi.json" },
+          { "name": "Worker API",  "url": "http://localhost:8081/openapi.json" }
+        ]
+    networks:
+      - microservices
+    depends_on:
+      - manager
+
+
+networks:
+  microservices:
+    driver: bridge
