@@ -3,20 +3,15 @@ module github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/worker
 go 1.24.12
 
 require (
-	github.com/getkin/kin-openapi v0.133.0
-	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
-	github.com/oapi-codegen/nethttp-middleware v1.1.2
-	github.com/oapi-codegen/runtime v1.1.2
-	github.com/rs/cors v1.11.1
+	github.com/rabbitmq/amqp091-go v1.10.0
 )
 
 require (
-	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
+	github.com/getkin/kin-openapi v0.133.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
-	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect

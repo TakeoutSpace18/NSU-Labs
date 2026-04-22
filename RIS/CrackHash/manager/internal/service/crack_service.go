@@ -1,58 +1,41 @@
 package service
 
 import (
-	"sync"
-
-	"github.com/google/uuid"
 	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/logger"
+	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/model"
+	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/repository"
+	"github.com/google/uuid"
 )
-
-type StatusResponseStatus string
-
-const (
-	StatusInProgress StatusResponseStatus = "IN_PROGRESS"
-	StatusReady      StatusResponseStatus = "READY"
-	StatusError      StatusResponseStatus = "ERROR"
-)
-
-type CrackRequest struct {
-	ID             uuid.UUID
-	Hash           string
-	MaxLength      int
-	Status         StatusResponseStatus
-	Results        []string
-	PartCount      int
-	CompletedParts int
-	mu             sync.RWMutex
-}
 
 type CrackService struct {
-	requests map[uuid.UUID]*CrackRequest
-	mu       sync.RWMutex
+	repo *repository.MongoRepository
 }
 
-func NewCrackService() *CrackService {
+func NewCrackService(repo *repository.MongoRepository) *CrackService {
 	return &CrackService{
-		requests: make(map[uuid.UUID]*CrackRequest),
+		repo: repo,
 	}
 }
 
-func (s *CrackService) CreateRequest(hash string, maxLength int, partCount int) uuid.UUID {
+func (s *CrackService) CreateRequest(hash string, maxLength int, partCount int, alphabet string) (uuid.UUID, error) {
 	id := uuid.New()
 
-	req := &CrackRequest{
-		ID:             id,
-		Hash:           hash,
-		MaxLength:      maxLength,
-		Status:         StatusInProgress,
-		Results:        []string{},
-		PartCount:      partCount,
-		CompletedParts: 0,
+	req := &model.CrackRequest{
+		ID:                   id.String(),
+		Hash:                 hash,
+		MaxLength:            maxLength,
+		Alphabet:             alphabet,
+		Status:               model.StatusInProgress,
+		Results:              []string{},
+		PartCount:            partCount,
+		CompletedParts:       0,
+		CompletedPartNumbers: []int32{},
 	}
 
-	s.mu.Lock()
-	s.requests[id] = req
-	s.mu.Unlock()
+	err := s.repo.Create(req)
+	if err != nil {
+		return uuid.Nil, err
+	}
 
 	logger.Log.Info("Created crack request",
 		"id", id,
@@ -61,35 +44,38 @@ func (s *CrackService) CreateRequest(hash string, maxLength int, partCount int) 
 		"partCount", partCount,
 	)
 
-	return id
-}
-
-func (s *CrackService) GetRequest(id uuid.UUID) (*CrackRequest, bool) {
-	s.mu.RLock()
-	req, exists := s.requests[id]
-	s.mu.RUnlock()
-
-	return req, exists
+	return id, nil
 }
 
 func (s *CrackService) HandleFoundWords(id uuid.UUID, partNumber int32, answers []string) {
-	s.mu.RLock()
-	req, exists := s.requests[id]
-	s.mu.RUnlock()
-
-	if !exists {
-		logger.Log.Warn("Received results for unknown request", "id", id)
+	err := s.repo.AddResults(id, partNumber, answers)
+	if err != nil {
+		logger.Log.Error("Error adding results to database",
+			"requestId", id,
+			"partNumber", partNumber,
+			"error", err,
+		)
 		return
 	}
 
-	req.mu.Lock()
-	defer req.mu.Unlock()
-
-	if len(answers) > 0 {
-		req.Results = append(req.Results, answers...)
+	req, err := s.repo.Get(id)
+	if err != nil {
+		logger.Log.Error("Error reading request from database",
+			"requestId", id,
+			"error", err,
+		)
+		return
 	}
 
-	req.CompletedParts++
+	if req.CompletedParts >= req.PartCount {
+		err := s.repo.MarkReady(id)
+		if err != nil {
+			logger.Log.Error("Error marking request ready in database",
+				"requestId", id,
+				"error", err,
+			)
+		}
+	}
 
 	logger.Log.Info("Completed part",
 		"requestId", id,
@@ -98,7 +84,6 @@ func (s *CrackService) HandleFoundWords(id uuid.UUID, partNumber int32, answers 
 	)
 
 	if req.CompletedParts >= req.PartCount {
-		req.Status = StatusReady
 		logger.Log.Info("All parts completed",
 			"requestId", id,
 			"results", len(req.Results),
@@ -106,17 +91,14 @@ func (s *CrackService) HandleFoundWords(id uuid.UUID, partNumber int32, answers 
 	}
 }
 
-func (s *CrackService) GetStatus(id uuid.UUID) (StatusResponseStatus, []string, bool) {
-	req, exists := s.GetRequest(id)
-	if !exists {
+func (s *CrackService) GetStatus(id uuid.UUID) (model.StatusResponseStatus, []string, bool) {
+	req, err := s.repo.Get(id)
+	if err != nil {
 		return "", nil, false
 	}
 
-	req.mu.RLock()
-	defer req.mu.RUnlock()
-
 	// Only return results if status is READY
-	if req.Status != StatusReady {
+	if req.Status != model.StatusReady {
 		return req.Status, nil, true
 	}
 
@@ -124,4 +106,8 @@ func (s *CrackService) GetStatus(id uuid.UUID) (StatusResponseStatus, []string, 
 	copy(results, req.Results)
 
 	return req.Status, results, true
+}
+
+func (s *CrackService) SetPendingParts(id uuid.UUID, pendingParts []int32) error {
+	return s.repo.SetPendingParts(id, pendingParts)
 }

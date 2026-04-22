@@ -7,7 +7,6 @@ COPY worker/ ./worker/
 
 WORKDIR /app/worker
 RUN go mod download
-RUN go generate -x ./internal/gen/generate.go
 RUN CGO_ENABLED=0 go build -o worker ./cmd
 
 FROM alpine:latest

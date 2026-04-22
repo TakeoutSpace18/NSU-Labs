@@ -12,8 +12,6 @@ servers:
 tags:
   - name: hash
     description: Operations for hash cracking
-  - name: internal
-    description: Internal APIs for workers
 
 paths:
   /api/hash/crack:
@@ -104,34 +102,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /internal/api/manager/hash/crack/request:
-    patch:
-      tags:
-        - internal
-      summary: Handle found words 
-      operationId: handleFoundWords
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FoundWordsRequest'
-            example:
-              requestId: "550e8400-e29b-41d4-a716-446655440000"
-              partNumber: 1
-              answers:
-                - "password"
-                - "123456"
-      responses:
-        '200':
-          description: Task processed successfully
-        '400':
-          description: Invalid task
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
 components:
   schemas:
     CrackHashRequest:
@@ -184,35 +154,6 @@ components:
             type: string
           description: Array of found words (null if status is not READY)
           example: ["abcd"]
-
-    FoundWordsRequest:
-      type: object
-      description: Worker response containing words with matching hash.
-      required:
-        - requestId
-        - partNumber
-        - answers
-      properties:
-        requestId:
-          type: string
-          description: Request GUID
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
-
-        partNumber:
-          type: integer
-          format: int32
-          description: Request part number
-          example: 1
-
-        answers:
-          type: array
-          description: List of matched words
-          items:
-            type: string
-          example:
-            - "password"
-            - "123456"
 
     ErrorResponse:
       type: object

@@ -5,22 +5,23 @@ import (
 
 	srv "github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/gen/server"
 	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/logger"
+	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/model"
 	"github.com/TakeoutSpace18/NSU-Labs/RIS/CrackHash/manager/internal/service"
 )
 
 // Manager implements StrictServerInterface
 type Manager struct {
-	crackService      *service.CrackService
-	workerDistributor *service.WorkerDistributor
+	crackService    *service.CrackService
+	taskDistributor *service.TaskDistributor
 }
 
 func NewManager(
 	crackService *service.CrackService,
-	workerDistributor *service.WorkerDistributor,
+	taskDistributor *service.TaskDistributor,
 ) *Manager {
 	return &Manager{
-		crackService:      crackService,
-		workerDistributor: workerDistributor,
+		crackService:    crackService,
+		taskDistributor: taskDistributor,
 	}
 }
 
@@ -29,36 +30,48 @@ func (m *Manager) CrackHash(
 	ctx context.Context,
 	request srv.CrackHashRequestObject,
 ) (srv.CrackHashResponseObject, error) {
-	workerCount := m.workerDistributor.WorkerCount()
+	partCount := m.taskDistributor.PartCount()
+	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
 
-	requestId := m.crackService.CreateRequest(
+	requestId, err := m.crackService.CreateRequest(
 		request.Body.Hash,
 		request.Body.MaxLength,
-		workerCount,
+		partCount,
+		alphabet,
 	)
+
+	if err != nil {
+		logger.Log.Error("Error creating crack request", "error", err)
+		return srv.CrackHash400JSONResponse{
+			Error:   "INTERNAL_ERROR",
+			Message: "Failed to create crack request",
+		}, nil
+	}
 
 	logger.Log.Info("Created crack request",
 		"requestId", requestId,
 		"hash", request.Body.Hash,
 		"maxLength", request.Body.MaxLength,
-		"workerCount", workerCount,
+		"partCount", partCount,
 	)
 
-	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	err := m.workerDistributor.DistributeTask(ctx, service.DistributeTask{
+	result := m.taskDistributor.DistributeTask(ctx, service.DistributeTask{
 		RequestId: requestId,
 		Hash:      request.Body.Hash,
 		MaxLength: int32(request.Body.MaxLength),
 		Alphabet:  alphabet,
 	})
 
-	if err != nil {
-		logger.Log.Error("Error distributing task", "error", err)
-		return srv.CrackHash400JSONResponse{
-			Error:   "DISTRIBUTION_ERROR",
-			Message: "Failed to distribute task to workers",
-		}, nil
+	if err := m.crackService.SetPendingParts(requestId, result.PendingParts); err != nil {
+		logger.Log.Error("Error saving pending parts",
+			"requestId", requestId, "error", err)
+	}
+
+	if len(result.PendingParts) > 0 {
+		logger.Log.Warn("Some parts could not be published, queued for retry",
+			"requestId", requestId,
+			"pendingParts", result.PendingParts,
+		)
 	}
 
 	return srv.CrackHash200JSONResponse{
@@ -81,7 +94,7 @@ func (m *Manager) GetCrackStatus(
 	}
 
 	var data *[]string
-	if status == service.StatusReady {
+	if status == model.StatusReady {
 		data = &results
 	}
 
@@ -89,24 +102,4 @@ func (m *Manager) GetCrackStatus(
 		Status: srv.StatusResponseStatus(status),
 		Data:   data,
 	}, nil
-}
-
-// PATCH /internal/api/manager/hash/crack/request
-func (m *Manager) HandleFoundWords(
-	ctx context.Context,
-	request srv.HandleFoundWordsRequestObject,
-) (srv.HandleFoundWordsResponseObject, error) {
-	logger.Log.Info("Received results from worker",
-		"requestId", request.Body.RequestId,
-		"partNumber", request.Body.PartNumber,
-		"answers", len(request.Body.Answers),
-	)
-
-	m.crackService.HandleFoundWords(
-		request.Body.RequestId,
-		request.Body.PartNumber,
-		request.Body.Answers,
-	)
-
-	return srv.HandleFoundWords200Response{}, nil
 }
